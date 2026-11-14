@@ -188,12 +188,15 @@ test_that("CPU GNN survives successful and failing CUDA cleanup boundaries", {
   }
 })
 
-test_that("attachment explains how to install a missing torch dependency", {
-  attach <- .onAttach
-  env <- new.env(parent = environment(attach))
-  env$requireNamespace <- function(...) FALSE
-  environment(attach) <- env
-  expect_message(attach("unused", "pigauto"), "install.packages\\('torch'\\)")
+test_that("runtime preflight reports a missing torch runtime", {
+  testthat::local_mocked_bindings(
+    .check_pigauto_torch_is_installed = function() FALSE,
+    .package = "pigauto"
+  )
+  runtime <- .check_pigauto_runtime()
+  expect_false(runtime$torch_is_installed)
+  expect_true(runtime$unavailable)
+  expect_identical(runtime$detail, "torch runtime is not installed")
 })
 
 test_that("GPU checkpoint reports formatted results only when enabled", {
