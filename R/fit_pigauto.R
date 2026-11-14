@@ -855,26 +855,10 @@ fit_pigauto <- function(
       val_rmse       = val_rmse,
       test_rmse      = test_rmse,
       calibrated_gates = calibrated_gates,
-      r_cal      = if (!is.null(calibrated_gates_list)) {
-        calibrated_gates_list$r_cal_gnn
-      } else {
-        NULL
-      },
-      r_cal_bm   = if (!is.null(calibrated_gates_list)) {
-        calibrated_gates_list$r_cal_bm
-      } else {
-        NULL
-      },
-      r_cal_gnn  = if (!is.null(calibrated_gates_list)) {
-        calibrated_gates_list$r_cal_gnn
-      } else {
-        NULL
-      },
-      r_cal_mean = if (!is.null(calibrated_gates_list)) {
-        calibrated_gates_list$r_cal_mean
-      } else {
-        NULL
-      },
+      r_cal      = calibrated_gates_list$r_cal_gnn,
+      r_cal_bm   = calibrated_gates_list$r_cal_bm,
+      r_cal_gnn  = calibrated_gates_list$r_cal_gnn,
+      r_cal_mean = calibrated_gates_list$r_cal_mean,
       mean_baseline_per_col  = mean_baseline_per_col,
       safety_floor           = safety_floor,
       phylo_signal_per_trait = phylo_signal_per_trait,

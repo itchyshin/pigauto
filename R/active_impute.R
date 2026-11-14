@@ -564,7 +564,6 @@ suggest_next_observation <- function(result, top_n = 10L,
       if (sum(!is.na(y)) < 5L || sum(is.na(y)) == 0L) next
 
       delta_v <- bm_variance_reduction(y, R_phy)
-      if (length(delta_v) == 0L) next
 
       miss_idx <- which(is.na(y))
       cell_dfs[[length(cell_dfs) + 1L]] <- data.frame(
@@ -584,7 +583,6 @@ suggest_next_observation <- function(result, top_n = 10L,
       if (sum(!is.na(y)) < 1L || sum(is.na(y)) == 0L) next
 
       delta_e <- lp_entropy_reduction_binary(y, sim_phylo)
-      if (length(delta_e) == 0L) next
 
       miss_idx <- which(is.na(y))
       cell_dfs[[length(cell_dfs) + 1L]] <- data.frame(
@@ -606,7 +604,6 @@ suggest_next_observation <- function(result, top_n = 10L,
       if (sum(row_obs) < 1L || sum(!row_obs) == 0L) next
 
       delta_e <- lp_entropy_reduction_categorical(oh, sim_phylo)
-      if (length(delta_e) == 0L) next
 
       miss_idx <- which(!row_obs)
       cell_dfs[[length(cell_dfs) + 1L]] <- data.frame(
@@ -636,7 +633,6 @@ suggest_next_observation <- function(result, top_n = 10L,
 
       # Gate entropy reduction (binary LP)
       delta_e <- lp_entropy_reduction_binary(y_gate, sim_phylo)
-      if (length(delta_e) != length(miss_gate)) next  # defensive
 
       # Probability gate is 1 at user-missing cells (current LP estimate)
       obs_gate_idx <- which(!is.na(y_gate))
@@ -687,26 +683,21 @@ suggest_next_observation <- function(result, top_n = 10L,
       row_obs <- stats::complete.cases(X_mp)
       if (sum(row_obs) < 5L || sum(!row_obs) == 0L) next
 
+      # Whole-row composition masks give each component the same missing cells;
+      # each BM call returns one score per cell after the count check above.
       delta_v_per_component <- numeric(0)
       for (k in seq_along(lc)) {
         y_k <- X_mp[, k]
         names(y_k) <- spp
         delta_k <- bm_variance_reduction(y_k, R_phy)
-        if (length(delta_k) == 0L) {
-          delta_v_per_component <- numeric(0); break
-        }
         if (length(delta_v_per_component) == 0L) {
           delta_v_per_component <- delta_k
         } else {
           # Component-wise sum (each component has the same miss_idx by
           # the row-level masking convention)
-          if (length(delta_k) != length(delta_v_per_component)) {
-            delta_v_per_component <- numeric(0); break
-          }
           delta_v_per_component <- delta_v_per_component + delta_k
         }
       }
-      if (length(delta_v_per_component) == 0L) next
 
       miss_idx <- which(!row_obs)
       cell_dfs[[length(cell_dfs) + 1L]] <- data.frame(
