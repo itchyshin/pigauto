@@ -1,0 +1,11 @@
+args <- commandArgs(TRUE); root <- normalizePath(args[1]); setwd(file.path(root,"exact-source/pigauto"))
+stopifnot(identical(Sys.getenv("NOT_CRAN",unset=NA_character_),NA_character_))
+stopifnot(identical(normalizePath(find.package("pigauto")),normalizePath("/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/neither/pigauto")))
+print(packageVersion("urlchecker")); print(curl::curl_version()); print(sessionInfo())
+result <- urlchecker::url_check(parallel=TRUE,progress=FALSE); saveRDS(result,file.path(root,"url-network-results.rds")); print(result)
+d <- as.data.frame(result)
+for(n in names(d)) if(is.list(d[[n]])) d[[n]] <- vapply(d[[n]],function(z)paste(z,collapse="; "),character(1))
+write.csv(d,file.path(root,"url-network-results-flat.csv"),row.names=FALSE)
+cat("URL_CHECK_AND_FLAT_EXPORT_COMPLETED\n")
+
+writeLines(capture.output(list(paths=.libPaths(),pigauto=find.package("pigauto"),session=sessionInfo())),file.path(root,"urls-network-session.txt"))

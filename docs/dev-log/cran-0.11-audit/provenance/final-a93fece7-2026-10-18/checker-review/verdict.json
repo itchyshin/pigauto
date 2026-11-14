@@ -1,0 +1,46 @@
+{
+  "reviewer": "grace",
+  "verdict": "PASS",
+  "scope": "Pre-push checker retarget review only; not frozen-artifact, native-check, platform or release readiness",
+  "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "artifact_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "artifact_size_bytes": 5137837,
+  "checker_start_commit": "ebade832ac1cb2dcf9e5d8d351ff36d708d49767",
+  "blockers": [],
+  "conditions": [
+    "Review applies only to the three current file hashes in readback.json; any subsequent change needs renewed review.",
+    "Future direct platform evidence must be read from actual completed logs, bound to the new archive and actual run/checker identity.",
+    "No readiness vote follows from this retarget or its identity controls."
+  ],
+  "checked_evidence": [
+    "Three before-retarget backups match starting HEAD",
+    "Parameter-only AST comparison of artifact.py",
+    "Exact single verifier label and two workflow label replacements",
+    "Successor FINAL.json and local archive hash/size/inventory readback",
+    "Retained public-object readback receipt",
+    "Retained one-positive/five-negative selftest and fresh independent repeat"
+  ],
+  "reviewed_files": {
+    "script/cran-0.11-platform/artifact.py": {
+      "before_sha256": "cc31f3cb02c3be0f900f40629ef3769a65b7164b91213575640d5e849769995f",
+      "after_sha256": "942170752d3829996c362835267895d7498f3a38a304313a9b5badb656188933"
+    },
+    "script/cran-0.11-platform/verify_results.py": {
+      "before_sha256": "f014c380a2118ae7c7f8ef2ced6e8b52e8890239dad9966614ccb04b5fe3e4b8",
+      "after_sha256": "ae8e4bd3a6f09214c748c8ea1eb6219007ed5464bae2e65604e08ab55c48af6e"
+    },
+    ".github/workflows/frozen-tarball-check.yaml": {
+      "before_sha256": "029ae1b6ca61d475d4b09717c71c46d778d45c5de0f3284e891e20ed6963a30d",
+      "after_sha256": "72872e09c592332f26a68bbd2f97ebc72a85b4bfc95ab4c647f80f5ef9a3a0c4"
+    }
+  },
+  "controls": {
+    "positive": "PASS",
+    "negative_refusals": 5
+  },
+  "limits": [
+    "No network operation, repository mutation, source/native check rerun, fit, upload or campaign.",
+    "The source binding is read from the independent freeze record; this is not a new full source/archive audit."
+  ],
+  "reviewed_utc": "2026-10-18T02:57:49.591036+00:00"
+}

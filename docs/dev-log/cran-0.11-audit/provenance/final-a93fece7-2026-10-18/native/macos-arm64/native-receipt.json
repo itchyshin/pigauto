@@ -1,0 +1,36 @@
+{
+  "artifact_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "artifact_size_bytes": 5137837,
+  "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "archive_path": "/private/tmp/pigauto-release-candidate/sha256-a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb/pigauto_0.11.0.tar.gz",
+  "archive_mode": "0444",
+  "native_check_script": "/private/tmp/pigauto-pr236-validator-20261017/script/cran-0.11-platform/check.R",
+  "native_check_script_sha256": "1e641c87e699fba2846aaa9c8958fa77348ecd22221b5ed08e1ccf31c2de9fb0",
+  "command": [
+    "Rscript",
+    "--vanilla",
+    "/private/tmp/pigauto-pr236-validator-20261017/script/cran-0.11-platform/check.R"
+  ],
+  "cwd": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos",
+  "NOT_CRAN": "UNSET",
+  "force_suggests": true,
+  "thread_caps": {
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "R_NUM_THREADS": "1",
+    "MAKEFLAGS": "-j1"
+  },
+  "timeout_seconds": 4500,
+  "term_grace_seconds": 15,
+  "warning_replay": "not run; requires separate explicit review",
+  "started_utc": "2026-10-18T02:53:44.139669+00:00",
+  "archive_sha256_before": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "elapsed_seconds": 459.703,
+  "timed_out": false,
+  "exit_code": 0,
+  "archive_sha256_after": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "log": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/native-check.log",
+  "finished_utc": "2026-10-18T03:01:23.851580+00:00"
+}

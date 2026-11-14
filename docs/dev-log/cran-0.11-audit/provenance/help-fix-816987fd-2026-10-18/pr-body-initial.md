@@ -1,0 +1,7 @@
+The installed `impute()` help promises GNN training even though the default is `gnn = FALSE`; the report help similarly promises GNN comparisons and training history for every fit. Both descriptions now explain baseline-only behavior and the explicit `gnn = TRUE` option. The report title now describes an imputation report.
+
+Only the two roxygen descriptions and their generated Rd pages change. All 49 R executable syntax trees match merged main `8e275ca`; no runtime, scientific default, dependency or example changes are included.
+
+Validation: regenerated both help pages; 17 existing report expectations pass with two expected small-validation warnings; a provisional installed copy displays the corrected help and runs the novice workflow with the default GNN disabled, fills both missing cells, and preserves observed values and classes. Independent source and installed-help review passed. Source CI and fresh local rendered-page review are being collected before this PR becomes ready.
+
+This resolves a final reader-review blocker for the CRAN 0.11 audit in #236. The `14ee7e5d` archive is retained as predecessor evidence and is withdrawn as a submission candidate. After this source PR is explicitly approved and merged, verify the automatic website deployment, freeze a new archive, and repeat the affected exact-artifact gates. Keep #236 unmerged; CRAN upload and maintainer confirmation require separate approval.

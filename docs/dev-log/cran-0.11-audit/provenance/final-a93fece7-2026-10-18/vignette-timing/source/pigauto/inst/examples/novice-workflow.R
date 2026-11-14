@@ -1,0 +1,6 @@
+traits <- pigauto::read_traits(system.file("extdata", "novice_traits.csv", package = "pigauto"))
+tree <- pigauto::read_tree(system.file("extdata", "novice_tree.nwk", package = "pigauto"))
+pigauto::check_pigauto(traits, tree)
+result <- pigauto::impute(traits, tree)
+completed <- pigauto::completed_data(result)
+pigauto::pigauto_report(result)

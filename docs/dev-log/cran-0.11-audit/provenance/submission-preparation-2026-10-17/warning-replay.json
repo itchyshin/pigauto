@@ -1,0 +1,15 @@
+{
+  "package": "0.11.0",
+  "package_path": "/private/tmp/pigauto-final-closure-20261017/library/pigauto",
+  "testthat": "3.3.2",
+  "not_cran": "UNSET",
+  "force_suggests": "true",
+  "pass": 3195,
+  "fail": 0,
+  "warnings": 161,
+  "skips": 86,
+  "elapsed_seconds": 183.448,
+  "error": {},
+  "archive_sha256": "c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2",
+  "total_elapsed_seconds": 205.56837037499645
+}

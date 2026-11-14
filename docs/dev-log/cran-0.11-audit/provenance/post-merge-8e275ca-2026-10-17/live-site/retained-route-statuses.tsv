@@ -1,0 +1,63 @@
+url	status	final_url	title
+https://itchyshin.github.io/pigauto/404.html	200	https://itchyshin.github.io/pigauto/404.html	Page not found • pigauto
+https://itchyshin.github.io/pigauto/LICENSE-text.html	200	https://itchyshin.github.io/pigauto/LICENSE-text.html	License • pigauto
+https://itchyshin.github.io/pigauto/articles/common-pitfalls.html	200	https://itchyshin.github.io/pigauto/articles/common-pitfalls.html	Common pitfalls / FAQ • pigauto
+https://itchyshin.github.io/pigauto/articles/getting-started.html	200	https://itchyshin.github.io/pigauto/articles/getting-started.html	Getting started with pigauto • pigauto
+https://itchyshin.github.io/pigauto/articles/gnn-architecture.html	200	https://itchyshin.github.io/pigauto/articles/gnn-architecture.html	GNN architecture and the math behind pigauto • pigauto
+https://itchyshin.github.io/pigauto/articles/index.html	200	https://itchyshin.github.io/pigauto/articles/index.html	Articles • pigauto
+https://itchyshin.github.io/pigauto/articles/mixed-types.html	200	https://itchyshin.github.io/pigauto/articles/mixed-types.html	Mixed-Type Trait Imputation • pigauto
+https://itchyshin.github.io/pigauto/articles/multiple-imputation.html	200	https://itchyshin.github.io/pigauto/articles/multiple-imputation.html	Multiple imputation and downstream models • pigauto
+https://itchyshin.github.io/pigauto/articles/tree-uncertainty.html	200	https://itchyshin.github.io/pigauto/articles/tree-uncertainty.html	Posterior-Tree Prediction Sensitivity • pigauto
+https://itchyshin.github.io/pigauto/authors.html	200	https://itchyshin.github.io/pigauto/authors.html	Authors and Citation • pigauto
+https://itchyshin.github.io/pigauto/index.html	200	https://itchyshin.github.io/pigauto/index.html	pigauto: Phylogenetic Imputation via Graph AUTO-encoders • pigauto
+https://itchyshin.github.io/pigauto/news/index.html	200	https://itchyshin.github.io/pigauto/news/index.html	Changelog • pigauto
+https://itchyshin.github.io/pigauto/reference/avonet300.html	200	https://itchyshin.github.io/pigauto/reference/avonet300.html	AVONET morphological and ecological trait data for 300 bird species — avonet300 • pigauto
+https://itchyshin.github.io/pigauto/reference/avonet_full.html	200	https://itchyshin.github.io/pigauto/reference/avonet_full.html	Full AVONET morphological and ecological trait data for 9,993 bird species — avonet_full • pigauto
+https://itchyshin.github.io/pigauto/reference/build_phylo_graph.html	200	https://itchyshin.github.io/pigauto/reference/build_phylo_graph.html	Build a phylogenetic graph representation from a tree — build_phylo_graph • pigauto
+https://itchyshin.github.io/pigauto/reference/calibration_df.html	200	https://itchyshin.github.io/pigauto/reference/calibration_df.html	Compute calibration data for probability predictions — calibration_df • pigauto
+https://itchyshin.github.io/pigauto/reference/check_pigauto.html	200	https://itchyshin.github.io/pigauto/reference/check_pigauto.html	Check whether traits and a tree are ready for pigauto — check_pigauto • pigauto
+https://itchyshin.github.io/pigauto/reference/compare_methods.html	200	https://itchyshin.github.io/pigauto/reference/compare_methods.html	Compare BM baseline and pigauto methods across replicates — compare_methods • pigauto
+https://itchyshin.github.io/pigauto/reference/completed_data.html	200	https://itchyshin.github.io/pigauto/reference/completed_data.html	Extract completed trait data — completed_data • pigauto
+https://itchyshin.github.io/pigauto/reference/confusion_matrix.html	200	https://itchyshin.github.io/pigauto/reference/confusion_matrix.html	Compute a confusion matrix for categorical or binary predictions — confusion_matrix • pigauto
+https://itchyshin.github.io/pigauto/reference/cross_validate.html	200	https://itchyshin.github.io/pigauto/reference/cross_validate.html	k-fold cross-validation for pigauto trait imputation — cross_validate • pigauto
+https://itchyshin.github.io/pigauto/reference/ctmax_sim.html	200	https://itchyshin.github.io/pigauto/reference/ctmax_sim.html	Simulated multi-observation-per-species CTmax data — ctmax_sim • pigauto
+https://itchyshin.github.io/pigauto/reference/evaluate.html	200	https://itchyshin.github.io/pigauto/reference/evaluate.html	Evaluate a fitted pigauto model on its test set — evaluate • pigauto
+https://itchyshin.github.io/pigauto/reference/evaluate_imputation.html	200	https://itchyshin.github.io/pigauto/reference/evaluate_imputation.html	Evaluate imputation performance against known values — evaluate_imputation • pigauto
+https://itchyshin.github.io/pigauto/reference/fit_baseline.html	200	https://itchyshin.github.io/pigauto/reference/fit_baseline.html	Fit the phylogenetic baseline — fit_baseline • pigauto
+https://itchyshin.github.io/pigauto/reference/fit_pigauto.html	200	https://itchyshin.github.io/pigauto/reference/fit_pigauto.html	Fit a pigauto model for trait imputation — fit_pigauto • pigauto
+https://itchyshin.github.io/pigauto/reference/impute.html	200	https://itchyshin.github.io/pigauto/reference/impute.html	Impute missing phylogenetic traits (convenience wrapper) — impute • pigauto
+https://itchyshin.github.io/pigauto/reference/index.html	200	https://itchyshin.github.io/pigauto/reference/index.html	Package index • pigauto
+https://itchyshin.github.io/pigauto/reference/load_pigauto.html	200	https://itchyshin.github.io/pigauto/reference/load_pigauto.html	Load a saved pigauto model — load_pigauto • pigauto
+https://itchyshin.github.io/pigauto/reference/make_missing_splits.html	200	https://itchyshin.github.io/pigauto/reference/make_missing_splits.html	Split cells into train/val/test for imputation evaluation — make_missing_splits • pigauto
+https://itchyshin.github.io/pigauto/reference/mask_missing.html	200	https://itchyshin.github.io/pigauto/reference/mask_missing.html	Create an observed/missing mask matrix — mask_missing • pigauto
+https://itchyshin.github.io/pigauto/reference/multi_impute.html	200	https://itchyshin.github.io/pigauto/reference/multi_impute.html	Generate experimental stochastic completion datasets — multi_impute • pigauto
+https://itchyshin.github.io/pigauto/reference/multi_impute_analysis.html	200	https://itchyshin.github.io/pigauto/reference/multi_impute_analysis.html	Analysis-aware multiple imputation for narrow regression models — multi_impute_analysis • pigauto
+https://itchyshin.github.io/pigauto/reference/multi_impute_trees.html	200	https://itchyshin.github.io/pigauto/reference/multi_impute_trees.html	Posterior-tree prediction sensitivity — multi_impute_trees • pigauto
+https://itchyshin.github.io/pigauto/reference/pigauto_report.html	200	https://itchyshin.github.io/pigauto/reference/pigauto_report.html	Generate an HTML benchmark report from a pigauto fit — pigauto_report • pigauto
+https://itchyshin.github.io/pigauto/reference/plot.pigauto_benchmark.html	200	https://itchyshin.github.io/pigauto/reference/plot.pigauto_benchmark.html	Plot a pigauto benchmark — plot.pigauto_benchmark • pigauto
+https://itchyshin.github.io/pigauto/reference/plot.pigauto_fit.html	200	https://itchyshin.github.io/pigauto/reference/plot.pigauto_fit.html	Plot diagnostics for a fitted pigauto model — plot.pigauto_fit • pigauto
+https://itchyshin.github.io/pigauto/reference/plot.pigauto_pred.html	200	https://itchyshin.github.io/pigauto/reference/plot.pigauto_pred.html	Plot predictions from a pigauto model — plot.pigauto_pred • pigauto
+https://itchyshin.github.io/pigauto/reference/plot.pigauto_result.html	200	https://itchyshin.github.io/pigauto/reference/plot.pigauto_result.html	Plot diagnostics for a pigauto result — plot.pigauto_result • pigauto
+https://itchyshin.github.io/pigauto/reference/plot_comparison.html	200	https://itchyshin.github.io/pigauto/reference/plot_comparison.html	Forest-plot style comparison of benchmark results — plot_comparison • pigauto
+https://itchyshin.github.io/pigauto/reference/plot_history_gg.html	200	https://itchyshin.github.io/pigauto/reference/plot_history_gg.html	Plot training history (ggplot2, deprecated) — plot_history_gg • pigauto
+https://itchyshin.github.io/pigauto/reference/plot_uncertainty.html	200	https://itchyshin.github.io/pigauto/reference/plot_uncertainty.html	Plot uncertainty ribbons for imputed trait values — plot_uncertainty • pigauto
+https://itchyshin.github.io/pigauto/reference/pool_mi.html	200	https://itchyshin.github.io/pigauto/reference/pool_mi.html	Pool downstream model fits across multiple imputations (Rubin's rules) — pool_mi • pigauto
+https://itchyshin.github.io/pigauto/reference/predict.pigauto_fit.html	200	https://itchyshin.github.io/pigauto/reference/predict.pigauto_fit.html	Impute missing traits using a fitted pigauto model — predict.pigauto_fit • pigauto
+https://itchyshin.github.io/pigauto/reference/preprocess_traits.html	200	https://itchyshin.github.io/pigauto/reference/preprocess_traits.html	Preprocess trait data: align to tree, encode into latent space — preprocess_traits • pigauto
+https://itchyshin.github.io/pigauto/reference/print.pigauto_check.html	200	https://itchyshin.github.io/pigauto/reference/print.pigauto_check.html	Print a pigauto input check — print.pigauto_check • pigauto
+https://itchyshin.github.io/pigauto/reference/print.summary_pigauto_result.html	200	https://itchyshin.github.io/pigauto/reference/print.summary_pigauto_result.html	Print a pigauto result summary — print.summary_pigauto_result • pigauto
+https://itchyshin.github.io/pigauto/reference/pull_gbif_centroids.html	200	https://itchyshin.github.io/pigauto/reference/pull_gbif_centroids.html	Fetch species range-centroid covariates from GBIF — pull_gbif_centroids • pigauto
+https://itchyshin.github.io/pigauto/reference/pull_worldclim_per_species.html	200	https://itchyshin.github.io/pigauto/reference/pull_worldclim_per_species.html	Fetch per-species bioclim covariates from WorldClim v2.1 — pull_worldclim_per_species • pigauto
+https://itchyshin.github.io/pigauto/reference/read_traits.html	200	https://itchyshin.github.io/pigauto/reference/read_traits.html	Read trait data from a CSV file or data frame — read_traits • pigauto
+https://itchyshin.github.io/pigauto/reference/read_tree.html	200	https://itchyshin.github.io/pigauto/reference/read_tree.html	Read a phylogenetic tree from a file — read_tree • pigauto
+https://itchyshin.github.io/pigauto/reference/save_pigauto.html	200	https://itchyshin.github.io/pigauto/reference/save_pigauto.html	Save a fitted pigauto model — save_pigauto • pigauto
+https://itchyshin.github.io/pigauto/reference/simulate_benchmark.html	200	https://itchyshin.github.io/pigauto/reference/simulate_benchmark.html	Run a simulation benchmark for pigauto — simulate_benchmark • pigauto
+https://itchyshin.github.io/pigauto/reference/simulate_non_bm.html	200	https://itchyshin.github.io/pigauto/reference/simulate_non_bm.html	Simulate non-BM trait data for benchmarking — simulate_non_bm • pigauto
+https://itchyshin.github.io/pigauto/reference/suggest_next_observation.html	200	https://itchyshin.github.io/pigauto/reference/suggest_next_observation.html	Suggest model-based candidate observations — suggest_next_observation • pigauto
+https://itchyshin.github.io/pigauto/reference/summary.pigauto_fit.html	200	https://itchyshin.github.io/pigauto/reference/summary.pigauto_fit.html	Summary method for pigauto_fit objects — summary.pigauto_fit • pigauto
+https://itchyshin.github.io/pigauto/reference/summary.pigauto_result.html	200	https://itchyshin.github.io/pigauto/reference/summary.pigauto_result.html	Summarise a pigauto result — summary.pigauto_result • pigauto
+https://itchyshin.github.io/pigauto/reference/tree300.html	200	https://itchyshin.github.io/pigauto/reference/tree300.html	Example bird phylogeny for the 300 species in avonet300 — tree300 • pigauto
+https://itchyshin.github.io/pigauto/reference/tree_full.html	200	https://itchyshin.github.io/pigauto/reference/tree_full.html	Example bird phylogeny for the species in avonet_full — tree_full • pigauto
+https://itchyshin.github.io/pigauto/reference/trees300.html	200	https://itchyshin.github.io/pigauto/reference/trees300.html	50 posterior phylogenies for the 300 species in avonet300 — trees300 • pigauto
+https://itchyshin.github.io/pigauto/reference/with_imputations.html	200	https://itchyshin.github.io/pigauto/reference/with_imputations.html	Fit a downstream model on every imputed dataset — with_imputations • pigauto
+https://itchyshin.github.io/pigauto/validation_suite.html	200	https://itchyshin.github.io/pigauto/validation_suite.html	validation_suite — historical development page withdrawn

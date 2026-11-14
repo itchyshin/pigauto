@@ -1,0 +1,4 @@
+Traceback (most recent call last):
+  File "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/ancillary/spelling-review/unknown-control/planted-unknown-review.py", line 19, in <module>
+    assert not unknown,unknown
+AssertionError: ['definately']

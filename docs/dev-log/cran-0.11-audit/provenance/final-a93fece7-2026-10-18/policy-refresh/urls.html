@@ -1,0 +1,140 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!-- Created by GNU Texinfo 6.8, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>CRAN URL checks</title>
+
+<meta name="description" content="CRAN URL checks">
+<meta name="keywords" content="CRAN URL checks">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="texi2any">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<style type="text/css">
+<!--
+a.copiable-anchor {visibility: hidden; text-decoration: none; line-height: 0em}
+a.summary-letter {text-decoration: none}
+blockquote.indentedblock {margin-right: 0em}
+div.display {margin-left: 3.2em}
+div.example {margin-left: 3.2em}
+kbd {font-style: oblique}
+pre.display {font-family: inherit}
+pre.format {font-family: inherit}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+span.nolinebreak {white-space: nowrap}
+span.roman {font-family: initial; font-weight: normal}
+span.sansserif {font-family: sans-serif; font-weight: normal}
+span:hover a.copiable-anchor {visibility: visible}
+ul.no-bullet {list-style: none}
+body {margin-left: 5%; margin-right: 5%;}
+
+H1 {             
+    background: white;
+    color: rgb(25%, 25%, 25%);
+    font-family: monospace;
+    font-size: xx-large;
+    text-align: center
+}
+
+H2 {
+    background: white;
+    color: rgb(40%, 40%, 40%);
+    font-family: monospace;
+    font-size: x-large;
+}
+
+ul {
+    margin-top: 0.25ex;
+    margin-bottom: 0.25ex;
+    padding-left: 1em;
+}
+li {
+    margin-top: 0.6ex;
+    margin-bottom: 0.25ex;
+}
+p {
+    margin-top: 0.6ex;
+    margin-bottom: 1.2ex;
+}
+
+-->
+</style>
+
+
+</head>
+
+<body lang="en">
+<h1 class="settitle" align="center">CRAN URL checks</h1>
+
+
+<p>The CRAN submission checks run by <code>R CMD check --as-cran</code> check
+the availability of URLs in files including <samp>DESCRIPTION</samp>,
+<samp>CITATION</samp>, <samp>NEWS.Rd</samp>, <samp>NEWS.md</samp>, <samp>README.md</samp>, and
+the <samp>.Rd</samp> help pages and HTML files in <samp>inst/doc</samp>.  These
+notes explain the checks.
+</p>
+<p>They are only done if the build of R in use supports a suitably recent
+version of <code>libcurl</code>: most should.
+</p>
+<ul>
+<li> <code>\url</code> markup should only be used for always-active URLs.  Examples
+of the use of e.g. <code>localhost</code> should use <code>\samp</code> markup.
+
+</li><li> The checks done are equivalent to using <code>curl -I -L</code> on the command
+line (where <code>curl</code> is available).  They may give different results
+from accessing the URL in your browser.  Possible reasons include:
+
+<ul>
+<li> Some websites do not allow &lsquo;<samp>HEAD</samp>&rsquo; requests.  That should be
+reported with a <code>405</code> status value, and such sites are not reported
+in the checks.  But some are mis-configured, notably
+&lsquo;<samp>http://www.sciencedirect.com</samp>&rsquo; (which is special-cased in the checks).
+
+</li><li> It is possible that a site relies on cookies you have saved in your
+browser or is insecure and you have saved an exception.  Try a vanilla
+browser session, another browser or even another machine.
+
+</li><li> If there are issues with verifying the identity of the site, the checks
+will report if the site is accessible without verification.  The checks
+use the root certificates which <code>libcurl</code> was compiled to use: on
+most systems these are from the OS (by default on Windows those shipped
+with the <code>libcurl</code> binaries are used).  Browsers may use the OS
+versions, or may use their own copies which can explain discrepancies.
+
+</li><li> HTTP sites reporting status codes <code>403</code> and <code>503</code> may work in
+a browser, although most do not. This has even been seen for status code
+<code>404</code>.
+</li></ul>
+
+<p>If you find one of the exceptions, explain your findings in the submission.
+</p>
+</li><li> There may be sites which are available to some users but not to all, so
+may work for you but not the CRAN maintainers.  Such sites are best
+avoided, but may be used in a <samp>.Rd</samp> file provided this is explained
+in the file and in the submission.
+
+</li><li> A surprisingly large number of websites use redirection and the issues
+may apply to a site redirected to.  You can see the redirection
+history using <code>curlGetHeaders(&quot;http://www.mywebsite.org/&quot;)</code>.  Where
+redirection is permanent you should use the redirected URL (see
+<a href="https://tools.ietf.org/html/rfc7231#section-6.4.2">RFC 7231</a>).
+
+<p>One common issue is the redirection of <code>http://</code> URLs to
+<code>https://</code> URLs, or even <em>vice versa</em>. 
+</p>
+</li><li> The timeout allowed for making a connection to a site is 60 seconds.
+This is normally more than adequate and avoids long delays for sites
+which will never respond.  But sometimes the <abbr>DNS</abbr> lookup for a
+rarely-used site on a slow network takes longer than that, so if a site
+is not resolved it is worth re-trying 15 minutes later.
+
+</li></ul>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,2 @@
+exit=0
+makeindex=C:\Users\RUNNER~1\AppData\Roaming\TinyTeX\bin\windows\MAKEIN~1.EXE

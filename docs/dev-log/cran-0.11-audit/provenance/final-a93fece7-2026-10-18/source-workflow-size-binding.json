@@ -1,0 +1,19 @@
+{
+  "artifact_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "checker_commit": "5e1014afadbae91dd2883d3a074e3e9d253b33cd",
+  "synthetic_commit": "999645fae22107d838e73e90e33996c025f2575a",
+  "synthetic_parents": [
+    "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+    "5e1014afadbae91dd2883d3a074e3e9d253b33cd"
+  ],
+  "workflow_sha256": "72872e09c592332f26a68bbd2f97ebc72a85b4bfc95ab4c647f80f5ef9a3a0c4",
+  "workflow_matches_reviewed_checker": true,
+  "sizes": {
+    "data": 2313444,
+    "inst/doc": 315687,
+    "inst/extdata": 1180321,
+    "regular_uncompressed_bytes": 7151058,
+    "compressed_bytes": 5137837
+  }
+}

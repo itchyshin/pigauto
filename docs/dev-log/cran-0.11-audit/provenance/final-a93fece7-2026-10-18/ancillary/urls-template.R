@@ -1,0 +1,7 @@
+args <- commandArgs(TRUE); root <- normalizePath(args[1]); setwd(file.path(root,"exact-source/pigauto"))
+print(packageVersion("urlchecker")); print(curl::curl_version()); print(sessionInfo())
+result <- urlchecker::url_check(parallel=TRUE,progress=FALSE); saveRDS(result,file.path(root,"url-results.rds")); print(result)
+d <- as.data.frame(result)
+for(n in names(d)) if(is.list(d[[n]])) d[[n]] <- vapply(d[[n]],function(z)paste(z,collapse="; "),character(1))
+write.csv(d,file.path(root,"url-results-flat.csv"),row.names=FALSE)
+cat("URL_CHECK_AND_FLAT_EXPORT_COMPLETED\n")

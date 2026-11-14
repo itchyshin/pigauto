@@ -1,0 +1,23 @@
+APPROVAL REQUIRED GATES:G7
+    CHECK: python3 /private/tmp/pigauto-final-closure-20261017/successor-b2e6054/verify-successor.py preparation
+    EXPECT: SUCCESSOR_EXACT_PREPARATION_PROOF_VERIFIED
+    CWD: /private/tmp/pigauto-pr236-validator-20261017
+    SHELL: /bin/sh
+    PATH: /Applications/ChatGPT.app/Contents/Resources/codex-cli/codex-path:/Users/z3437171/.codex/tmp/arg0/codex-arg0emta88:/Users/z3437171/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override:/Users/z3437171/.antigravity-ide/antigravity-ide/bin:/Users/z3437171/.antigravity/antigravity/bin:/Users/z3437171/miniconda3/bin:/Users/z3437171/miniconda3/condabin:/Users/z3437171/.pyenv/shims:/Users/z3437171/.juliaup/bin:/opt/local/bin:/opt/local/sbin:/opt/homebrew/bin:/opt/homebrew/sbin:/Library/Frameworks/Python.framework/Versions/3.13/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd...
+    APPROVED: /private/tmp/pigauto-final-closure-20261017/unlazy-approvals/a910e3697e2d35a7060b20f75ebbe73bdbb43cc8b7fba69ace3114c6bdf2a158.json
+APPROVAL REQUIRED GATES:G8
+    CHECK: python3 /private/tmp/pigauto-final-closure-20261017/successor-b2e6054/verify-successor.py panel
+    EXPECT: SUCCESSOR_FINAL_PANEL_AND_EXACT_PROOF_VERIFIED
+    CWD: /private/tmp/pigauto-pr236-validator-20261017
+    SHELL: /bin/sh
+    PATH: /Applications/ChatGPT.app/Contents/Resources/codex-cli/codex-path:/Users/z3437171/.codex/tmp/arg0/codex-arg0emta88:/Users/z3437171/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override:/Users/z3437171/.antigravity-ide/antigravity-ide/bin:/Users/z3437171/.antigravity/antigravity/bin:/Users/z3437171/miniconda3/bin:/Users/z3437171/miniconda3/condabin:/Users/z3437171/.pyenv/shims:/Users/z3437171/.juliaup/bin:/opt/local/bin:/opt/local/sbin:/opt/homebrew/bin:/opt/homebrew/sbin:/Library/Frameworks/Python.framework/Versions/3.13/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd...
+    APPROVED: /private/tmp/pigauto-final-closure-20261017/unlazy-approvals/b6512dee63914883c2971192b647eb61ef75b5bdbacf2becf0bd5895fe361764.json
+  RUN  GATES:G7 shell=/bin/sh cwd=/private/tmp/pigauto-pr236-validator-20261017 PATH=/Applications/ChatGPT.app/Contents/Resources/codex-cli/codex-path:/Users/z3437171/.codex/tmp/arg0/codex-arg0emta88:/Users/z3437171/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override:/Users/z3437171/.antigravity-ide/antigravity-ide/bin:/Users/z3437171/.antigravity/antigravity/bin:/Users/z3437171/miniconda3/bin:/Users/z3437171/miniconda3/condabin:/Users/z3437171/.pyenv/shims:/Users/z3437171/.juliaup/bin:/opt/local/bin:/opt/local/sbin:/opt/homebrew/bin:/opt/homebrew/sbin:/Library/Frameworks/Python.framework/Versions/3.13/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd...
+  RUN  GATES:G8 shell=/bin/sh cwd=/private/tmp/pigauto-pr236-validator-20261017 PATH=/Applications/ChatGPT.app/Contents/Resources/codex-cli/codex-path:/Users/z3437171/.codex/tmp/arg0/codex-arg0emta88:/Users/z3437171/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override:/Users/z3437171/.antigravity-ide/antigravity-ide/bin:/Users/z3437171/.antigravity/antigravity/bin:/Users/z3437171/miniconda3/bin:/Users/z3437171/miniconda3/condabin:/Users/z3437171/.pyenv/shims:/Users/z3437171/.juliaup/bin:/opt/local/bin:/opt/local/sbin:/opt/homebrew/bin:/opt/homebrew/sbin:/Library/Frameworks/Python.framework/Versions/3.13/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd...
+  PASS GATES:G7: Clean merged-source frozen artifact passes all corresponding exact-artifact gates.
+       exit=0; EXPECT=matched; output=SUCCESSOR_EXACT_PREPARATION_PROOF_VERIFIED
+  PASS GATES:G8: Fresh independent closure, timing disposition and submission-ready verification pass.
+       exit=0; EXPECT=matched; output=SUCCESSOR_FINAL_PANEL_AND_EXACT_PROOF_VERIFIED
+GATES.md: 10 gates
+UNMET: 1 (met: 9, reran: 2, previously met reverified: 2)
+  GATES:G9

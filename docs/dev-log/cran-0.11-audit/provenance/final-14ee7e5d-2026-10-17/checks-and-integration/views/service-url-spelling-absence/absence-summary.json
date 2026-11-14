@@ -1,0 +1,10 @@
+{
+  "pass": 60,
+  "fail": 0,
+  "warn": 0,
+  "skip": 8,
+  "files": ["test-gbif-centroids.R", "test-worldclim-covariates.R"],
+  "not_cran": "UNSET",
+  "rgbif": false,
+  "terra": false
+}

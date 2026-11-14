@@ -1,0 +1,47 @@
+[
+  {
+    "key": "cran_package",
+    "url": "https://cran.r-project.org/web/packages/pigauto/index.html",
+    "status": 200,
+    "sha256": "83f0c766ffaa592de1eec4bdb0b8e7b814e25a750089afc57f4110e6168227a2",
+    "bytes": 11826,
+    "path": "/private/tmp/pigauto-final-closure-20261017/cran_package.html"
+  },
+  {
+    "key": "cran_archive",
+    "url": "https://cran.r-project.org/src/contrib/Archive/pigauto/",
+    "error": "HTTP Error 404: Not Found"
+  },
+  {
+    "key": "cran_packages",
+    "url": "https://cran.r-project.org/src/contrib/PACKAGES.rds",
+    "status": 200,
+    "sha256": "316b92292e5691996dfd04732a74c330314cc1c66bf496e46a88832cd637b551",
+    "bytes": 1308216,
+    "path": "/private/tmp/pigauto-final-closure-20261017/cran_packages.rds"
+  },
+  {
+    "key": "cran_policy",
+    "url": "https://cran.r-project.org/web/packages/policies.html",
+    "status": 200,
+    "sha256": "df82e90cbc5bbd1623cefe6d4a591dc127cbf00af01e086ce10dc2e35295fffc",
+    "bytes": 30860,
+    "path": "/private/tmp/pigauto-final-closure-20261017/cran_policy.html"
+  },
+  {
+    "key": "cran_checklist",
+    "url": "https://cran.r-project.org/web/packages/submission_checklist.html",
+    "status": 200,
+    "sha256": "fa78a8c5d9c6b37c91e42a49f2ad225b6dd46602471f46dc3b475ca1274dc955",
+    "bytes": 6210,
+    "path": "/private/tmp/pigauto-final-closure-20261017/cran_checklist.html"
+  },
+  {
+    "key": "cran_urls",
+    "url": "https://cran.r-project.org/web/packages/URL_checks.html",
+    "status": 200,
+    "sha256": "319d3b53bd3d317766e8062f5d420ec1f107d81c97b67a300b3061d0c94efc67",
+    "bytes": 5177,
+    "path": "/private/tmp/pigauto-final-closure-20261017/cran_urls.html"
+  }
+]

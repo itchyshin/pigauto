@@ -1,0 +1,32 @@
+{
+  "retrieved_utc": "2026-10-18T07:10:00.216384+00:00",
+  "records": [
+    {
+      "id": 12123486112,
+      "name": "frozen-a93fece7-ubuntu-latest-release",
+      "server_digest": "sha256:f0775c24838f354966e234282c79d6a9b4241e5631dec5bc09f4309dd5e39359",
+      "local_sha256": "f0775c24838f354966e234282c79d6a9b4241e5631dec5bc09f4309dd5e39359",
+      "size_bytes": 13410742,
+      "run": 39091958419,
+      "head_sha": "5e1014afadbae91dd2883d3a074e3e9d253b33cd"
+    },
+    {
+      "id": 12122993608,
+      "name": "frozen-a93fece7-windows-latest-release",
+      "server_digest": "sha256:16189189151868861a661fba754b20262f85df3c8ac755c1b0da273562f63d3f",
+      "local_sha256": "16189189151868861a661fba754b20262f85df3c8ac755c1b0da273562f63d3f",
+      "size_bytes": 13403675,
+      "run": 39091958419,
+      "head_sha": "5e1014afadbae91dd2883d3a074e3e9d253b33cd"
+    },
+    {
+      "id": 12122903627,
+      "name": "frozen-a93fece7-windows-latest-devel",
+      "server_digest": "sha256:e8d024ad42c56a90174df8c293512a174c0e6dc5de9b14d34c03626d5efde3a8",
+      "local_sha256": "e8d024ad42c56a90174df8c293512a174c0e6dc5de9b14d34c03626d5efde3a8",
+      "size_bytes": 13398893,
+      "run": 39091958419,
+      "head_sha": "5e1014afadbae91dd2883d3a074e3e9d253b33cd"
+    }
+  ]
+}

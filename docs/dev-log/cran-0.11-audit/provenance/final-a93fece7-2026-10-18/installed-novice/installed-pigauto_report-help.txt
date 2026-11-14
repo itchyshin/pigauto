@@ -1,0 +1,53 @@
+GenerataHTMimputatioreporfropigautfi
+Descriptio:
+
+    ProduceaHTMfilwitinteractivchart loadinCharj
+    froitpubliCD).Fofitcreatewitthdefaul gn =
+    FALS’,threpordescribebaselinonlimputatio.Fofit
+    createwit gn =TRU’,ialscomparethGNagainsth
+    phylogenetibaselinanincludetraininhistor.Petrai
+    metric,gatvalue,anheloudiagnosticonformacoverag
+    arincludewheavailabl.
+Usag:
+
+    pigauto_repor(
+      fi,
+      dat =NUL,
+      split =NUL,
+      output_pat = pigauto_reporhtm",
+      titl = pigautImputatioRepor",
+      ope =TRU
+     )
+     Argument:
+
+    fi: pigauto_fi’objec o pigauto_resul’fro imput’).
+
+   dat:Optiona pigauto_dat’objec. Extracteautomaticallwhe
+          fi’i pigauto_resul’. Whesupplieimusmatcth
+         fi specieantrait).
+
+ split:Optionasplitobjecfro make_missing_split’.Extracte
+         automaticallwhe fi’i pigauto_resul’.Whesupplie
+         imusmatcthfi.
+output_pat:Characteolengt. FilpatfothHTMrepor
+          defaul ‘pigauto_reporhtm"’ithworkindirector).
+
+  titl:Characteolengt. Reportitl HTMescapeowrit).
+
+   ope:Logicaolengt. Opethreporibrowsewhedon
+          defaul TRU’).
+Valu:
+
+    Thoutpupat invisibl).
+Example:
+
+    datavonet30,tree30)
+    tre <-ap:keetitree30,tree30tilabeseq_le30)])
+    trait <-avonet30matctretilabe,avonet30Species_Ke),
+                         (Mas", WinLengt"),dro =FALS]
+    rownametrait) <-tretilabe
+    traitMasseq_le3)] <-NA_real
+    resul <-imputtrait,tre,epoch =5,verbos =FALS)
+    pigauto_reporresul,output_pat =tempfilfileex = "htm"),
+                   ope =FALS)
+    

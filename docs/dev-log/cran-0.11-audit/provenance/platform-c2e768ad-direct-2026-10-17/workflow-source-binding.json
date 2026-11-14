@@ -1,0 +1,19 @@
+{
+  "html_url": "https://github.com/itchyshin/pigauto/commit/f78a42c4329e3249ed91ed6bb54ab4c39a4da8b8",
+  "parents": [
+    "780c08470b263cc26b4139c711a5c144fd29389c",
+    "a5500712b771cb4e34401fb5d9b7681a13219cf4"
+  ],
+  "sha": "f78a42c4329e3249ed91ed6bb54ab4c39a4da8b8",
+  "tree": "7c501eacea3645ede1d7649d8b2e76c3af44246d",
+  "checker_diff_exit": 0,
+  "checker_files_sha256": {
+    ".github/workflows/frozen-tarball-check.yaml": "bfbb2f61b1f5d84a108d1bdfbeff559e23cdad3c652891fefdad6b9ae346fa09",
+    "script/cran-0.11-platform/README.md": "3d8463b4cc6ee482eb856a527c22db0b50523caae910174d6d9da38bd34ced29",
+    "script/cran-0.11-platform/artifact.py": "3ebfc54952f8bb64c64d39470a623cffe6cfb53a48a391edc942c67cebcab23c",
+    "script/cran-0.11-platform/check.R": "1e641c87e699fba2846aaa9c8958fa77348ecd22221b5ed08e1ccf31c2de9fb0",
+    "script/cran-0.11-platform/manual-tools.R": "02d1aeca3510adba51053222ed849fe549f0611382b02a4ea9aaacc736de646e",
+    "script/cran-0.11-platform/test-dependencies.R": "1cbf5323dee3078339f50f95ef609060a92f0dba907d42c3d2a3aa7ee8e3ab91",
+    "script/cran-0.11-platform/verify_results.py": "bb7ae2e6cb54aa8314ad874e6e2bd1193fe1e295190a0e6ee1e1c28f95b2ce97"
+  }
+}

@@ -1,0 +1,200 @@
+{
+  "artifact_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "parser_controls": [
+    "PASS",
+    "PASS",
+    "PASS",
+    "REFUSED_EXPECTED",
+    "REFUSED_EXPECTED",
+    "REFUSED_EXPECTED",
+    "REFUSED_EXPECTED",
+    "REFUSED_EXPECTED",
+    "REFUSED_EXPECTED",
+    "REFUSED_EXPECTED"
+  ],
+  "platforms": [
+    {
+      "platform": "macos-arm64",
+      "artifact_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+      "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+      "status": "OK",
+      "native_elapsed_seconds": 452.674129962921,
+      "stage_timings": {
+        "examples": {
+          "raw_check_line": "* checking examples ... [9s/10s] OK",
+          "timing_format": "cpu_elapsed_seconds",
+          "cpu_seconds": 9.0,
+          "elapsed_seconds": 10.0
+        },
+        "tests": {
+          "raw_check_line": "* checking tests ... [204s/256s] OK",
+          "timing_format": "cpu_elapsed_seconds",
+          "cpu_seconds": 204.0,
+          "elapsed_seconds": 256.0
+        },
+        "vignettes": {
+          "raw_check_line": "* checking re-building of vignette outputs ... [12s/15s] OK",
+          "timing_format": "cpu_elapsed_seconds",
+          "cpu_seconds": 12.0,
+          "elapsed_seconds": 15.0
+        },
+        "PDF": {
+          "raw_check_line": "* checking PDF version of manual ... [6s/7s] OK",
+          "timing_format": "cpu_elapsed_seconds",
+          "cpu_seconds": 6.0,
+          "elapsed_seconds": 7.0
+        },
+        "HTML": {
+          "raw_check_line": "* checking HTML version of manual ... [3s/4s] OK",
+          "timing_format": "cpu_elapsed_seconds",
+          "cpu_seconds": 3.0,
+          "elapsed_seconds": 4.0
+        }
+      },
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "declared_dependencies_available": 29,
+      "check_log_sha256": "a031c1eea52c73ebb6c24289c4fc250a831979b35d3c8d143bb41e3f4316bba4",
+      "native_rout_sha256": "f28f4671ec2cb4dc9f6ef10a6a4005fa1a87017a289e62f895d0ab77314635df"
+    },
+    {
+      "platform": "ubuntu-latest-release",
+      "artifact_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+      "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+      "status": "OK",
+      "native_elapsed_seconds": 534.689439296722,
+      "stage_timings": {
+        "examples": {
+          "raw_check_line": "* checking examples ... [17s/17s] OK",
+          "timing_format": "cpu_elapsed_seconds",
+          "cpu_seconds": 17.0,
+          "elapsed_seconds": 17.0
+        },
+        "tests": {
+          "raw_check_line": "* checking tests ... [333s/333s] OK",
+          "timing_format": "cpu_elapsed_seconds",
+          "cpu_seconds": 333.0,
+          "elapsed_seconds": 333.0
+        },
+        "vignettes": {
+          "raw_check_line": "* checking re-building of vignette outputs ... [19s/19s] OK",
+          "timing_format": "cpu_elapsed_seconds",
+          "cpu_seconds": 19.0,
+          "elapsed_seconds": 19.0
+        },
+        "PDF": {
+          "raw_check_line": "* checking PDF version of manual ... [3s/3s] OK",
+          "timing_format": "cpu_elapsed_seconds",
+          "cpu_seconds": 3.0,
+          "elapsed_seconds": 3.0
+        },
+        "HTML": {
+          "raw_check_line": "* checking HTML version of manual ... [4s/4s] OK",
+          "timing_format": "cpu_elapsed_seconds",
+          "cpu_seconds": 4.0,
+          "elapsed_seconds": 4.0
+        }
+      },
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "declared_dependencies_available": 29,
+      "check_log_sha256": "468a652fe6124cf56a4c6cceac8c01f22ba845da76dd2ed2948c4fbf649231af",
+      "native_rout_sha256": "eb04aa0e2b885a44da064060d6635795a969fad8b425ce4138aee75a88d9a45a"
+    },
+    {
+      "platform": "windows-latest-devel",
+      "artifact_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+      "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+      "status": "OK",
+      "native_elapsed_seconds": 516.487149000168,
+      "stage_timings": {
+        "examples": {
+          "raw_check_line": "* checking examples ... [16s] OK",
+          "timing_format": "single_reported_seconds",
+          "reported_seconds": 16.0
+        },
+        "tests": {
+          "raw_check_line": "* checking tests ... [324s] OK",
+          "timing_format": "single_reported_seconds",
+          "reported_seconds": 324.0
+        },
+        "vignettes": {
+          "raw_check_line": "* checking re-building of vignette outputs ... [17s] OK",
+          "timing_format": "single_reported_seconds",
+          "reported_seconds": 17.0
+        },
+        "PDF": {
+          "raw_check_line": "* checking PDF version of manual ... [3s] OK",
+          "timing_format": "single_reported_seconds",
+          "reported_seconds": 3.0
+        },
+        "HTML": {
+          "raw_check_line": "* checking HTML version of manual ... [3s] OK",
+          "timing_format": "single_reported_seconds",
+          "reported_seconds": 3.0
+        }
+      },
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "declared_dependencies_available": 29,
+      "check_log_sha256": "4467940f612baaaf1d7e192bfa79376c018b64577157f80ef138e788925235e1",
+      "native_rout_sha256": "4175390b1a37ea09e3da27b1160fe3bdcc316da7062fe812b2c43cc49a979617"
+    },
+    {
+      "platform": "windows-latest-release",
+      "artifact_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+      "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+      "status": "OK",
+      "native_elapsed_seconds": 627.140662193298,
+      "stage_timings": {
+        "examples": {
+          "raw_check_line": "* checking examples ... [16s] OK",
+          "timing_format": "single_reported_seconds",
+          "reported_seconds": 16.0
+        },
+        "tests": {
+          "raw_check_line": "* checking tests ... [406s] OK",
+          "timing_format": "single_reported_seconds",
+          "reported_seconds": 406.0
+        },
+        "vignettes": {
+          "raw_check_line": "* checking re-building of vignette outputs ... [20s] OK",
+          "timing_format": "single_reported_seconds",
+          "reported_seconds": 20.0
+        },
+        "PDF": {
+          "raw_check_line": "* checking PDF version of manual ... [4s] OK",
+          "timing_format": "single_reported_seconds",
+          "reported_seconds": 4.0
+        },
+        "HTML": {
+          "raw_check_line": "* checking HTML version of manual ... [12s] OK",
+          "timing_format": "single_reported_seconds",
+          "reported_seconds": 12.0
+        }
+      },
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "declared_dependencies_available": 29,
+      "check_log_sha256": "96b6dd43245abb3149f7c83e6862f396c076ae8d0e01f1a4cc9f096a840b74fb",
+      "native_rout_sha256": "eb28252632f338b2bc8b4ba043c595bdf4c1490aca3f64004b63b5c8e303a92c"
+    }
+  ],
+  "scope": "Original gzip native checks; rounded stage pairs preserve CPU and elapsed separately; single reported seconds are not assigned a CPU/elapsed interpretation. Separate warning replays excluded from native duration."
+}

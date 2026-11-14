@@ -1,0 +1,3 @@
+Error in packageVersion("testthat") : there is no package called ‘testthat’
+Calls: stopifnot -> packageVersion
+Execution halted

@@ -1,0 +1,9 @@
+{
+  "source_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636",
+  "source_path": "/Users/z3437171/.codex/worktrees/cran-011-final-artifact/pigauto",
+  "clean_worktree": true,
+  "status": "",
+  "checked_utc": "2026-10-17T23:54:19.784231+00:00",
+  "command": "env -u NOT_CRAN OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 VECLIB_MAXIMUM_THREADS=1 R CMD build /Users/z3437171/.codex/worktrees/cran-011-final-artifact/pigauto",
+  "estimated_build_and_local_check_minutes": "10-20"
+}

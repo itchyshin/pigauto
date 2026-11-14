@@ -1,0 +1,10 @@
+{
+  "source": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/pigauto_0.11.0.tar.gz",
+  "persistent_copy": "/Users/z3437171/.codex/artifacts/pigauto-cran-0.11.0/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/pigauto_0.11.0.tar.gz",
+  "sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+  "size_bytes": 5137648,
+  "mode": "0444",
+  "source_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636",
+  "copied_utc": "2026-10-18T00:49:36.007279+00:00",
+  "scope": "Byte-identical durable retention of the one frozen candidate; validation still pending, no submission or release publication"
+}

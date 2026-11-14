@@ -1,0 +1,2 @@
+exit=0
+makeindex=/home/runner/.TinyTeX/bin/x86_64-linux/makeindex

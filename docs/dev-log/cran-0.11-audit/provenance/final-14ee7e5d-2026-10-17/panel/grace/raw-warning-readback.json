@@ -1,0 +1,85 @@
+{
+  "scope": "Fresh RDS decoding only; no test/fits or native rerun",
+  "records": [
+    {
+      "cell": "local-macos",
+      "warnings": 161,
+      "skips": 86,
+      "problems": 0,
+      "identity_and_caller_contract": "PASS",
+      "categories": {
+        "small_validation": 119,
+        "undefined_constant_correlation": 9,
+        "constant_matched_trait": 4,
+        "few_tree_draws": 5,
+        "covariates_joint_baseline": 5,
+        "covariates_gnn_off": 3,
+        "imbalanced_ordinal": 12,
+        "signal_gate_fallback": 1,
+        "conformal_sample_limit": 2,
+        "species_dropped": 1
+      },
+      "rds_sha256": "dfa186d174e78fa3052c9ae238456285bd0a17ec1dd10c2065a64c655283faa8"
+    },
+    {
+      "cell": "windows-latest-release",
+      "warnings": 161,
+      "skips": 86,
+      "problems": 0,
+      "identity_and_caller_contract": "PASS",
+      "categories": {
+        "small_validation": 119,
+        "undefined_constant_correlation": 9,
+        "constant_matched_trait": 4,
+        "few_tree_draws": 5,
+        "covariates_joint_baseline": 5,
+        "covariates_gnn_off": 3,
+        "imbalanced_ordinal": 12,
+        "signal_gate_fallback": 1,
+        "conformal_sample_limit": 2,
+        "species_dropped": 1
+      },
+      "rds_sha256": "5d9be35d0aa03427cb904d7de878b003122c353194fc3af45849c819480bcdd7"
+    },
+    {
+      "cell": "windows-latest-devel",
+      "warnings": 161,
+      "skips": 86,
+      "problems": 0,
+      "identity_and_caller_contract": "PASS",
+      "categories": {
+        "small_validation": 119,
+        "undefined_constant_correlation": 9,
+        "constant_matched_trait": 4,
+        "few_tree_draws": 5,
+        "covariates_joint_baseline": 5,
+        "covariates_gnn_off": 3,
+        "imbalanced_ordinal": 12,
+        "signal_gate_fallback": 1,
+        "conformal_sample_limit": 2,
+        "species_dropped": 1
+      },
+      "rds_sha256": "a63c8ae79336b17c5c8a0ad3bcf4fa8541eac91b4c3e0cfa048ff2484779689a"
+    },
+    {
+      "cell": "ubuntu-latest-release",
+      "warnings": 161,
+      "skips": 86,
+      "problems": 0,
+      "identity_and_caller_contract": "PASS",
+      "categories": {
+        "small_validation": 119,
+        "undefined_constant_correlation": 9,
+        "constant_matched_trait": 4,
+        "few_tree_draws": 5,
+        "covariates_joint_baseline": 5,
+        "covariates_gnn_off": 3,
+        "imbalanced_ordinal": 12,
+        "signal_gate_fallback": 1,
+        "conformal_sample_limit": 2,
+        "species_dropped": 1
+      },
+      "rds_sha256": "cf4618a25e9f33b521ac27fffdad6377bb57b4a80fdf55b42cab5d7ac3d1961a"
+    }
+  ]
+}

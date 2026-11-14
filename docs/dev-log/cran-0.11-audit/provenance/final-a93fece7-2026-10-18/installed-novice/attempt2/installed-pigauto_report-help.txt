@@ -1,0 +1,59 @@
+Generate an HTML imputation report from a pigauto fit
+
+Description:
+
+     Produces an HTML file with interactive charts (loading Chart.js
+     from its public CDN). For fits created with the default ‘gnn =
+     FALSE’, the report describes baseline-only imputation. For fits
+     created with ‘gnn = TRUE’, it also compares the GNN against the
+     phylogenetic baseline and includes training history. Per-trait
+     metrics, gate values, and held-out diagnostic conformal coverage
+     are included when available.
+
+Usage:
+
+     pigauto_report(
+       fit,
+       data = NULL,
+       splits = NULL,
+       output_path = "pigauto_report.html",
+       title = "pigauto Imputation Report",
+       open = TRUE
+     )
+     
+Arguments:
+
+     fit: A ‘pigauto_fit’ object (or a ‘pigauto_result’ from ‘impute’).
+
+    data: Optional ‘pigauto_data’ object.  Extracted automatically when
+          ‘fit’ is a ‘pigauto_result’.  When supplied it must match the
+          fit (species and traits).
+
+  splits: Optional splits object from ‘make_missing_splits’. Extracted
+          automatically when ‘fit’ is a ‘pigauto_result’. When supplied
+          it must match the fit.
+
+output_path: Character of length 1.  File path for the HTML report
+          (default ‘"pigauto_report.html"’ in the working directory).
+
+   title: Character of length 1.  Report title (HTML-escaped on write).
+
+    open: Logical of length 1.  Open the report in a browser when done
+          (default ‘TRUE’).
+
+Value:
+
+     The output path (invisibly).
+
+Examples:
+
+     data(avonet300, tree300)
+     tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+     traits <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+                          c("Mass", "Wing.Length"), drop = FALSE]
+     rownames(traits) <- tree$tip.label
+     traits$Mass[seq_len(3L)] <- NA_real_
+     result <- impute(traits, tree, epochs = 5L, verbose = FALSE)
+     pigauto_report(result, output_path = tempfile(fileext = ".html"),
+                    open = FALSE)
+     

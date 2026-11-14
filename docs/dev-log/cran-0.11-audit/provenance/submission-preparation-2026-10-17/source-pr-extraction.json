@@ -1,0 +1,20 @@
+{
+  "worktree": "/Users/z3437171/.codex/worktrees/cran-011-final-artifact/pigauto",
+  "branch": "codex/cran-011-source-closure-20261017",
+  "base": "780c08470b263cc26b4139c711a5c144fd29389c",
+  "files": {
+    "NEWS.md": "8bc45684d3890cf42fb48145f8cb350e7a31a6f9baabd4ffa5c1c3047f520cd7",
+    "R/evaluate.R": "17f326f8adbf6a3074bfb29f3bc07556a35f5d6ceb9af33d1cd0bdcd9fa9998e",
+    "R/plot.R": "331206b1df6daca960cf2ab4255e441fb6741d530ccb013a98ed7da136c06313",
+    "R/simulate_benchmark.R": "d0d2bcc15b7f37fb56d2e0264357108f362f97f39d88d5d423a12c778372f6d1",
+    "man/compare_methods.Rd": "0e960c333b05ab22e1313ba66d6acd47dc6af158c8be0b69192eb03bd4d295fa",
+    "man/plot.pigauto_fit.Rd": "4897916eb314b5bde8f8dc9ec4d615b4ce320c11ca6bd8c26e5bb745db902121",
+    "man/simulate_benchmark.Rd": "0188da54811a9dbc539ee0af5d1f4c54410f58cf8897c07fb32bcbfe0eb750b3",
+    "tests/testthat/test-new-features.R": "92bfa14759fc277a40c6d155cf3e562be1ddab4afe5fbe4d2e803392c8812429",
+    "README.md": "5516910c3e10f3974e673ff8e8ac34dfa4ae3dabd517ad6362cfc98e91a24a46",
+    "vignettes/getting-started.Rmd": "2e18561af8173140e82cde783bd7ee2fcdf0a060ab19627caeb13ba51b880bd8",
+    "vignettes/getting-started.R": "d7c76d507e512eaa53618e14d6392ac094ce0da7e81eaa4e65d9577a22637adf"
+  },
+  "excluded_evidence_not_copied": true,
+  "head": "259d7e98c86dd5aa7680367d9e621ad76037d323"
+}

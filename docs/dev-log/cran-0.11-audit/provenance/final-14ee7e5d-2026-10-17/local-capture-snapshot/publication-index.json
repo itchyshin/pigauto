@@ -1,0 +1,22 @@
+{
+  "archive": "pigauto-final-local-macos-evidence.tar.gz",
+  "archive_sha256": "e23a13705fb736050d8a2c4ed1d15f1ea483a8cecb84ff85d1a75d7278c4c5b7",
+  "archive_size_bytes": 2085070,
+  "deterministic_repeat_sha256": "e23a13705fb736050d8a2c4ed1d15f1ea483a8cecb84ff85d1a75d7278c4c5b7",
+  "deterministic_repeat_test": "PASS",
+  "member_count": 32,
+  "member_manifest": "publication/member-manifest.json",
+  "member_manifest_sha256": "9dcbb312fe655809c6f5ee392e9f631942a7258de33e17615b3b67759f365f6d",
+  "planted_hash_failure_rejected": true,
+  "planted_path_failure_rejected": true,
+  "positive_roundtrip": "PASS",
+  "producer_identity_file": "publication/producer-identity.json",
+  "producer_identity_sha256": "376fd17d7d21a293844c81315ae73a2b841157fbeaf02aaa0112e07f2134da60",
+  "raw_original_member_count": 26,
+  "reproduction_instructions": {
+    "path": "publication/REPRODUCTION.md",
+    "sha256": "8b4a35e619e187dd4b7a8968aa5a176c024022edc472d154af7110046f1658d2"
+  },
+  "roundtrip_validation": "/private/tmp/pigauto-final-closure-20261017/final-local-publication/roundtrip-validation.json",
+  "schema": "pigauto-final-local-evidence-index-v1"
+}

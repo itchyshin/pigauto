@@ -1,0 +1,60 @@
+{
+  "actual_stages_checked": 15,
+  "controls": [
+    {
+      "expected": {
+        "cpu_seconds": 14.0,
+        "elapsed_seconds": 18.0,
+        "timing_format": "cpu_elapsed_seconds"
+      },
+      "input": "* checking examples ... [14s/18s] OK",
+      "result": "PASS"
+    },
+    {
+      "expected": {
+        "reported_seconds": 16.0,
+        "timing_format": "single_reported_seconds"
+      },
+      "input": "* checking examples ... [16s] OK",
+      "result": "PASS"
+    },
+    {
+      "expected": {
+        "timing_format": "not_reported"
+      },
+      "input": "* checking examples ... OK",
+      "result": "PASS"
+    },
+    {
+      "input": "* checking examples ... [14s/14s/1s] OK",
+      "result": "REFUSED_EXPECTED"
+    },
+    {
+      "input": "* checking examples ... [14/14s] OK",
+      "result": "REFUSED_EXPECTED"
+    },
+    {
+      "input": "* checking examples ... [14ms] OK",
+      "result": "REFUSED_EXPECTED"
+    },
+    {
+      "input": "* checking examples ... [NaNs] OK",
+      "result": "REFUSED_EXPECTED"
+    },
+    {
+      "input": "* checking examples ... [14s elapsed] OK",
+      "result": "REFUSED_EXPECTED"
+    },
+    {
+      "input": "* checking examples ... [14s / 14s] OK",
+      "result": "REFUSED_EXPECTED"
+    },
+    {
+      "input": "* checking examples ... [14s] NOTE",
+      "result": "REFUSED_EXPECTED"
+    }
+  ],
+  "helper_sha256": "742dd6dec3de4adf77fc21b0b38833ecf7aa58b5cb778a5b652d18ee8a775c1e",
+  "scope": "Rounded native CPU/elapsed pairs and single reported seconds are distinct from unrounded Rout process times.",
+  "status": "PASS_TIMING_PARSER_KNOWN_ANSWER_AND_INDEPENDENT_REFERENCE"
+}

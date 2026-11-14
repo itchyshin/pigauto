@@ -1,0 +1,13 @@
+test_absolute_api_is_unchanged (test_cran_release_gate.PortablePaths.test_absolute_api_is_unchanged) ... ok
+test_bad_hash_and_size_still_fail (test_cran_release_gate.PortablePaths.test_bad_hash_and_size_still_fail) ... ok
+test_cli_discovers_git_directory_git_file_or_description (test_cran_release_gate.PortablePaths.test_cli_discovers_git_directory_git_file_or_description) ... ok
+test_cli_without_marker_uses_ledger_parent (test_cran_release_gate.PortablePaths.test_cli_without_marker_uses_ledger_parent) ... ok
+test_explicit_root_api_and_cli_ignore_cwd (test_cran_release_gate.PortablePaths.test_explicit_root_api_and_cli_ignore_cwd) ... ok
+test_relative_artifact_requires_root_even_when_cwd_matches (test_cran_release_gate.PortablePaths.test_relative_artifact_requires_root_even_when_cwd_matches) ... ok
+test_relative_evidence_requires_root (test_cran_release_gate.PortablePaths.test_relative_evidence_requires_root) ... ok
+test_wrong_root_missing_paths_and_directories_fail (test_cran_release_gate.PortablePaths.test_wrong_root_missing_paths_and_directories_fail) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.914s
+
+OK

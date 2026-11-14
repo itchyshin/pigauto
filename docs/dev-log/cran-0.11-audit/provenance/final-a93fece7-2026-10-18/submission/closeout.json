@@ -1,0 +1,33 @@
+{
+  "observed_utc": "2026-10-18T07:54:57.725503+00:00",
+  "state": "confirmed",
+  "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "artifact_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "last_published_evidence_head": "f2d64b18f8189833d846f7d80a01d10d5e7a2bf2",
+  "pr236": {
+    "state": "OPEN",
+    "isDraft": true,
+    "merged": false
+  },
+  "release_gates": {
+    "met": 10,
+    "unmet": 0,
+    "abandoned": 0
+  },
+  "handoff_gate": {
+    "global_exit": 1,
+    "reason": "Five inherited imputation-sim campaign ledgers are outside this release scope; adapter refused execution. No foreign command executed or ledger altered. This is not a global handoff-pass claim.",
+    "owned_release_ledger": "Separately reverified all10met",
+    "owned_checkout": "clean and pushed"
+  },
+  "cran_acknowledgement": {
+    "subject": "CRAN Submission pigauto 0.11.0",
+    "received": "2026-10-18 01:45 America/Edmonton",
+    "source": "Newest matching message in authenticated itchyshin@gmail.com browser",
+    "observed_message": "The following package was uploaded to CRAN; package pigauto,version0.11.0; maintainer confirms policies",
+    "not_a_cran_review_result": true
+  },
+  "next_unproven_rung": "incoming-passed",
+  "no_source_change": true,
+  "no_confirmation_token_published": true
+}

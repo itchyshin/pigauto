@@ -1,0 +1,174 @@
+[1] ‘1.0.1’
+$version
+[1] "8.14.1"
+
+$headers
+[1] "8.14.1"
+
+$ssl_version
+[1] "LibreSSL/3.3.6 (SecureTransport)"
+
+$libz_version
+[1] "1.2.12"
+
+$libssh_version
+[1] NA
+
+$libidn_version
+[1] NA
+
+$host
+[1] "aarch64-apple-darwin23.6.0"
+
+$protocols
+ [1] "dict"    "file"    "ftp"     "ftps"    "gopher"  "gophers" "http"   
+ [8] "https"   "imap"    "imaps"   "ldap"    "ldaps"   "mqtt"    "pop3"   
+[15] "pop3s"   "rtsp"    "smb"     "smbs"    "smtp"    "smtps"   "telnet" 
+[22] "tftp"    "ws"      "wss"    
+
+$ipv6
+[1] TRUE
+
+$http2
+[1] TRUE
+
+$idn
+[1] FALSE
+
+$url_parser
+[1] TRUE
+
+R version 4.6.0 (2026-04-24)
+Platform: aarch64-apple-darwin23
+Running under: macOS Tahoe 26.7.1
+
+Matrix products: default
+BLAS:   /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
+
+locale:
+[1] C.UTF-8/C.UTF-8/C.UTF-8/C/C.UTF-8/C.UTF-8
+
+time zone: America/Edmonton
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+[1] compiler_4.6.0 curl_7.1.0    
+✖ Error: man/read_tree.Rd:57:6 Error: Could not resolve hostname [birdtree.org]: Could not resolve host: birdtree.org
+\url{https://birdtree.org/downloads/}
+     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: inst/doc/getting-started.html:497:57 Error: Could not resolve hostname [birdtree.org]: Could not resolve host: birdtree.org
+and read it with <code>read_tree()</code>; see <a href="https://birdtree.org/downloads/">BirdTree downloads</a> and the <a href="tree-uncertainty.html">tree-uncertainty article</a> for
+                                                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: README.md:57:12 Error: Could not resolve hostname [birdtree.org]: Could not resolve host: birdtree.org
+[BirdTree](https://birdtree.org/downloads/) and read it with `read_tree()`;
+           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: man/read_tree.Rd:59:6 Error: Could not resolve hostname [birdtree.org]: Could not resolve host: birdtree.org
+\url{https://birdtree.org/faq/}.
+     ^~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: man/read_tree.Rd:58:6 Error: Could not resolve hostname [birdtree.org]: Could not resolve host: birdtree.org
+\url{https://birdtree.org/subsets/}
+     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: inst/doc/tree-uncertainty.html:372:26 Error: Could not resolve hostname [birdtree.org]: Could not resolve host: birdtree.org
+sample, use the <a href="https://birdtree.org/subsets/">BirdTree subset
+                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: vignettes/tree-uncertainty.Rmd:52:24 Error: Could not resolve hostname [birdtree.org]: Could not resolve host: birdtree.org
+[BirdTree subset tool](https://birdtree.org/subsets/), then read the downloaded
+                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: inst/doc/getting-started.html:949:78 Error: Could not resolve hostname [doi.org]: Could not resolve host: doi.org
+their evolutionary history. <em>Science</em>, 320(5884), 1763–1768. <a href="https://doi.org/10.1126/science.1157704" class="uri">https://doi.org/10.1126/science.1157704</a></li>
+                                                                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: vignettes/getting-started.Rmd:654:3 Error: Could not resolve hostname [doi.org]: Could not resolve host: doi.org
+  https://doi.org/10.1126/science.1157704
+  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: DESCRIPTION:32:9 Error: Could not resolve hostname [github.com]: Could not resolve host: github.com
+        https://github.com/itchyshin/pigauto
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: DESCRIPTION:33:13 Error: Could not resolve hostname [github.com]: Could not resolve host: github.com
+BugReports: https://github.com/itchyshin/pigauto/issues
+            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: README.md:6:13 Error: Could not resolve hostname [github.com]: Could not resolve host: github.com
+[![pkgdown](https://github.com/itchyshin/pigauto/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/itchyshin/pigauto/actions/workflows/pkgdown.yaml)
+            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: README.md:5:17 Error: Could not resolve hostname [github.com]: Could not resolve host: github.com
+[![R-CMD-check](https://github.com/itchyshin/pigauto/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/itchyshin/pigauto/actions/workflows/R-CMD-check.yaml)
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: inst/doc/common-pitfalls.html:531:44 Error: Could not resolve hostname [github.com]: Could not resolve host: github.com
+(<code>phylo_signal_gate</code>), <a href="https://github.com/itchyshin/pigauto/blob/main/script/bench_signal_sweep.md">Phase
+                                           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: inst/doc/common-pitfalls.html:501:60 Error: Could not resolve hostname [github.com]: Could not resolve host: github.com
+(<code>phylo_signal_gate</code>, “Safety floor”), <a href="https://github.com/itchyshin/pigauto/blob/main/specs/2026-04-23-safety-floor-mean-gate-design.md">design
+                                                           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: vignettes/common-pitfalls.Rmd:184:15 Error: Could not resolve hostname [github.com]: Could not resolve host: github.com
+[design spec](https://github.com/itchyshin/pigauto/blob/main/specs/2026-04-23-safety-floor-mean-gate-design.md).
+              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: inst/doc/common-pitfalls.html:566:78 Error: Could not resolve hostname [github.com]: Could not resolve host: github.com
+(<code>clamp_outliers</code>, <code>clamp_factor</code> arguments), <a href="https://github.com/itchyshin/pigauto/blob/main/useful/MEMO_2026-05-01_avonet_mass_diag.md">AVONET
+                                                                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: vignettes/common-pitfalls.Rmd:262:30 Error: Could not resolve hostname [github.com]: Could not resolve host: github.com
+[AVONET Mass diagnosis memo](https://github.com/itchyshin/pigauto/blob/main/useful/MEMO_2026-05-01_avonet_mass_diag.md),
+                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: inst/doc/common-pitfalls.html:567:35 Error: Could not resolve hostname [github.com]: Could not resolve host: github.com
+Mass diagnosis memo</a>, <a href="https://github.com/itchyshin/pigauto/blob/main/useful/MEMO_2026-05-01_phase_g_results.md">Phase
+                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: vignettes/common-pitfalls.Rmd:263:19 Error: Could not resolve hostname [github.com]: Could not resolve host: github.com
+[Phase G results](https://github.com/itchyshin/pigauto/blob/main/useful/MEMO_2026-05-01_phase_g_results.md).
+                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: inst/doc/common-pitfalls.html:448:20 Error: Could not resolve hostname [github.com]: Could not resolve host: github.com
+traits”), <a href="https://github.com/itchyshin/pigauto/blob/main/useful/MEMO_2026-05-01_phase_h_results.md">Phase
+                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: DESCRIPTION:33:13 Error: Could not resolve hostname [github.com]: Could not resolve host: github.com
+BugReports: https://github.com/itchyshin/pigauto/issues
+            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: NEWS.md:943:47 Error: Could not resolve hostname [github.com]: Could not resolve host: github.com
+External 60-replicate ablation (b1805, [#106](https://github.com/itchyshin/pigauto/issues/106), code in [#116](https://github.com/itchyshin/pigauto/pull/116))
+                                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: man/impute.Rd:276:7 Error: Could not resolve hostname [github.com]: Could not resolve host: github.com
+\href{https://github.com/itchyshin/pigauto/issues/40}{issue #40}.}
+      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: man/predict.pigauto_fit.Rd:48:7 Error: Could not resolve hostname [github.com]: Could not resolve host: github.com
+\href{https://github.com/itchyshin/pigauto/issues/40}{issue #40}.}
+      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: inst/doc/common-pitfalls.html:399:31 Error: Could not resolve hostname [github.com]: Could not resolve host: github.com
+(read this first)”), <a href="https://github.com/itchyshin/pigauto/issues/67">issue #67</a>.</p>
+                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: inst/doc/common-pitfalls.html:449:22 Error: Could not resolve hostname [github.com]: Could not resolve host: github.com
+H memo</a>, <a href="https://github.com/itchyshin/pigauto/issues/68">issue #68</a>.</p>
+                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: inst/doc/common-pitfalls.html:360:79 Error: Could not resolve hostname [github.com]: Could not resolve host: github.com
+<p>If you hit something that isn’t here and feels surprising, please <a href="https://github.com/itchyshin/pigauto/issues/new">open an issue</a>
+                                                                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: vignettes/common-pitfalls.Rmd:30:17 Error: Could not resolve hostname [github.com]: Could not resolve host: github.com
+[open an issue](https://github.com/itchyshin/pigauto/issues/new) — most
+                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: NEWS.md:943:112 Error: Could not resolve hostname [github.com]: Could not resolve host: github.com
+External 60-replicate ablation (b1805, [#106](https://github.com/itchyshin/pigauto/issues/106), code in [#116](https://github.com/itchyshin/pigauto/pull/116))
+                                                                                                               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: DESCRIPTION:31:6 Error: Could not resolve hostname [itchyshin.github.io]: Could not resolve host: itchyshin.github.io
+URL: https://itchyshin.github.io/pigauto/,
+     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: README.md:237:21 Error: Could not resolve hostname [itchyshin.github.io]: Could not resolve host: itchyshin.github.io
+- [Common pitfalls](https://itchyshin.github.io/pigauto/articles/common-pitfalls.html)
+                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: README.md:234:21 Error: Could not resolve hostname [itchyshin.github.io]: Could not resolve host: itchyshin.github.io
+- [Getting started](https://itchyshin.github.io/pigauto/articles/getting-started.html)
+                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: README.md:235:23 Error: Could not resolve hostname [itchyshin.github.io]: Could not resolve host: itchyshin.github.io
+- [Mixed-type traits](https://itchyshin.github.io/pigauto/articles/mixed-types.html)
+                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: README.md:204:31 Error: Could not resolve hostname [itchyshin.github.io]: Could not resolve host: itchyshin.github.io
+[multiple imputation article](https://itchyshin.github.io/pigauto/articles/multiple-imputation.html).
+                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: README.md:236:47 Error: Could not resolve hostname [itchyshin.github.io]: Could not resolve host: itchyshin.github.io
+- [Multiple imputation and downstream models](https://itchyshin.github.io/pigauto/articles/multiple-imputation.html)
+                                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: README.md:238:33 Error: Could not resolve hostname [itchyshin.github.io]: Could not resolve host: itchyshin.github.io
+- [Tree prediction sensitivity](https://itchyshin.github.io/pigauto/articles/tree-uncertainty.html)
+                                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+✖ Error: README.md:7:94 Error: Could not resolve hostname [lifecycle.r-lib.org]: Could not resolve host: lifecycle.r-lib.org
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+                                                                                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+URL_CHECK_AND_FLAT_EXPORT_COMPLETED

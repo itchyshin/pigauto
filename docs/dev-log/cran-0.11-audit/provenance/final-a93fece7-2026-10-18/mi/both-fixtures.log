@@ -1,0 +1,3 @@
+tests/testthat/test-pool-mi-adapter-fixtures.R: 50 expectations passed against installed pigauto
+tests/testthat/test-mi-provenance.R: 55 expectations passed against installed pigauto
+ADAPTER_FIXTURES_OK

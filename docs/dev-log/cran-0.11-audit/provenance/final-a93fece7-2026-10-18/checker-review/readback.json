@@ -1,0 +1,59 @@
+{
+  "reviewer": "grace",
+  "scope": "Pre-push checker retarget only; no artifact/native/release verdict",
+  "status": "PASS",
+  "archive_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "size_bytes": 5137837,
+  "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "inventory_sha256": "d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d",
+  "url": "http://builder2.rhub.io/api/-/package/062a7517bd61fe3fd188ab5f0fd12254",
+  "parameter_only_artifact_AST": true,
+  "new_constants": {
+    "URL": "http://builder2.rhub.io/api/-/package/062a7517bd61fe3fd188ab5f0fd12254",
+    "SHA": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+    "SIZE": 5137837,
+    "INVENTORY": "d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d"
+  },
+  "before_backups_equal_current_HEAD": true,
+  "verifier_single_label_only": true,
+  "workflow_two_labels_only": true,
+  "positive_control": "PASS",
+  "negative_controls": [
+    {
+      "control": "wrong-sha",
+      "result": "REFUSED"
+    },
+    {
+      "control": "wrong-size",
+      "result": "REFUSED"
+    },
+    {
+      "control": "wrong-inventory",
+      "result": "REFUSED"
+    },
+    {
+      "control": "wrong-entries",
+      "result": "REFUSED"
+    },
+    {
+      "control": "same-size-byte-mutation",
+      "result": "REFUSED"
+    }
+  ],
+  "reviewed_files": {
+    "script/cran-0.11-platform/artifact.py": {
+      "before_sha256": "cc31f3cb02c3be0f900f40629ef3769a65b7164b91213575640d5e849769995f",
+      "after_sha256": "942170752d3829996c362835267895d7498f3a38a304313a9b5badb656188933"
+    },
+    "script/cran-0.11-platform/verify_results.py": {
+      "before_sha256": "f014c380a2118ae7c7f8ef2ced6e8b52e8890239dad9966614ccb04b5fe3e4b8",
+      "after_sha256": "ae8e4bd3a6f09214c748c8ea1eb6219007ed5464bae2e65604e08ab55c48af6e"
+    },
+    ".github/workflows/frozen-tarball-check.yaml": {
+      "before_sha256": "029ae1b6ca61d475d4b09717c71c46d778d45c5de0f3284e891e20ed6963a30d",
+      "after_sha256": "72872e09c592332f26a68bbd2f97ebc72a85b4bfc95ab4c647f80f5ef9a3a0c4"
+    }
+  },
+  "archive_unchanged_after_controls": true,
+  "reviewed_utc": "2026-10-18T02:57:18.081984+00:00"
+}

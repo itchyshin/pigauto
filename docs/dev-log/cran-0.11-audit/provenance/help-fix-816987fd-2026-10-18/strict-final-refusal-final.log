@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "/private/tmp/pigauto-final-closure-20261017/verify-final-checkpoint.py", line 21, in <module>
+    assert ledger['artifact']['current_candidate'] is True, 'Withdrawn predecessor cannot satisfy the final release checkpoint'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: Withdrawn predecessor cannot satisfy the final release checkpoint

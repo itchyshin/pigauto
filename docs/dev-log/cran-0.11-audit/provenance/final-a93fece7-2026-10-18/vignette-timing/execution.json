@@ -1,0 +1,176 @@
+[
+  {
+    "file": "common-pitfalls.Rmd",
+    "command": [
+      "Rscript",
+      "--vanilla",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/render-one.R",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+      "common-pitfalls.Rmd"
+    ],
+    "render_script_sha256": "aa18ac3f067c35b0aacbdf183201507ed6b3ad36b29e7f6aafcb2b8b50f27ef7",
+    "source_rmd_sha256": "a545207dac3d063e124b8612e1a39ae0ab2ed08a55e5ba48a6b881ffb8876a19",
+    "start_utc": "2026-10-18T07:10:11.764321+00:00",
+    "timeout_seconds": 120,
+    "thread_caps": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "VECLIB_MAXIMUM_THREADS": "1",
+      "R_NUM_THREADS": "1",
+      "MAKEFLAGS": "-j1"
+    },
+    "NOT_CRAN": "UNSET",
+    "cwd": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+    "process_elapsed_seconds": 4.065,
+    "exit": 0,
+    "log": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/common-pitfalls.Rmd.log",
+    "log_sha256": "bf1d2527763dd0a8be8ff411c07ffd8a0e0a28ad46cad36f7720e1cf57950e6d",
+    "completed_utc": "2026-10-18T07:10:15.831148+00:00"
+  },
+  {
+    "file": "getting-started.Rmd",
+    "command": [
+      "Rscript",
+      "--vanilla",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/render-one.R",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+      "getting-started.Rmd"
+    ],
+    "render_script_sha256": "aa18ac3f067c35b0aacbdf183201507ed6b3ad36b29e7f6aafcb2b8b50f27ef7",
+    "source_rmd_sha256": "2e18561af8173140e82cde783bd7ee2fcdf0a060ab19627caeb13ba51b880bd8",
+    "start_utc": "2026-10-18T07:10:15.832634+00:00",
+    "timeout_seconds": 120,
+    "thread_caps": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "VECLIB_MAXIMUM_THREADS": "1",
+      "R_NUM_THREADS": "1",
+      "MAKEFLAGS": "-j1"
+    },
+    "NOT_CRAN": "UNSET",
+    "cwd": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+    "process_elapsed_seconds": 5.502,
+    "exit": 0,
+    "log": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/getting-started.Rmd.log",
+    "log_sha256": "838a59e26d94d0cd4f896f3489d6a30286ec64c152b9bafc98ef2f3dc82f66c3",
+    "completed_utc": "2026-10-18T07:10:21.335492+00:00"
+  },
+  {
+    "file": "gnn-architecture.Rmd",
+    "command": [
+      "Rscript",
+      "--vanilla",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/render-one.R",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+      "gnn-architecture.Rmd"
+    ],
+    "render_script_sha256": "aa18ac3f067c35b0aacbdf183201507ed6b3ad36b29e7f6aafcb2b8b50f27ef7",
+    "source_rmd_sha256": "e152c1f08b7f91c79c0506f2806b6e907d753a81d63e5dc663b6de450f5f9ec0",
+    "start_utc": "2026-10-18T07:10:21.336904+00:00",
+    "timeout_seconds": 120,
+    "thread_caps": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "VECLIB_MAXIMUM_THREADS": "1",
+      "R_NUM_THREADS": "1",
+      "MAKEFLAGS": "-j1"
+    },
+    "NOT_CRAN": "UNSET",
+    "cwd": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+    "process_elapsed_seconds": 3.353,
+    "exit": 0,
+    "log": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/gnn-architecture.Rmd.log",
+    "log_sha256": "57948d1245a68078f5c4127fab0e3c187cdd8f7e9900647e18636c99e9225131",
+    "completed_utc": "2026-10-18T07:10:24.691434+00:00"
+  },
+  {
+    "file": "mixed-types.Rmd",
+    "command": [
+      "Rscript",
+      "--vanilla",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/render-one.R",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+      "mixed-types.Rmd"
+    ],
+    "render_script_sha256": "aa18ac3f067c35b0aacbdf183201507ed6b3ad36b29e7f6aafcb2b8b50f27ef7",
+    "source_rmd_sha256": "c1b7585bd5ad44a6ff252ee081461c7fa6e3224fca3901baab8ea32983cb5615",
+    "start_utc": "2026-10-18T07:10:24.693101+00:00",
+    "timeout_seconds": 120,
+    "thread_caps": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "VECLIB_MAXIMUM_THREADS": "1",
+      "R_NUM_THREADS": "1",
+      "MAKEFLAGS": "-j1"
+    },
+    "NOT_CRAN": "UNSET",
+    "cwd": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+    "process_elapsed_seconds": 4.992,
+    "exit": 0,
+    "log": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/mixed-types.Rmd.log",
+    "log_sha256": "648f0abeb77f0888c5589fa797942d3f9df9e962f7a7d8fdc1c491373a06c93b",
+    "completed_utc": "2026-10-18T07:10:29.685300+00:00"
+  },
+  {
+    "file": "multiple-imputation.Rmd",
+    "command": [
+      "Rscript",
+      "--vanilla",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/render-one.R",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+      "multiple-imputation.Rmd"
+    ],
+    "render_script_sha256": "aa18ac3f067c35b0aacbdf183201507ed6b3ad36b29e7f6aafcb2b8b50f27ef7",
+    "source_rmd_sha256": "549dc43ad8e382b81ced1badb18491186ecdd464c53d24e47e539403e957286d",
+    "start_utc": "2026-10-18T07:10:29.687179+00:00",
+    "timeout_seconds": 120,
+    "thread_caps": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "VECLIB_MAXIMUM_THREADS": "1",
+      "R_NUM_THREADS": "1",
+      "MAKEFLAGS": "-j1"
+    },
+    "NOT_CRAN": "UNSET",
+    "cwd": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+    "process_elapsed_seconds": 3.966,
+    "exit": 0,
+    "log": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/multiple-imputation.Rmd.log",
+    "log_sha256": "41da51afbbc616fb0967762160f7c963f26701ffdde0583b12ff401d4590e017",
+    "completed_utc": "2026-10-18T07:10:33.654254+00:00"
+  },
+  {
+    "file": "tree-uncertainty.Rmd",
+    "command": [
+      "Rscript",
+      "--vanilla",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/render-one.R",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+      "tree-uncertainty.Rmd"
+    ],
+    "render_script_sha256": "aa18ac3f067c35b0aacbdf183201507ed6b3ad36b29e7f6aafcb2b8b50f27ef7",
+    "source_rmd_sha256": "c42a05ab7cb75a3a489496da8fefbf0642afa300fd8ec2d17a278ff3eb794f39",
+    "start_utc": "2026-10-18T07:10:33.655300+00:00",
+    "timeout_seconds": 120,
+    "thread_caps": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "VECLIB_MAXIMUM_THREADS": "1",
+      "R_NUM_THREADS": "1",
+      "MAKEFLAGS": "-j1"
+    },
+    "NOT_CRAN": "UNSET",
+    "cwd": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+    "process_elapsed_seconds": 3.434,
+    "exit": 0,
+    "log": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/tree-uncertainty.Rmd.log",
+    "log_sha256": "b1a73c6c4870ea46818560193e8e5f986dbc3d0c381182597e8de6647a9202a5",
+    "completed_utc": "2026-10-18T07:10:37.089563+00:00"
+  }
+]

@@ -1,0 +1,406 @@
+word,found
+acc,"NEWS.md:1593,1851,1851,1919"
+activations,NEWS.md:2596
+AdamW,"fit_pigauto.Rd:164,166"
+AE,NEWS.md:2071
+Aitchison,NEWS.md:3002
+al,"avonet_full.Rd:14; avonet300.Rd:25; multi_impute_trees.Rd:32; multi_impute.Rd:371; read_tree.Rd:43; tree_full.Rd:13,34; tree300.Rd:13,29; trees300.Rd:14,15,37,41; description:22; NEWS.md:911,2424,2556,3122; README.md:56; getting-started.Rmd:171,648,650,652; gnn-architecture.Rmd:458,459; tree-uncertainty.Rmd:31,50,116,119,122"
+allocator,NEWS.md:2596
+AmNat,gnn-architecture.Rmd:450
+AmphiBIO,"NEWS.md:309,2515"
+analysing,multi_impute.Rd:390; with_imputations.Rd:70; NEWS.md:238
+Ané,getting-started.Rmd:655; gnn-architecture.Rmd:454
+AO,multi_impute_trees.Rd:284; read_tree.Rd:53; tree_full.Rd:38; tree300.Rd:33; trees300.Rd:45
+arg,"NEWS.md:2105,2348,2387,2704"
+argmax,"fit_baseline.Rd:48; impute.Rd:122; predict.pigauto_fit.Rd:173; NEWS.md:1161,1568,1900,2742,2753,2840,2910,2957; gnn-architecture.Rmd:140,184"
+args,"NEWS.md:1457,2301"
+artefact,NEWS.md:2584
+artefacts,NEWS.md:3350
+autoencoder,gnn-architecture.Rmd:194
+Autoencoder,NEWS.md:3252; README.md:242
+autoresearch,"NEWS.md:975,1046,1194"
+Autoresearch,NEWS.md:1078
+AVONET,"avonet_full.Rd:6,14,23,31,36; avonet300.Rd:6,25; build_phylo_graph.Rd:76; fit_baseline.Rd:102,337; fit_pigauto.Rd:360; impute.Rd:182,283,500; predict.pigauto_fit.Rd:88; NEWS.md:57,149,152,309,441,447,728,1136,1179,1202,1358,1458,1471,1485,1509,1548,1556,1584,1618,1766,1834,1906,1949,1992,2046,2367,2420,2498,2556,2657,2762,2808,2940,3193,3215,3309,3325,3327,3362,3376,3408,3437,3498; common-pitfalls.Rmd:88,223,262; getting-started.Rmd:169,171,351,648; multiple-imputation.Rmd:87; tree-uncertainty.Rmd:31"
+BACE,"NEWS.md:434,537,747,749,759,975,1104,1150,1161,1174,1185,2436,2441,2454,2803,2975,3499"
+BACE's,"fit_baseline.Rd:100,104; fit_pigauto.Rd:358,362; impute.Rd:180,184; NEWS.md:57,757,759,886,1157,1161"
+basisOfRecord,NEWS.md:2229
+BCE,"fit_pigauto.Rd:472; NEWS.md:2856,3261; gnn-architecture.Rmd:294"
+behaviour,"fit_baseline.Rd:48,93,132,140,208; fit_pigauto.Rd:97,152,272,282,319,351,414; impute.Rd:141,173,234,246,288,313,336,367; make_missing_splits.Rd:32; multi_impute_trees.Rd:90; predict.pigauto_fit.Rd:57,93; NEWS.md:54,70,139,695,706,794,849,1161,1288,1541,1880,2046,2310,2622,2742,2826,3477; README.md:64; common-pitfalls.Rmd:143; mixed-types.Rmd:34"
+behavioural,multi_impute.Rd:455; pool_mi.Rd:165; NEWS.md:2609
+benchmarked,multi_impute_trees.Rd:212; NEWS.md:299
+benchmarking,"simulate_non_bm.Rd:5; NEWS.md:3350; getting-started.Rmd:152,163"
+bennetti,NEWS.md:1485
+BES,gnn-architecture.Rmd:463
+BIEN,"fit_pigauto.Rd:270; NEWS.md:45,57,872,962,975,984,1014,1046,1078,1091,1194,1202,2046,2197,2199,2245,2295,2367,2485,2525"
+BIEN's,NEWS.md:1098
+bigl,"gnn-architecture.Rmd:101,162,220"
+bigr,"gnn-architecture.Rmd:100,162,220"
+bioclim,"pull_gbif_centroids.Rd:39; pull_worldclim_per_species.Rd:5,47; NEWS.md:975,1006,1014,2090,2097,2105,2145,2147,2160,2171,2199,2205,2239,2247,2277"
+biogeographic,NEWS.md:2239
+biome,impute.Rd:447
+Biometrika,pool_mi.Rd:158; multiple-imputation.Rmd:288
+BirdTree,"avonet300.Rd:10; build_phylo_graph.Rd:76; multi_impute_trees.Rd:32,187; read_tree.Rd:22,24,29,42,43,56; tree_full.Rd:13,24; tree300.Rd:13,24; trees300.Rd:22,28; NEWS.md:13,15,2762,3142,3147,3309,3376,3408; README.md:56,57; getting-started.Rmd:171,178; tree-uncertainty.Rmd:27,31,41,50,52"
+BirdTree's,read_tree.Rd:35; tree_full.Rd:20; tree300.Rd:20
+Blomberg's,fit_pigauto.Rd:291
+BLUPs,"multi_impute_analysis.Rd:74; pool_mi.Rd:83,111; mixed-types.Rmd:196; tree-uncertainty.Rmd:108"
+BodyShapeI,"NEWS.md:2510,2556,2562"
+boldsymbol,gnn-architecture.Rmd:122
+Britton,trees300.Rd:37
+brms,"pool_mi.Rd:131,133; NEWS.md:171,173,182; README.md:196; multiple-imputation.Rmd:261"
+brmsfit,NEWS.md:178
+Bruggeman,"getting-started.Rmd:655; gnn-architecture.Rmd:453,454"
+Buerkner,multi_impute.Rd:450
+Buuren,predict.pigauto_fit.Rd:65; NEWS.md:1387
+bw,gnn-architecture.Rmd:237
+Casuarius,"predict.pigauto_fit.Rd:88; NEWS.md:1358,1485,1522"
+cbinds,NEWS.md:1014
+CDN,pigauto_report.Rd:41
+cdot,"common-pitfalls.Rmd:143; gnn-architecture.Rmd:184,244,264,271,290,291,413,415"
+centre,multi_impute.Rd:409
+centred,"fit_baseline.Rd:185; fit_pigauto.Rd:388; impute.Rd:209; multi_impute.Rd:51; preprocess_traits.Rd:46,181; NEWS.md:282,512,2988; mixed-types.Rmd:35"
+cffa,NEWS.md:2562
+characterisation,NEWS.md:2900
+clade,"make_missing_splits.Rd:37,50; multi_impute_trees.Rd:84; simulate_benchmark.Rd:79; simulate_non_bm.Rd:42; NEWS.md:638,1358,2470; README.md:91; getting-started.Rmd:98,365,609; multiple-imputation.Rmd:38; tree-uncertainty.Rmd:31"
+Clade,NEWS.md:2470
+clades,"make_missing_splits.Rd:48; predict.pigauto_fit.Rd:182; NEWS.md:447,648,2470; README.md:91; getting-started.Rmd:98; multiple-imputation.Rmd:50"
+cladogram,"NEWS.md:2426,3068"
+CLR,"fit_baseline.Rd:259; impute.Rd:69; multi_impute.Rd:313,314; predict.pigauto_fit.Rd:214; preprocess_traits.Rd:47,181; suggest_next_observation.Rd:119; NEWS.md:1263,1646,2063,2988,2992,2999,3002; getting-started.Rmd:482; gnn-architecture.Rmd:294; mixed-types.Rmd:35"
+CMD,NEWS.md:1968; README.md:5
+Cohn,getting-started.Rmd:660
+colour,plot_comparison.Rd:41; NEWS.md:2982; mixed-types.Rmd:35
+coloured,plot.pigauto_fit.Rd:19
+comparator,"NEWS.md:434,749,1104,1150,2864"
+compat,"NEWS.md:899,1817,2114,2386,2389,2573,2674,2737"
+compositional,"impute.Rd:65; multi_impute_trees.Rd:44; multi_impute.Rd:98; preprocess_traits.Rd:42; description:8; NEWS.md:2980,2982,3002; README.md:15; getting-started.Rmd:91,630; mixed-types.Rmd:168"
+concat,gnn-architecture.Rmd:220
+coords,"gnn-architecture.Rmd:220,322"
+cov,"NEWS.md:1014,1034,2247; gnn-architecture.Rmd:93,271,416"
+covs,"gnn-architecture.Rmd:220,322"
+CTmax,"ctmax_sim.Rd:6,26,35; NEWS.md:3076,3092,3099"
+CUDA,NEWS.md:2596; getting-started.Rmd:592
+culmen,avonet300.Rd:13
+cv,"NEWS.md:1791,1840,1855,1857,1860"
+DAE,"NEWS.md:798,1226,2999; gnn-architecture.Rmd:194"
+de,"multi_impute_trees.Rd:279; description:23; NEWS.md:1069,2135,2209; gnn-architecture.Rmd:466"
+decd,NEWS.md:2063
+Delhey,"NEWS.md:3144,3158"
+denoising,gnn-architecture.Rmd:194
+Denoising,NEWS.md:3252
+DEP,NEWS.md:911
+DepthRangeDeep,"NEWS.md:2556,2562"
+dev,"fit_pigauto.Rd:327; impute.Rd:149; NEWS.md:1200,1222,1318,1383,1481,1552,1623,1676,2086,2143,2213,2280,2323,2395"
+df,"multi_impute.Rd:234; pool_mi.Rd:95,99,105,106,108"
+DGP,"NEWS.md:911,943; tree-uncertainty.Rmd:108"
+diag,gnn-architecture.Rmd:101
+dimensionally,fit_pigauto.Rd:292
+discoverability,impute.Rd:344
+discriminative,"NEWS.md:2443,2900"
+docstring,NEWS.md:1271
+doi,"description:24; tree-uncertainty.Rmd:116,119,122"
+downloader,NEWS.md:2424
+drmTMB,"NEWS.md:173,182,186; README.md:196; multiple-imputation.Rmd:203"
+dropdown,"NEWS.md:1276,1281; common-pitfalls.Rmd:26"
+eigen,"build_phylo_graph.Rd:18,31; NEWS.md:3376,3489"
+eigendecomposition,NEWS.md:3362; getting-started.Rmd:609
+eigensolver,"build_phylo_graph.Rd:67,71; NEWS.md:3368"
+enum,"NEWS.md:1608,1612"
+env,"NEWS.md:2943,3158"
+eqn,"NEWS.md:1632,1727"
+Ericson,"trees300.Rd:14,23,24,37; NEWS.md:15; tree-uncertainty.Rmd:31,116"
+errored,with_imputations.Rd:44; NEWS.md:695
+ESA,NEWS.md:2424
+estimands,multiple-imputation.Rmd:38
+et,"avonet_full.Rd:14; avonet300.Rd:25; multi_impute_trees.Rd:32; multi_impute.Rd:370; read_tree.Rd:42; tree_full.Rd:13,34; tree300.Rd:13,29; trees300.Rd:14,15,37,41; description:22; NEWS.md:911,2424,2556,3122; README.md:56; getting-started.Rmd:171,648,650,652; gnn-architecture.Rmd:458,459; tree-uncertainty.Rmd:31,50,116,119,122"
+exchangeability,"NEWS.md:638,2046; gnn-architecture.Rmd:377"
+expm,"NEWS.md:1429,1527"
+extractability,with_imputations.Rd:29
+factorisation,gnn-architecture.Rmd:361
+fallbacks,fit_baseline.Rd:317
+favour,fit_baseline.Rd:63; NEWS.md:590
+Felsenstein,gnn-architecture.Rmd:450
+ffn,gnn-architecture.Rmd:244
+FFN,fit_pigauto.Rd:131; NEWS.md:2884; gnn-architecture.Rmd:244
+Fick,pull_worldclim_per_species.Rd:84
+FishBase,"NEWS.md:441,447,2510,2554,2556,2584"
+fishtree,"NEWS.md:2510,2554,2556"
+FMI,"pool_mi.Rd:107,108; NEWS.md:2693,2792,3026,3135"
+frac,NEWS.md:2470; getting-started.Rmd:462
+Freckleton,"multi_impute.Rd:323,434,454; pool_mi.Rd:160,164; gnn-architecture.Rmd:463; multiple-imputation.Rmd:290"
+Gammerman,gnn-architecture.Rmd:469
+gbif,"NEWS.md:2224,2255,2263,2268,2271"
+GBIF,"pull_gbif_centroids.Rd:5,46,51,56,63; pull_worldclim_per_species.Rd:19,42,47; NEWS.md:2090,2147,2155,2205,2215,2217,2234,2239,2247,2277; getting-started.Rmd:577"
+Gelman,"multi_impute.Rd:357,438,450"
+generalised,NEWS.md:3257
+generalises,NEWS.md:2485
+ggplot,"plot_history_gg.Rd:5,21"
+GH,multi_impute_trees.Rd:284; read_tree.Rd:53; tree_full.Rd:38; tree300.Rd:33; trees300.Rd:45
+Ghahramani,getting-started.Rmd:660
+gllvmTMB,"NEWS.md:173,182,186; README.md:196; multiple-imputation.Rmd:221"
+glmmTMB,NEWS.md:173; README.md:196; multiple-imputation.Rmd:164
+GlobTherm,NEWS.md:309
+GLS,"fit_baseline.Rd:185; fit_pigauto.Rd:388; impute.Rd:209; NEWS.md:282,466,473,667,858; gnn-architecture.Rmd:93,122"
+gnn,"multi_impute_trees.Rd:174,246; NEWS.md:1836,2367"
+GNN,"compare_methods.Rd:33,35,59; fit_baseline.Rd:173,325; fit_pigauto.Rd:75,81,87,88,93,97,125,187,192,262,280,436,467; impute.Rd:111,347,348,358,363,367,400,462; multi_impute_trees.Rd:68,78,79,80,81,95,97,123,158,159,169,170,193,196,203,206,207,208,215,216,223,224,230,243,254; multi_impute.Rd:58,61,65,124,132,133,316,318,390,408; pigauto_report.Rd:43; plot_comparison.Rd:38,41; plot.pigauto_fit.Rd:13; predict.pigauto_fit.Rd:30,37,139,143,152,164; preprocess_traits.Rd:128; simulate_benchmark.Rd:38,45,47,67,75; NEWS.md:5,8,137,145,149,152,154,159,161,165,253,299,309,333,483,485,495,498,527,531,534,537,552,670,769,792,903,921,926,931,958,975,1046,1069,1069,1098,1226,1228,1241,1245,1247,1358,1409,1842,2090,2168,2284,2327,2515,2658,2693,2705,2719,2828,2882,2900,2938,2996,3076,3111,3249,3261,3278,3284,3335,3429,3437,3466; README.md:64,75; common-pitfalls.Rmd:133,135,139,143,171; getting-started.Rmd:44,107,116,163,239,273,351,365,592,592; gnn-architecture.Rmd:2,26,77,79,192,194,275,280,305,343,350,383,415,415,420; mixed-types.Rmd:37,114,149; multiple-imputation.Rmd:50; tree-uncertainty.Rmd:62,85,87"
+GNN's,"fit_pigauto.Rd:451; predict.pigauto_fit.Rd:88; simulate_benchmark.Rd:82; NEWS.md:1059,3261; common-pitfalls.Rmd:228; gnn-architecture.Rmd:18,113"
+Goolsby,NEWS.md:3122; getting-started.Rmd:655; gnn-architecture.Rmd:454
+Grafen,NEWS.md:2424
+Graphormer,gnn-architecture.Rmd:459
+Groothuis,NEWS.md:1387
+gzip,save_pigauto.Rd:16
+Hackett,"build_phylo_graph.Rd:76; tree_full.Rd:12,20,34; tree300.Rd:12,20,29; trees300.Rd:14,15,23,25,41; NEWS.md:15,3142,3309,3376,3408; getting-started.Rmd:171,652; tree-uncertainty.Rmd:31,119"
+Hadfield,"fit_baseline.Rd:184; fit_pigauto.Rd:387; impute.Rd:208; multi_impute.Rd:357,366,441,445; NEWS.md:200,282"
+hardcoded,NEWS.md:2818
+Hartmann,multi_impute_trees.Rd:284; read_tree.Rd:53; tree_full.Rd:38; tree300.Rd:33; trees300.Rd:45
+hasCoordinate,NEWS.md:2227
+hasGeospatialIssues,NEWS.md:2229
+Heringa,gnn-architecture.Rmd:453
+Hijmans,pull_worldclim_per_species.Rd:84
+honours,NEWS.md:1331
+HTMLs,NEWS.md:1281
+ij,gnn-architecture.Rmd:113
+ik,getting-started.Rmd:461
+inferentially,pool_mi.Rd:77
+initialisation,NEWS.md:3429
+initialisations,NEWS.md:1126
+initialised,"gnn-architecture.Rmd:244,280"
+initialises,NEWS.md:2884
+Insessorial,avonet300.Rd:19
+interpretability,NEWS.md:2135
+iter,NEWS.md:2623
+iters,NEWS.md:2646
+IUCN,"impute.Rd:441,444; preprocess_traits.Rd:163"
+JB,multi_impute_trees.Rd:284; read_tree.Rd:53; tree_full.Rd:38; tree300.Rd:33; trees300.Rd:45
+Jetz,"multi_impute_trees.Rd:32,284; read_tree.Rd:42,53; tree_full.Rd:13,38; tree300.Rd:13,33; trees300.Rd:15,45; README.md:56; getting-started.Rmd:171,650; tree-uncertainty.Rmd:31,50,122"
+jomo,multi_impute_analysis.Rd:61
+js,pigauto_report.Rd:40; NEWS.md:3460
+Kimball,tree_full.Rd:34; tree300.Rd:29; trees300.Rd:41
+kk,getting-started.Rmd:466
+Krylov,NEWS.md:3379
+L̂,"NEWS.md:1126,1136"
+labelled,fit_baseline.Rd:260; multiple-imputation.Rmd:205
+Lanczos,"build_phylo_graph.Rd:67,74,80; NEWS.md:3316,3368,3370,3379; getting-started.Rmd:609"
+latents,"impute.Rd:268; NEWS.md:2063,2399"
+ldots,"gnn-architecture.Rmd:220,317"
+learnable,"build_phylo_graph.Rd:40; fit_pigauto.Rd:119,133,146,191,446,455; NEWS.md:2727,2729,2884; getting-started.Rmd:273; gnn-architecture.Rmd:208,238,248,268,322,350"
+licence,tree_full.Rd:23; tree300.Rd:23; trees300.Rd:27; NEWS.md:15
+lifecycle,predict.pigauto_fit.Rd:149
+Lifecycle,README.md:7
+LKJ,"multi_impute.Rd:202,360; NEWS.md:89; multiple-imputation.Rmd:64"
+lme,pool_mi.Rd:125; NEWS.md:173; README.md:196; multiple-imputation.Rmd:164
+LOC,NEWS.md:1752
+lon,"pull_gbif_centroids.Rd:36,52; NEWS.md:2105,2205,2217,2232,2258"
+lossiness,NEWS.md:2968
+lossy,NEWS.md:2926
+L̂ᵀR,NEWS.md:1126
+mathbb,"gnn-architecture.Rmd:113,208,210,212,224,227,268,322"
+mathbf,"gnn-architecture.Rmd:93,100,101,101,103,113,122,140,220,237,317,322"
+mathcal,"gnn-architecture.Rmd:93,122,162,288,294,383"
+mathrm,"NEWS.md:1632,1727; getting-started.Rmd:461; gnn-architecture.Rmd:93,101,122,220,237,271,290,291,377,415,416,419"
+mathtt,"gnn-architecture.Rmd:244,264,343"
+maximising,NEWS.md:622
+MCAR,"ctmax_sim.Rd:14; NEWS.md:95,638,872,911,935,984,2431,2485,2772,3156,3327"
+MCC,"multi_impute_trees.Rd:197; tree_full.Rd:25; tree300.Rd:25; NEWS.md:2693,2704,3309,3376,3408; getting-started.Rmd:171"
+MCMCglmm,"multi_impute.Rd:442; pool_mi.Rd:131,135; NEWS.md:173,178,200,886; README.md:196; multiple-imputation.Rmd:275"
+MCSE,NEWS.md:152
+md,fit_pigauto.Rd:327; impute.Rd:149; NEWS.md:1646
+MEE,gnn-architecture.Rmd:454
+microbiome,NEWS.md:2982; mixed-types.Rmd:35
+minimise,NEWS.md:2046
+minimises,common-pitfalls.Rmd:143; getting-started.Rmd:273
+minimising,NEWS.md:3261; gnn-architecture.Rmd:343
+mis,NEWS.md:926; common-pitfalls.Rmd:228
+mispaired,NEWS.md:769
+misspecification,NEWS.md:929
+MLP,"NEWS.md:3076,3085; gnn-architecture.Rmd:216,258"
+MNAR,"NEWS.md:911,935,3156; mixed-types.Rmd:196"
+mondrian,NEWS.md:441
+Mooers,multi_impute_trees.Rd:284; read_tree.Rd:53; tree_full.Rd:38; tree300.Rd:33; trees300.Rd:45
+morphometric,avonet_full.Rd:24; avonet300.Rd:33; NEWS.md:3309
+morphometrics,getting-started.Rmd:352
+MPS,"NEWS.md:2367,2375,2498,2510,2515,2562; getting-started.Rmd:592"
+MrBayes,tree-uncertainty.Rmd:27
+mult,gnn-architecture.Rmd:244
+MVN,"fit_baseline.Rd:61,119,128,135,146,148,256,312,314,321,346; fit_pigauto.Rd:309,367; impute.Rd:131,188,258; multi_impute_trees.Rd:198; suggest_next_observation.Rd:59; NEWS.md:368,382,485,580,604,622,670,784,863,943,962,968,1046,1069,1091,1703,1985,1992,2515,2614,2856,2873,2910,2936,2971,3171; getting-started.Rmd:655; gnn-architecture.Rmd:18,120,162,361,413,419,436,437; mixed-types.Rmd:103"
+NAR,gnn-architecture.Rmd:453
+Narval,"NEWS.md:2762,2808"
+navbar,"NEWS.md:1281,3347; common-pitfalls.Rmd:26"
+neighbourhood,NEWS.md:3449
+neighbours,NEWS.md:3429
+Neoaves,trees300.Rd:38; tree-uncertainty.Rmd:116
+NeurIPS,"gnn-architecture.Rmd:458,459"
+Newick,"read_tree.Rd:17,24,25; NEWS.md:15; README.md:42,56; tree-uncertainty.Rmd:50"
+nlme,NEWS.md:173; README.md:196; multiple-imputation.Rmd:152
+Nonresponse,multi_impute.Rd:431; pool_mi.Rd:154; gnn-architecture.Rmd:462; multiple-imputation.Rmd:293
+normalisation,"build_phylo_graph.Rd:56,58; fit_pigauto.Rd:120; getting-started.Rmd:212; mixed-types.Rmd:80"
+normalised,"build_phylo_graph.Rd:30,48; multi_impute.Rd:370; NEWS.md:216,2864,2988; getting-started.Rmd:122"
+nrow,NEWS.md:769
+occ,NEWS.md:2227
+oo,getting-started.Rmd:466
+OO,"gnn-architecture.Rmd:101,103"
+OOM,"NEWS.md:2498,2609"
+OOM'd,NEWS.md:2596
+optim,NEWS.md:845
+optimised,NEWS.md:3437
+optimiser,"NEWS.md:943,962; gnn-architecture.Rmd:338"
+Ornstein,simulate_benchmark.Rd:77
+otimes,gnn-architecture.Rmd:122
+OU,"fit_baseline.Rd:95; fit_pigauto.Rd:353; impute.Rd:175; simulate_non_bm.Rd:26,28,42; NEWS.md:57,149,2465,3477"
+Oudshoorn,NEWS.md:1387
+overfits,NEWS.md:1803
+OVR,"fit_baseline.Rd:110,130,135,147,188,333,346; fit_pigauto.Rd:368; impute.Rd:189,245,260; NEWS.md:361,368,485,580,590,604,757,759,863,1069,2046,2626,2637,2864,2910,2941; gnn-architecture.Rmd:18,173,439"
+Pagel,fit_baseline.Rd:55; fit_pigauto.Rd:306; impute.Rd:128; multi_impute.Rd:140; NEWS.md:863; gnn-architecture.Rmd:451
+Pagel's,"fit_baseline.Rd:60,91,97,335; fit_pigauto.Rd:267,276,286,307,316,349,355; impute.Rd:129,138,171,177,332; multi_impute.Rd:142,157,352; NEWS.md:33,45,57,200,340,353,361,836,838,880,2284,2449; README.md:64; getting-started.Rmd:98,522,529; multiple-imputation.Rmd:38,64"
+PAICE,NEWS.md:2808
+PanTHERIA,"impute.Rd:85; multi_impute_trees.Rd:55; multi_impute.Rd:110; NEWS.md:70,309,441,447,1179,2405,2418,2424,2506,2556"
+parallelising,NEWS.md:3030
+parameterised,NEWS.md:622
+passthrough,NEWS.md:2713
+patristic,build_phylo_graph.Rd:34; getting-started.Rmd:122
+pectinate,NEWS.md:3068
+penalises,gnn-architecture.Rmd:297
+Penone,NEWS.md:911
+personalised,NEWS.md:3449
+PGLS,"multi_impute.Rd:69,82; NEWS.md:95,265; multiple-imputation.Rmd:64"
+phy,NEWS.md:1659
+phylo,"compare_methods.Rd:21; cross_validate.Rd:20; NEWS.md:638,693,858,880,911,926,935,1035,1126,1906,2135,2183,2209,2295,2301,2304,2310,2320,2424,2470,2826,2884,2943,3156,3158"
+Phylo,NEWS.md:802
+phylogenetically,NEWS.md:441
+phylogenies,avonet300.Rd:27; build_phylo_graph.Rd:75; multi_impute_trees.Rd:141; multi_impute.Rd:446; read_tree.Rd:22; trees300.Rd:6; NEWS.md:3362
+Phylogenies,gnn-architecture.Rmd:450
+phylogenomic,tree_full.Rd:34; tree300.Rd:29; trees300.Rd:41; getting-started.Rmd:652; tree-uncertainty.Rmd:119
+PhyloMaker,"NEWS.md:2295,2485,2525"
+phylopars,"NEWS.md:537,604,863,863,1992"
+PhyloPars,gnn-architecture.Rmd:453
+phytools,NEWS.md:2320
+pigauto's,"ctmax_sim.Rd:38; fit_baseline.Rd:304; multi_impute_analysis.Rd:68; multi_impute_trees.Rd:140; multi_impute.Rd:278; read_tree.Rd:37; NEWS.md:200,402,757,759,903,935,1157,1161,1358,2097,2424,2470,2515,2525,2584,2884,3209,3477; getting-started.Rmd:655; gnn-architecture.Rmd:122,134,162"
+pkgdown,"NEWS.md:1069,1269,1271,1293,2441,2445,2568,2762,2797,2814,2814,3151,3327,3408; README.md:6"
+pmm,NEWS.md:1471
+PMM,"impute.Rd:303,305,309,315; predict.pigauto_fit.Rd:73,76,81,86,87,95; NEWS.md:830,1356,1358,1360,1369,1371,1387,1401,1416,1419,1421,1436,1442,1445,1450,1454,1468; getting-started.Rmd:423"
+polytomies,NEWS.md:2525
+polytomy,NEWS.md:2485
+poolable,README.md:94
+pre,"compare_methods.Rd:23; fit_baseline.Rd:344; fit_pigauto.Rd:129,132,318,328; impute.Rd:140,150,269,313,472; multi_impute_trees.Rd:90; multi_impute.Rd:148; predict.pigauto_fit.Rd:45; pull_gbif_centroids.Rd:40; NEWS.md:441,447,518,537,695,728,1115,1185,1219,1301,1320,1322,1567,1817,1906,1925,1949,1978,2031,2046,2105,2197,2399,2702,2737,2884,2893,2943,2946,3350; gnn-architecture.Rmd:234,253"
+Pre,"NEWS.md:1341,1593,2116,2893,2943"
+precompute,getting-started.Rmd:418
+precomputes,cross_validate.Rd:33
+predeclared,NEWS.md:822
+preds,NEWS.md:1464
+preflight,"check_pigauto.Rd:35; impute.Rd:394; NEWS.md:548,552"
+preprocess,impute.Rd:282; predict.pigauto_fit.Rd:54; NEWS.md:1495
+Preprocess,preprocess_traits.Rd:5; getting-started.Rmd:194
+pretraining,"NEWS.md:2900,2973"
+propto,gnn-architecture.Rmd:113
+qquad,"gnn-architecture.Rmd:264,317"
+Rabosky,NEWS.md:2556
+Rao,NEWS.md:2742
+rds,NEWS.md:2271
+README,"NEWS.md:15,190,567,1271,1276,1293,2797"
+recognises,NEWS.md:2515
+recomputation,build_phylo_graph.Rd:84; NEWS.md:1670; getting-started.Rmd:268
+Reddy,tree_full.Rd:34; tree300.Rd:29; trees300.Rd:41
+regularisation,"fit_pigauto.Rd:123,190,199; plot.pigauto_fit.Rd:15; NEWS.md:3122"
+regularisations,gnn-architecture.Rmd:284
+regularised,fit_pigauto.Rd:449
+Reiter,"multiple-imputation.Rmd:270,295"
+relabelling,NEWS.md:368
+ReLU,gnn-architecture.Rmd:220
+renormalises,gnn-architecture.Rmd:175
+reorganisation,"NEWS.md:1269,1271"
+reorganises,NEWS.md:1271
+ResidualPhyloDAE,"NEWS.md:794,3252,3504; gnn-architecture.Rmd:192,441"
+ResNet,"fit_pigauto.Rd:120,436; NEWS.md:3284; getting-started.Rmd:116; gnn-architecture.Rmd:198"
+rfishbase's,NEWS.md:2556
+rgbif,"NEWS.md:2226,2227,2263"
+RJ,pull_worldclim_per_species.Rd:84
+rmse,NEWS.md:950
+rowMeans,NEWS.md:2588
+roxygen,"NEWS.md:615,759,1457,1536,1612,2387,2388,3289"
+Roxygen,NEWS.md:2685
+Rphylopars,"fit_baseline.Rd:321,323; NEWS.md:402,537,670,759,2713,2719,2848,2877,2954,3120,3171,3270,3333,3505; getting-started.Rmd:655; gnn-architecture.Rmd:454"
+rsbl,tree-uncertainty.Rmd:116
+RSpectra,"NEWS.md:3372,3379,3384"
+scaler,NEWS.md:863
+schemas,NEWS.md:3321
+sd,cross_validate.Rd:43; fit_baseline.Rd:265
+SDs,"preprocess_traits.Rd:64,96"
+selectable,multiple-imputation.Rmd:64
+serialised,save_pigauto.Rd:28
+Serialises,save_pigauto.Rd:22
+SEs,evaluate_imputation.Rd:19; multi_impute_trees.Rd:120; multi_impute.Rd:313; NEWS.md:2693
+SHA,NEWS.md:822
+Shafer,gnn-architecture.Rmd:469
+Shinichi's,fit_pigauto.Rd:326; impute.Rd:148
+sla,"NEWS.md:878,880,886,890,2295"
+SLA,"NEWS.md:2139,2168,2199,2239,2247"
+SLURM,"NEWS.md:2808,2808"
+SMCFCS,multi_impute_analysis.Rd:61
+Sociobiology,multi_impute.Rd:456; pool_mi.Rd:166
+softmax,NEWS.md:2996
+softplus,gnn-architecture.Rmd:237
+SoilGrids,"NEWS.md:2208,2239,2277"
+stabilising,simulate_benchmark.Rd:77; simulate_non_bm.Rd:42
+stochasticity,NEWS.md:1445
+suboptimal,NEWS.md:880
+subprocess,NEWS.md:3198
+subspaces,NEWS.md:3379
+summarise,multiple-imputation.Rmd:50
+Summarise,"summary.pigauto_result.Rd:5,19"
+summarises,with_imputations.Rd:39
+supersession,NEWS.md:565
+sysbio,description:24
+Syst,gnn-architecture.Rmd:466
+syy,description:24
+TabPFN,"NEWS.md:3179,3181,3189,3198,3204,3209,3220"
+TabPFN's,NEWS.md:3193
+terrestriality,"NEWS.md:2431,2507"
+testthat,"NEWS.md:2268,2271"
+th,multi_impute.Rd:193; NEWS.md:222
+Tobias,"avonet_full.Rd:14; avonet300.Rd:25; getting-started.Rmd:171,648"
+Topologies,multi_impute_trees.Rd:160; trees300.Rd:26
+Totoro,NEWS.md:145; multiple-imputation.Rmd:107
+transformative,NEWS.md:1860
+Troph,"NEWS.md:2510,2556,2562"
+trophic,NEWS.md:1202
+Trophic,"fit_baseline.Rd:337; NEWS.md:2454,2498"
+Uhlenbeck,simulate_benchmark.Rd:77
+ultrametric,"build_phylo_graph.Rd:72; NEWS.md:1115,1216,3068,3379"
+un,predict.pigauto_fit.Rd:92; NEWS.md:1465; gnn-architecture.Rmd:361
+uncached,tree-uncertainty.Rmd:50
+unconverged,NEWS.md:109
+underbrace,"gnn-architecture.Rmd:288,414,415,416"
+undercoverage,NEWS.md:2046
+underperform,"NEWS.md:1880,1891"
+undersample,NEWS.md:2470
+undersampled,"predict.pigauto_fit.Rd:182; NEWS.md:447,648"
+unnormalised,build_phylo_graph.Rd:61
+UQ,NEWS.md:2525
+validator,NEWS.md:2946
+Vaswani,gnn-architecture.Rmd:458
+vcv,gnn-architecture.Rmd:93
+vec,gnn-architecture.Rmd:122
+Vehtari,"multi_impute.Rd:370,450"
+venv,"NEWS.md:3198,3220"
+Villemereuil,multi_impute_trees.Rd:279; description:23; NEWS.md:1069; gnn-architecture.Rmd:466
+visualisations,NEWS.md:3460
+Visualise,getting-started.Rmd:371
+Vovk,description:22; gnn-architecture.Rmd:469
+Vphy,NEWS.md:3226
+VU,"preprocess_traits.Rd:163; mixed-types.Rmd:20,32"
+widehat,gnn-architecture.Rmd:101
+worktree,NEWS.md:2818
+WorldClim,"pull_worldclim_per_species.Rd:5,22,46,51,84; NEWS.md:975,1036,1098,2088,2145,2147,2157,2239,2277; getting-started.Rmd:577"
+writeup,NEWS.md:903
+xz,NEWS.md:3321
+Ying,gnn-architecture.Rmd:459
+Zhou,"multiple-imputation.Rmd:270,295"
+zi,"fit_baseline.Rd:56,68,161,164,166,188,331; fit_pigauto.Rd:309,315,380,381; impute.Rd:131,137,201,202,265,280,300; predict.pigauto_fit.Rd:42,52,66,191,213,219; preprocess_traits.Rd:37,121; suggest_next_observation.Rd:104,110; NEWS.md:361,368,590,710,778,1426,1495,1527,1531,1564,1608,1625,1630,1632,1659,1880,1889,1900,1929,1931,2397,2402,2573; gnn-architecture.Rmd:294"
+ZI,"NEWS.md:2848,2873,2910; mixed-types.Rmd:34"
+zRMSE,NEWS.md:45
+Δ,"NEWS.md:921,926,929,931"
+λ,"NEWS.md:29,2449; common-pitfalls.Rmd:196,209; getting-started.Rmd:522,529,543"
+μ,NEWS.md:784; gnn-architecture.Rmd:299
+ρ,"NEWS.md:2461,2646"
+σ,NEWS.md:784; common-pitfalls.Rmd:228
+Σ,"NEWS.md:962,1046,1091,1104,1110,1126,2623"
+Σ̂,"NEWS.md:1126,1136"
+definately,description:1

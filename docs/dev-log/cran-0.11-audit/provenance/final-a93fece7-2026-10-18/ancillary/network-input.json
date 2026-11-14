@@ -1,0 +1,5 @@
+{
+  "reason": "Initial URL checker returned sandbox DNS failures, not URL status evidence. One authorized read-only network rerun.",
+  "script_sha256": "2a67ed47606bb2943360572de473b157f77875d64c9170f05da69651ffb549cb",
+  "input_source_script_sha256": "fa832d6c6e0afbcc86761a2d7826ca5914fbb67006f017127e6e08a10abcb1f5"
+}

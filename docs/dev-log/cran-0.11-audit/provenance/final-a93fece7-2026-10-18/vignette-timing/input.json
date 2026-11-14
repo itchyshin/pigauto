@@ -1,0 +1,44 @@
+{
+  "artifact": {
+    "path": "/private/tmp/pigauto-release-candidate/sha256-a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb/pigauto_0.11.0.tar.gz",
+    "sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+    "size_bytes": 5137837,
+    "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18"
+  },
+  "source_path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/source/pigauto",
+  "source_rmd_sha256": {
+    "common-pitfalls.Rmd": "a545207dac3d063e124b8612e1a39ae0ab2ed08a55e5ba48a6b881ffb8876a19",
+    "getting-started.Rmd": "2e18561af8173140e82cde783bd7ee2fcdf0a060ab19627caeb13ba51b880bd8",
+    "gnn-architecture.Rmd": "e152c1f08b7f91c79c0506f2806b6e907d753a81d63e5dc663b6de450f5f9ec0",
+    "mixed-types.Rmd": "c1b7585bd5ad44a6ff252ee081461c7fa6e3224fca3901baab8ea32983cb5615",
+    "multiple-imputation.Rmd": "549dc43ad8e382b81ced1badb18491186ecdd464c53d24e47e539403e957286d",
+    "tree-uncertainty.Rmd": "c42a05ab7cb75a3a489496da8fefbf0642afa300fd8ec2d17a278ff3eb794f39"
+  },
+  "library": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/neither",
+  "per_vignette_timeout_seconds": 120,
+  "total_timeout_seconds": 600,
+  "render_policy": "Default rmarkdown/knitr execution; do not override eval options; preserve authored teaching chunks and existing failure behavior.",
+  "installed_package_source": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/neither/pigauto",
+  "optional_backends_absent": [
+    "drmTMB",
+    "gllvmTMB"
+  ],
+  "installed_library_evidence": {
+    "manifest_path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/manifest.json",
+    "manifest_sha256": "15e134f6fd4202a08a28a43bfab243b9b6973cfb1f9a2c426c2140cd516e78ed",
+    "install_command": [
+      "R",
+      "CMD",
+      "INSTALL",
+      "--no-multiarch",
+      "-l",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/neither",
+      "/private/tmp/pigauto-release-candidate/sha256-a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb/pigauto_0.11.0.tar.gz"
+    ],
+    "install_exit_code": 0,
+    "install_log_sha256": "7f8a73b86b7d03565ff3003762e097a22aabf7fce7f9737a57df3161adc95993",
+    "archive_sha256_after_install": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+    "library": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/neither",
+    "optional_packages_absent": true
+  }
+}

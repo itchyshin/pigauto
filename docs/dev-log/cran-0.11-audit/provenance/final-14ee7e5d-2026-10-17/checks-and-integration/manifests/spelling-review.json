@@ -1,0 +1,46 @@
+{
+  "bundle": "raw/spelling-review.evidence.tar.gz",
+  "bundle_sha256": "5d6387c888716f562bfaf8958f170243c1c5c73f15a9a92b98f56506ceae53a1",
+  "bundle_size_bytes": 156131,
+  "kind": "evidence_bundle_not_release_archive",
+  "member_count": 6,
+  "members": [
+    {
+      "member": "README.md",
+      "sha256": "a9ab1b9e4efda1fd1a83e698eeb7dae63e3ed9293b65d1572141fd3a2b53be93",
+      "size_bytes": 2598,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-spelling-review/README.md"
+    },
+    {
+      "member": "files.sha256",
+      "sha256": "47f1031aa77a85fcdd9e010acc8f043bf6b2be0e83edfefedad9473011fde677",
+      "size_bytes": 406,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-spelling-review/files.sha256"
+    },
+    {
+      "member": "receipt.json",
+      "sha256": "23c77e6f4da89770f62a15bb67f8da6a8eebcf8e874a35f792df72e715a2dbd3",
+      "size_bytes": 5410,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-spelling-review/receipt.json"
+    },
+    {
+      "member": "review.py",
+      "sha256": "42ea3622366ccab53d60e9728f3516e8a94bb0f46282c3fb84fbc46b89d9c03f",
+      "size_bytes": 8938,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-spelling-review/review.py"
+    },
+    {
+      "member": "source-contexts.csv",
+      "sha256": "0c1702ca90cf47538aab67749bb9bc00c164eb634455dd281b9228d3278aa0e6",
+      "size_bytes": 459950,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-spelling-review/source-contexts.csv"
+    },
+    {
+      "member": "token-adjudication.csv",
+      "sha256": "ec02775ac5b83bf37852a4d6cc97b6d5a7e255a6461447917bdfef9ce4f14601",
+      "size_bytes": 142955,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-spelling-review/token-adjudication.csv"
+    }
+  ],
+  "release_archive_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb"
+}

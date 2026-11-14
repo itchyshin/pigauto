@@ -1,0 +1,6 @@
+{
+  "finding": "First independent reader compared literal CRLF and LF within multiline CSV message fields as unequal.",
+  "affected": "Windows release/devel warning-details.csv ordinal warning message",
+  "correction": "CSV logical record comparison uses universal-newline normalization, matching declared CRLF_TO_LF_ONLY; exact byte transform and raw gzip original equality remain mandatory.",
+  "not_a_publication_mutation": true
+}

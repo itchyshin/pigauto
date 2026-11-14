@@ -1,0 +1,129 @@
+{
+  "artifact": {
+    "path": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/pigauto_0.11.0.tar.gz",
+    "sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+    "size_bytes": 5137648,
+    "source_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636"
+  },
+  "separate_diagnostic": true,
+  "all_six_success": true,
+  "rows": [
+    {
+      "file": "common-pitfalls.Rmd",
+      "render_elapsed_seconds": 5.8116,
+      "process_elapsed_seconds": 39.06071133300429,
+      "exit": 0,
+      "start_utc": "2026-10-18T00:30:05.111766+00:00",
+      "render_start_utc": "2026-10-18 00:30:37 UTC",
+      "source_rmd_sha256": "a545207dac3d063e124b8612e1a39ae0ab2ed08a55e5ba48a6b881ffb8876a19",
+      "disabled_chunks": 8,
+      "enabled_chunks": 1,
+      "chunk_trace": "rendered/common-pitfalls/chunk-options.jsonl",
+      "command": [
+        "Rscript",
+        "--vanilla",
+        "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d/render-one.R",
+        "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d",
+        "common-pitfalls.Rmd"
+      ]
+    },
+    {
+      "file": "getting-started.Rmd",
+      "render_elapsed_seconds": 23.6822,
+      "process_elapsed_seconds": 64.07528816600097,
+      "exit": 0,
+      "start_utc": "2026-10-18T00:30:44.320057+00:00",
+      "render_start_utc": "2026-10-18 00:31:23 UTC",
+      "source_rmd_sha256": "2e18561af8173140e82cde783bd7ee2fcdf0a060ab19627caeb13ba51b880bd8",
+      "disabled_chunks": 20,
+      "enabled_chunks": 7,
+      "chunk_trace": "rendered/getting-started/chunk-options.jsonl",
+      "command": [
+        "Rscript",
+        "--vanilla",
+        "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d/render-one.R",
+        "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d",
+        "getting-started.Rmd"
+      ]
+    },
+    {
+      "file": "gnn-architecture.Rmd",
+      "render_elapsed_seconds": 9.878,
+      "process_elapsed_seconds": 43.36521229200298,
+      "exit": 0,
+      "start_utc": "2026-10-18T00:31:48.534717+00:00",
+      "render_start_utc": "2026-10-18 00:32:20 UTC",
+      "source_rmd_sha256": "e152c1f08b7f91c79c0506f2806b6e907d753a81d63e5dc663b6de450f5f9ec0",
+      "disabled_chunks": 0,
+      "enabled_chunks": 1,
+      "chunk_trace": "rendered/gnn-architecture/chunk-options.jsonl",
+      "command": [
+        "Rscript",
+        "--vanilla",
+        "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d/render-one.R",
+        "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d",
+        "gnn-architecture.Rmd"
+      ]
+    },
+    {
+      "file": "mixed-types.Rmd",
+      "render_elapsed_seconds": 16.6452,
+      "process_elapsed_seconds": 64.05447420899873,
+      "exit": 0,
+      "start_utc": "2026-10-18T00:32:32.421220+00:00",
+      "render_start_utc": "2026-10-18 00:33:18 UTC",
+      "source_rmd_sha256": "c1b7585bd5ad44a6ff252ee081461c7fa6e3224fca3901baab8ea32983cb5615",
+      "disabled_chunks": 1,
+      "enabled_chunks": 11,
+      "chunk_trace": "rendered/mixed-types/chunk-options.jsonl",
+      "command": [
+        "Rscript",
+        "--vanilla",
+        "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d/render-one.R",
+        "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d",
+        "mixed-types.Rmd"
+      ]
+    },
+    {
+      "file": "multiple-imputation.Rmd",
+      "render_elapsed_seconds": 10.7013,
+      "process_elapsed_seconds": 52.372303792013554,
+      "exit": 0,
+      "start_utc": "2026-10-18T00:33:36.750831+00:00",
+      "render_start_utc": "2026-10-18 00:34:17 UTC",
+      "source_rmd_sha256": "549dc43ad8e382b81ced1badb18491186ecdd464c53d24e47e539403e957286d",
+      "disabled_chunks": 8,
+      "enabled_chunks": 1,
+      "chunk_trace": "rendered/multiple-imputation/chunk-options.jsonl",
+      "command": [
+        "Rscript",
+        "--vanilla",
+        "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d/render-one.R",
+        "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d",
+        "multiple-imputation.Rmd"
+      ]
+    },
+    {
+      "file": "tree-uncertainty.Rmd",
+      "render_elapsed_seconds": 8.1682,
+      "process_elapsed_seconds": 45.35446679199231,
+      "exit": 0,
+      "start_utc": "2026-10-18T00:34:29.232877+00:00",
+      "render_start_utc": "2026-10-18 00:35:04 UTC",
+      "source_rmd_sha256": "c42a05ab7cb75a3a489496da8fefbf0642afa300fd8ec2d17a278ff3eb794f39",
+      "disabled_chunks": 3,
+      "enabled_chunks": 1,
+      "chunk_trace": "rendered/tree-uncertainty/chunk-options.jsonl",
+      "command": [
+        "Rscript",
+        "--vanilla",
+        "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d/render-one.R",
+        "/private/tmp/pigauto-final-closure-20261017/vignette-timing-14ee7e5d",
+        "tree-uncertainty.Rmd"
+      ]
+    }
+  ],
+  "archive_sha256_after": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+  "source_rmds_unchanged": true,
+  "not_a_native_or_windows_check_timing": true
+}

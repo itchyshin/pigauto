@@ -1,0 +1,23 @@
+Final direct frozen archive run 39082452558, attempt 1
+PR 236 checker head: 6cd5f65b06d0c3ee32ce4b2d5a67a22c06028116
+Merged source commit bound into frozen archive: 8e275ca738129c8d608f06ffc407b8141c1a2636
+GitHub event/workflow SHA (synthetic PR merge): e94e40a2f66a7f27dcc69b515d762d69c6eadf66
+Frozen pigauto 0.11.0 archive SHA-256: 14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb
+Archive bytes: 5137648; inventory SHA-256: d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d; entries: 250
+All three jobs completed success; their native R CMD check logs report Status: OK; archive posthash identities match prehash.
+
+Artifact IDs / server ZIP digests / local ZIP SHA-256:
+Windows release 12120265144; 13,403,460 bytes; ff8f7b5e9a6b87c193c0ab98835b4ba4dbac41e8bbcd4b93e93bed4f56436da2
+Windows devel 12119942511; 13,399,068 bytes; f16a0de8b68dddc0a246e04397de31610fb7fcf00c80d4c2e84aa3c1a370cd68
+Ubuntu release 12119717510; 13,409,927 bytes; 12a9e31f579b914c58a6221320c7192d142a99648d1cb30cf403f7954b9ece2c
+
+Actual GitHub raw job-log Status: OK lines:
+Windows release job 117542043476: 2026-10-18T00:36:26.1325412Z Status: OK; native check elapsed 645.8126 s; separate warning replay 423.25 s.
+Windows devel job 117542043721: 2026-10-18T00:34:12.0245464Z Status: OK; native check elapsed 622.4320 s; separate warning replay 409.41 s.
+Ubuntu release job 117542044036: 2026-10-18T00:29:04.0402657Z Status: OK; native check elapsed 336.3305 s; separate warning replay 196.181 s.
+
+Separate warning replay, NOT part of native check timing: each platform records testthat 3.3.2, pigauto 0.11.0, NOT_CRAN=UNSET, _R_CHECK_FORCE_SUGGESTS_=true, same installed package path under frozen-check/pigauto.Rcheck/pigauto. Each replay JSON reports native_counts and replay_counts fail=0, warnings=161, skips=86, pass=3195, error={}; warning-details.csv has 161 data rows per platform. These counts are retained observations, not an adjudication of the warnings.
+
+Existing verifier:
+python3 /private/tmp/pigauto-pr236-validator-20261017/script/cran-0.11-platform/verify_results.py /private/tmp/pigauto-final-closure-20261017/final-direct-39082452558
+Result: DIRECT_ARCHIVE_MATRIX_VERIFIED_3_OF_3; check-log SHA-256 values are in verify-results.out. Verifier confirms archive identity/inventory, shared run/workflow identity, Status: OK, exit=0, check environment/command, dependency scan, and manual review required. See each retained platform artifact's frozen-check/pigauto.Rcheck/00check.log and platform-evidence/check-console.log for check logs; warning-objects.rds and warning-details.csv are separate diagnostic replay outputs.

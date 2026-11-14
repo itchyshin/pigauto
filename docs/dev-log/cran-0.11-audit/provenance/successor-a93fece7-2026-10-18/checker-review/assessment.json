@@ -1,0 +1,36 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "6b3bc5bb494878598c1587b024b87043f006e21b469a60df8ffb313a29f44df5",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Grace independent checker reviewer",
+  "method": "Separate post-draft read against fresh structural/hash/identity-control receipts.",
+  "genre": "Bounded engineering review",
+  "coverage": "Whole exact saved README",
+  "score": 2,
+  "style_status": "assessed",
+  "score_reason": "Concrete changes, tested refusals and review limits are stated directly.",
+  "confidence": "moderate",
+  "confidence_reason": "Editorial self-judgment, not authorship detection.",
+  "examples": [
+    {
+      "location": "Opening verdict",
+      "cue": "Scope before conclusions",
+      "impact": "Avoids interpreting a checker pass as release readiness.",
+      "repair": "no change needed",
+      "line": 3,
+      "quote": "**PASS for checker retargeting only.** This does not establish package, platform or release readiness."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "not_applicable",
+  "science_gate_reason": "No new scientific claim.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Compared to exact backup/current bytes, AST comparison, successor identity and fresh control readback.",
+  "references_gate": "not_applicable",
+  "references_gate_reason": "Internal evidence only; no new external literature claim.",
+  "date": "2026-10-18T02:57:49.592370+00:00",
+  "calibration_status": "Protocol examples were already seen; no held-out evaluation.",
+  "interpretation": "perceived_style_not_authorship"
+}

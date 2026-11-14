@@ -1,0 +1,12 @@
+{
+  "attempt": 2,
+  "exit_code": 1,
+  "elapsed_seconds": 1.6431184580142144,
+  "failure": "copied native tests tree was one directory too shallow for capture script working-directory contract",
+  "command": [
+    "Rscript",
+    "--vanilla",
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay/capture.R",
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay"
+  ]
+}

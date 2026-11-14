@@ -1,0 +1,6 @@
+REAL_FIT_STATUS backend=gllvmTMB imputation=1 convergence=0 pdHess=TRUE
+REAL_FIT_STATUS backend=gllvmTMB imputation=2 convergence=0 pdHess=TRUE
+REAL_FIT_STATUS backend=gllvmTMB imputation=3 convergence=0 pdHess=TRUE
+RUBIN_ORACLE_OK backend=gllvmTMB terms=8 imputations=3
+script/cran-0.11-integration/test-real-backends.R: 22 expectations passed against installed pigauto
+GLLVM_ONLY_OK

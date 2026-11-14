@@ -1,0 +1,22 @@
+{
+  "routes_checked": 44,
+  "route_failures": [],
+  "retained_routes_checked": 62,
+  "retained_route_failures": [],
+  "expected_utility_routes": [
+    {
+      "url": "https://itchyshin.github.io/pigauto/404.html",
+      "status": 200,
+      "title": "Page not found \u2022 pigauto"
+    }
+  ],
+  "sitemap_status": 200,
+  "sitemap_entries": 62,
+  "sitemap_retired_targets": [],
+  "search_status": 200,
+  "search_entries": 613,
+  "search_retired_targets": [],
+  "search_entries_with_historical_dev_text": [
+    "https://itchyshin.github.io/pigauto/news/index.html"
+  ]
+}

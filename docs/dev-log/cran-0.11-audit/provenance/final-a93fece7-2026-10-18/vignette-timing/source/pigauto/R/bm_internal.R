@@ -1,0 +1,451 @@
+# Internal helpers for univariate phylogenetic BM imputation.
+#
+# These implement the standard conditional multivariate-normal approach:
+#   R = cov2cor(vcv(tree))       -- phylogenetic correlation matrix
+#   mu_hat = GLS phylogenetic mean
+#   sigma2 = REML residual variance
+#   E[y_m | y_o] = mu_hat + R_mo R_oo^{-1} (y_o - mu_hat)
+#   Var[y_m | y_o] = sigma2 * (1 - diag(R_mo R_oo^{-1} R_om))
+#
+# Each trait column is imputed independently (univariate, not joint).
+# This is the standard MCMCglmm/glmmTMB approach: separate the
+# phylogenetic correlation structure from the residual variance.
+#
+# @references
+# Goolsby, E.W., Bruggeman, J. & Ane, C. (2017) Rphylopars: fast
+#   multivariate phylogenetic comparative methods for missing data and
+#   within-species variation. Methods in Ecology and Evolution, 8,
+#   22-27.
+# @keywords internal
+
+# ---- phylo_cor_matrix -------------------------------------------------------
+
+#' Compute the phylogenetic correlation matrix from a tree
+#'
+#' @param tree object of class \code{"phylo"}.
+#' @return Symmetric positive-definite matrix (\eqn{n \times n}), with
+#'   diagonal = 1 and dimnames from \code{tree$tip.label}.
+#' @keywords internal
+#' @noRd
+phylo_cor_matrix <- function(tree) {
+  C <- ape::vcv(tree)
+  stats::cov2cor(C)
+}
+
+# ---- bm_impute_col ----------------------------------------------------------
+
+#' Univariate BM conditional imputation for one latent column
+#'
+#' Given a phylogenetic correlation matrix and a partially observed trait
+#' vector, compute the GLS phylogenetic mean, REML variance, and
+#' conditional mean/SE for missing species.
+#'
+#' @param y numeric vector (length \code{n_species}). \code{NA} = missing.
+#' @param R phylogenetic correlation matrix (\code{n_species x n_species}).
+#'   Must be ordered consistently with \code{y}.
+#' @param nugget numeric scalar added to diagonal of \eqn{R_{oo}} for
+#'   regularisation (default \code{1e-6}).
+#' @return A list with:
+#'   \describe{
+#'     \item{mu}{numeric vector (length \code{n_species}). Observed species
+#'       keep their values; missing species get the conditional mean.}
+#'     \item{se}{numeric vector (length \code{n_species}). Observed species
+#'       get 0; missing species get
+#'       \eqn{\sqrt{\sigma^2 (1 - h_i)}}.}
+#'   }
+#' @keywords internal
+#' @noRd
+bm_impute_col <- function(y, R, nugget = 1e-6, lambda = 1.0) {
+  # Pagel's lambda regularises the off-diagonal of R toward zero
+  #   R(lambda) = lambda * R + (1 - lambda) * I,    lambda in [0, 1]
+  # At lambda = 1 the call is bit-identical to v0.9.x (back-compat).
+  # At lambda = 0, R(lambda) = I -- GLS mean reduces to the arithmetic
+  # mean of observed cells; conditional posterior is the grand mean
+  # with no phylogenetic structure.
+  # lambda = "estimate" triggers ML estimation: returns a list with an
+  # additional $lambda_hat field reporting the optimal lambda.
+  # Spec: specs/2026-05-18-pagel-lambda-baseline-design.md.
+  lambda_hat <- NULL
+  if (identical(lambda, "estimate")) {
+    lambda_hat <- ml_lambda_for_col(y, R, nugget = nugget)
+    lambda <- lambda_hat
+  } else if (identical(lambda, "cv")) {
+    lambda_hat <- cv_lambda_for_col(y, R, nugget = nugget)
+    lambda <- lambda_hat
+  } else if (identical(lambda, "bayes")) {
+    # Bayesian model-averaged prediction: predict at each grid lambda,
+    # then average with the posterior weights. Returns mu averaged, se
+    # combining within-lambda and between-lambda variance, and
+    # lambda_hat = posterior mean (a diagnostic, not used in the blend).
+    post <- bayes_lambda_for_col(y, R, nugget = nugget)
+    mu_avg <- numeric(length(y))
+    var_within <- numeric(length(y))   # E_lambda[Var_BM(lambda)]
+    mu_each <- vector("list", length(post$lambda_grid))
+    for (i in seq_along(post$lambda_grid)) {
+      r_i <- bm_impute_col(y, R, nugget = nugget, lambda = post$lambda_grid[i])
+      mu_each[[i]] <- r_i$mu
+      mu_avg <- mu_avg + post$weights[i] * r_i$mu
+      var_within <- var_within + post$weights[i] * r_i$se^2
+    }
+    # Var_lambda[E_BM(lambda)]: between-lambda spread in posterior mean.
+    var_between <- numeric(length(y))
+    for (i in seq_along(post$lambda_grid)) {
+      var_between <- var_between + post$weights[i] * (mu_each[[i]] - mu_avg)^2
+    }
+    var_total <- var_within + var_between
+    out <- list(mu = mu_avg,
+                se = sqrt(pmax(var_total, 0)),
+                lambda_hat = post$lambda_post_mean,
+                lambda_post_entropy = post$lambda_post_entropy)
+    return(out)
+  }
+  if (!is.numeric(lambda) || length(lambda) != 1L || !is.finite(lambda) ||
+      lambda < 0 || lambda > 1) {
+    stop("'lambda' must be a numeric scalar in [0, 1], \"estimate\", \"cv\", or \"bayes\"; got: ",
+         paste(lambda, collapse = ", "), call. = FALSE)
+  }
+  if (lambda < 1) {
+    diag_R <- diag(R)
+    R <- lambda * R
+    diag(R) <- lambda * diag_R + (1 - lambda)
+  }
+
+  n <- length(y)
+  mu_out <- numeric(n)
+  se_out <- numeric(n)
+
+  obs_idx  <- which(!is.na(y))
+  miss_idx <- which(is.na(y))
+  n_o <- length(obs_idx)
+  n_m <- length(miss_idx)
+
+ # Edge case: all observed ------------------------------------------------
+  if (n_m == 0L) {
+    return(list(mu = y, se = se_out))
+  }
+
+  # Edge case: too few observations for GLS --------------------------------
+  if (n_o < 5L) {
+    y_obs <- y[obs_idx]
+    global_mu <- if (n_o > 0L) mean(y_obs) else 0
+    global_sd <- if (n_o > 1L) stats::sd(y_obs) else 1
+    mu_out[obs_idx]  <- y_obs
+    mu_out[miss_idx] <- global_mu
+    se_out[miss_idx] <- global_sd
+    return(list(mu = mu_out, se = se_out))
+  }
+
+  # Normal path: conditional MVN -------------------------------------------
+  y_o <- y[obs_idx]
+  R_oo <- R[obs_idx, obs_idx, drop = FALSE]
+  R_mo <- R[miss_idx, obs_idx, drop = FALSE]
+
+  # Cholesky with nugget back-off
+  L <- NULL
+  nug <- nugget
+  for (attempt in seq_len(6L)) {
+    R_oo_reg <- R_oo + diag(nug, n_o)
+    L <- tryCatch(chol(R_oo_reg), error = function(e) NULL)
+    if (!is.null(L)) break
+    nug <- nug * 2
+  }
+  if (is.null(L)) {
+    # Last resort: fallback to global mean/sd
+    warning("BM baseline: Cholesky of R_oo failed after nugget back-off; ",
+            "using global mean fallback.", call. = FALSE)
+    mu_out[obs_idx]  <- y_o
+    mu_out[miss_idx] <- mean(y_o)
+    se_out[miss_idx] <- stats::sd(y_o)
+    return(list(mu = mu_out, se = se_out))
+  }
+
+  # Solve via Cholesky: solve(R_oo_reg, b) = backsolve(L, forwardsolve(t(L), b))
+  chol_solve <- function(b) {
+    backsolve(L, forwardsolve(t(L), b))
+  }
+
+  # 1. GLS phylogenetic mean
+  ones  <- rep(1, n_o)
+  a     <- chol_solve(ones)        # R_oo^{-1} 1
+  b     <- chol_solve(y_o)         # R_oo^{-1} y_o
+  mu_hat <- sum(b) / sum(a)        # (1'R_oo^{-1} y_o) / (1'R_oo^{-1} 1)
+
+  # 2. REML variance
+  e       <- y_o - mu_hat
+  e_solve <- chol_solve(e)         # R_oo^{-1} (y_o - mu_hat)
+  sigma2  <- as.numeric(crossprod(e, e_solve)) / max(n_o - 1L, 1L)
+
+  # 3. Conditional mean for missing species
+  mu_m <- mu_hat + as.numeric(R_mo %*% e_solve)
+
+  # 4. Conditional variance for missing species
+  #    h_i = diag(R_mo R_oo^{-1} R_om) computed without forming the full product
+  #    W = L^{-T} R_om  =>  h_i = colSums(W^2)
+  W <- forwardsolve(t(L), t(R_mo))   # (n_o x n_m)
+  h <- colSums(W^2)
+  cond_var <- sigma2 * pmax(1 - h, 0)
+
+  # Assemble output
+  mu_out[obs_idx]  <- y_o
+  mu_out[miss_idx] <- mu_m
+  se_out[miss_idx] <- sqrt(cond_var)
+
+  out <- list(mu = mu_out, se = se_out)
+  if (!is.null(lambda_hat)) out$lambda_hat <- lambda_hat
+  out
+}
+
+# ---- ml_lambda_for_col -----------------------------------------------------
+#
+# Per-column ML estimation of Pagel's lambda for the BM baseline.
+#
+# Profile-likelihood: at fixed lambda the GLS phylogenetic mean
+# mu_hat(lambda) and REML variance sigma2_hat(lambda) are closed-form,
+# so the profile (REML) negative log-likelihood is
+#
+#   nll(lambda) = 0.5 * ( (n_o - 1) * log(sigma2_hat(lambda))
+#                       + log|R_oo(lambda)| )
+#
+# (constants dropped). We 1D-optimise over lambda in (eps, 1-eps) using
+# stats::optimise to avoid the singular endpoints.
+#
+# Returns: scalar lambda_hat in [eps, 1-eps]. Falls back to 1 if there
+# are too few observed cells (n_o < 10) to do useful inference, or if
+# any of the Cholesky factorisations fail.
+# @noRd
+ml_lambda_for_col <- function(y, R, nugget = 1e-6,
+                                lambda_grid = c(0.005, 0.995)) {
+  ml_lambda_and_mu_for_col(y, R, nugget = nugget,
+                            lambda_grid = lambda_grid)$lambda_hat
+}
+
+# ---- ml_lambda_and_mu_for_col -----------------------------------------------
+#
+# Same estimate as ml_lambda_for_col(), but also returns the GLS
+# phylogenetic mean AT that estimated lambda, read off the SAME
+# eigendecomposition cache used to search for lambda_hat
+# (build_pagel_nll_cache()'s $mu_at(), R/pagel_lambda.R) instead of a
+# second O(n_o^3) factorisation of R_oo. A caller that needs both (e.g.
+# the joint baseline's Henderson-centering step in
+# `.mvn_init_per_column()`, R/joint_mvn_solver.R) should call this
+# instead of pairing `ml_lambda_for_col()` with a separate
+# `.mvn_gls_mean_at_lambda()` call (Rose review, 2026-09-23, "SPEED":
+# that pairing did two O(n^3) factorisations per column).
+#
+# Returns list(lambda_hat, mu_hat). mu_hat is NA_real_ whenever the
+# lambda estimate itself falls back to 1 (n_o < 10 or a degenerate
+# cache) -- callers should use their own GLS-mean fallback in that case,
+# same as before this helper existed.
+# @noRd
+ml_lambda_and_mu_for_col <- function(y, R, nugget = 1e-6,
+                                       lambda_grid = c(0.005, 0.995)) {
+  obs <- which(!is.na(y))
+  n_o <- length(obs)
+  if (n_o < 10L) return(list(lambda_hat = 1.0, mu_hat = NA_real_))
+
+  # v0.11 perf: build the eigendecomp cache ONCE; each NLL evaluation
+  # below is O(n_o) instead of O(n_o^3). At n_o = 1500 this drops the
+  # 16-evaluation grid + optim loop from ~5 sec to ~0.05 sec.
+  # Spec: 2026-05-18-pagel-lambda-eigendecomp-speedup-design.md.
+  #
+  # The grid-then-refine search itself lives in `.pagel_lambda_from_cache()`
+  # (R/pagel_lambda.R) so a caller that already built this column's cache
+  # for another reason (e.g. `.mvn_resolve_lambda()`'s lambda_block search,
+  # R/joint_mvn_solver.R) can reuse it instead of calling this wrapper.
+  cache <- build_pagel_nll_cache(y, R, nugget = nugget)
+  .pagel_lambda_from_cache(cache, lambda_grid = lambda_grid)
+}
+
+# ---- bm_impute_col_with_cov -------------------------------------------------
+
+#' Univariate BM conditional imputation with covariates as fixed effects.
+#'
+#' Extends \code{\link{bm_impute_col}} to a GLS regression model
+#'   \eqn{y = X \beta + u,\quad u \sim \mathrm{MVN}(0, \sigma^2 R)},
+#' where \eqn{X} is a (\code{n_species x p_x}) design matrix of
+#' covariates (with intercept as the first column).  Returns the
+#' phylogenetic-BLUP prediction
+#'   \eqn{\hat{y}_m = X_m \hat{\beta} + R_{mo} R_{oo}^{-1} (y_o - X_o \hat{\beta})}.
+#'
+#' This is the same math \code{phylolm::phylolm(y ~ X, model="BM")}
+#' uses internally for prediction.  Implemented here so pigauto's own
+#' BM machinery handles covariate fixed effects without an external
+#' dependency.
+#'
+#' @param y numeric vector (length \code{n_species}). \code{NA} = missing.
+#' @param X numeric matrix (\code{n_species x p_x}). Design matrix with
+#'   the intercept column included.  All rows must be present and
+#'   finite (covariates should already be imputed before this call).
+#' @param R phylogenetic correlation matrix (\code{n_species x n_species}).
+#' @param nugget numeric scalar (default \code{1e-6}).
+#' @param ridge numeric scalar. Ridge regulariser added to (X' R^-1 X)
+#'   diagonal of the non-intercept coefficients.  Shrinks unsupported
+#'   covariate coefficients toward zero (e.g. on interactive DGPs where
+#'   the linear projection is genuinely 0).  Default \code{0.05} -- gentle.
+#' @param lrt_threshold numeric scalar in \eqn{[0, 1]}. Likelihood-ratio gate:
+#'   if the cov-aware fit's residual variance is not at least
+#'   \code{1 - lrt_threshold} fraction of the no-cov fit's residual
+#'   variance, fall back to the no-cov baseline.  This avoids fitting
+#'   noise on data where covariates do not actually help.  Default
+#'   \code{0.02} (covariates must reduce residual variance by >= 2%).
+#'   Set to \code{0} to disable the gate entirely.
+#' @param lambda numeric scalar in \code{[0, 1]}, or \code{"estimate"}.
+#'   Pagel's lambda applied to \code{R} exactly as in
+#'   \code{\link{bm_impute_col}}: \code{R(lambda) = lambda * R + (1 -
+#'   lambda) * I}. Default \code{1.0} is bit-identical to the pre-lambda
+#'   behaviour (no new code executes). \code{"estimate"} profiles lambda
+#'   jointly with the GLS coefficients via \code{build_pagel_nll_cache(y,
+#'   R, X = X)} and reports the optimum as \code{$lambda_hat}. Because the
+#'   transform is applied to \code{R} up front, the LRT gate below (which
+#'   compares the cov-aware fit to an intercept-only fit) compares both
+#'   models at the SAME lambda.
+#' @return A list with \code{mu}, \code{se}, \code{beta_hat}
+#'   (the fitted GLS coefficients, length \code{p_x}), and
+#'   \code{used_cov} (logical -- TRUE if the cov-aware fit was used,
+#'   FALSE if the LRT gate fell back to no-cov). When \code{lambda =
+#'   "estimate"}, also \code{lambda_hat} (the profiled optimum).
+#' @keywords internal
+#' @noRd
+bm_impute_col_with_cov <- function(y, X, R, nugget = 1e-6,
+                                    ridge = 0.0,
+                                    lrt_threshold = 0.02,
+                                    lambda = 1.0) {
+  n <- length(y)
+  stopifnot(is.matrix(X), nrow(X) == n)
+  p_x <- ncol(X)
+
+  # Pagel's lambda: same transform as bm_impute_col() (lines ~107-111).
+  # At lambda = 1 this branch does not execute, so the rest of the
+  # function is untouched and bit-identical to the pre-lambda version.
+  lambda_hat <- NULL
+  if (identical(lambda, "estimate")) {
+    cache <- build_pagel_nll_cache(y, R, nugget = nugget, X = X)
+    opt <- stats::optimize(cache$nll, interval = c(0.01, 0.99), tol = 1e-4)
+    lambda_hat <- opt$minimum
+    lambda <- lambda_hat
+  }
+  if (!is.numeric(lambda) || length(lambda) != 1L || !is.finite(lambda) ||
+      lambda < 0 || lambda > 1) {
+    stop("'lambda' must be a numeric scalar in [0, 1] or \"estimate\"; got: ",
+         paste(lambda, collapse = ", "), call. = FALSE)
+  }
+  if (lambda < 1) {
+    diag_R <- diag(R)
+    R <- lambda * R
+    diag(R) <- lambda * diag_R + (1 - lambda)
+  }
+
+  mu_out <- numeric(n)
+  se_out <- numeric(n)
+
+  obs_idx  <- which(!is.na(y))
+  miss_idx <- which(is.na(y))
+  n_o <- length(obs_idx)
+  n_m <- length(miss_idx)
+
+  if (n_m == 0L) {
+    return(list(mu = y, se = se_out, beta_hat = rep(NA_real_, p_x)))
+  }
+
+  # Too few observations for GLS regression: fall back to global mean
+  if (n_o < max(p_x + 5L, 10L)) {
+    y_obs <- y[obs_idx]
+    global_mu <- if (n_o > 0L) mean(y_obs) else 0
+    global_sd <- if (n_o > 1L) stats::sd(y_obs) else 1
+    mu_out[obs_idx]  <- y_obs
+    mu_out[miss_idx] <- global_mu
+    se_out[miss_idx] <- global_sd
+    return(list(mu = mu_out, se = se_out, beta_hat = rep(NA_real_, p_x)))
+  }
+
+  y_o  <- y[obs_idx]
+  X_o  <- X[obs_idx, , drop = FALSE]
+  X_m  <- X[miss_idx, , drop = FALSE]
+  R_oo <- R[obs_idx, obs_idx, drop = FALSE]
+  R_mo <- R[miss_idx, obs_idx, drop = FALSE]
+
+  # Cholesky with nugget back-off
+  L <- NULL
+  nug <- nugget
+  for (attempt in seq_len(6L)) {
+    R_oo_reg <- R_oo + diag(nug, n_o)
+    L <- tryCatch(chol(R_oo_reg), error = function(e) NULL)
+    if (!is.null(L)) break
+    nug <- nug * 2
+  }
+  if (is.null(L)) {
+    warning("BM cov baseline: Cholesky failed; falling back to global mean.",
+            call. = FALSE)
+    mu_out[obs_idx]  <- y_o
+    mu_out[miss_idx] <- mean(y_o)
+    se_out[miss_idx] <- stats::sd(y_o)
+    return(list(mu = mu_out, se = se_out, beta_hat = rep(NA_real_, p_x)))
+  }
+  chol_solve <- function(b) backsolve(L, forwardsolve(t(L), b))
+
+  # GLS regression with ridge on non-intercept coefficients:
+  #   beta_hat = (X' R_oo^{-1} X + lambda*P)^{-1} X' R_oo^{-1} y_o
+  # P is the identity matrix with the intercept (col 1) zeroed out, so
+  # only the covariate coefs are shrunk.
+  Rinv_X <- chol_solve(X_o)
+  Rinv_y <- chol_solve(y_o)
+  XtRinvX <- crossprod(X_o, Rinv_X)
+  XtRinvy <- crossprod(X_o, Rinv_y)
+  ridge_diag <- rep(ridge, p_x)
+  ridge_diag[1] <- 0           # don't penalise the intercept
+  beta_hat <- tryCatch(
+    solve(XtRinvX + diag(ridge_diag + 1e-8, p_x), XtRinvy),
+    error = function(e) {
+      warning("GLS solve failed; falling back to OLS.", call. = FALSE)
+      solve(crossprod(X_o) + diag(ridge_diag + 1e-8, p_x), crossprod(X_o, y_o))
+    })
+  beta_hat <- as.numeric(beta_hat)
+
+  # REML residual variance with cov fit
+  e_cov       <- y_o - as.numeric(X_o %*% beta_hat)
+  e_cov_solve <- chol_solve(e_cov)
+  sigma2_cov  <- as.numeric(crossprod(e_cov, e_cov_solve)) /
+                  max(n_o - p_x, 1L)
+
+  # Likelihood-ratio gate: compare cov fit to intercept-only fit.
+  # If covariates barely reduce residual variance, fall back to no-cov
+  # so we don't drag the GNN toward a noisy "all-zero coefs" baseline.
+  used_cov <- TRUE
+  if (lrt_threshold > 0) {
+    # Intercept-only GLS: same as bm_impute_col() math
+    ones <- rep(1, n_o)
+    a <- chol_solve(ones)
+    b <- chol_solve(y_o)
+    mu_int <- sum(b) / sum(a)
+    e_int  <- y_o - mu_int
+    e_int_solve <- chol_solve(e_int)
+    sigma2_int  <- as.numeric(crossprod(e_int, e_int_solve)) /
+                    max(n_o - 1L, 1L)
+    # Relative reduction in residual variance from adding covariates
+    rel_red <- (sigma2_int - sigma2_cov) / max(sigma2_int, 1e-12)
+    if (!is.finite(rel_red) || rel_red < lrt_threshold) {
+      used_cov <- FALSE
+      # Use intercept-only solution
+      beta_hat <- c(mu_int, rep(0, p_x - 1L))
+      e_cov_solve <- e_int_solve
+      sigma2_cov  <- sigma2_int
+    }
+  }
+
+  # Conditional mean for missing species: fixed-effects + residual BLUP
+  fixed_m <- as.numeric(X_m %*% beta_hat)
+  mu_m    <- fixed_m + as.numeric(R_mo %*% e_cov_solve)
+
+  # Conditional variance (residual phylo only; ignores fixed-effects uncertainty)
+  W <- forwardsolve(t(L), t(R_mo))
+  h <- colSums(W^2)
+  cond_var <- sigma2_cov * pmax(1 - h, 0)
+
+  mu_out[obs_idx]  <- y_o
+  mu_out[miss_idx] <- mu_m
+  se_out[miss_idx] <- sqrt(cond_var)
+
+  out <- list(mu = mu_out, se = se_out, beta_hat = beta_hat, used_cov = used_cov)
+  if (!is.null(lambda_hat)) out$lambda_hat <- lambda_hat
+  out
+}

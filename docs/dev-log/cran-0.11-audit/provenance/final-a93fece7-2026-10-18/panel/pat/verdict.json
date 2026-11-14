@@ -1,0 +1,30 @@
+{
+  "reviewer": "pat",
+  "verdict": "READY",
+  "artifact_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "blockers": [],
+  "findings": [
+    "The exact frozen archive and installed help agree that impute defaults to gnn = FALSE; report help covers baseline-only and explicit GNN use.",
+    "The installed novice workflow filled both missing cells and preserved observed values and classes.",
+    "The DOI resolver returned 403, disclosed in cran-comments.md; Crossref confirmed the cited article identity.",
+    "Warning-capture object attribution remains unresolved because both retained captures contain identical RDS bytes; native checks were not rerun."
+  ],
+  "checked_evidence": [
+    "Content-addressed archive SHA-256, size, persistent readback, archive inventory, and independent freeze-review receipt.",
+    "Frozen archive pigauto/man/impute.Rd and pigauto/man/pigauto_report.Rd; installed help transcripts from the successor archive installation.",
+    "Installed novice workflow run receipt, workflow receipt, run log, and installed package version.",
+    "Four-platform native summary and direct check logs; optional-model matrix supervisor and manifest.",
+    "Six-vignette render receipt, disabled-chunk traces, rendered outputs, and source identity.",
+    "Deployed-site verdict and route receipts; final cran-comments.md.",
+    "Current CRAN policy receipt, rights/source summary, DOI and Crossref records, warning audit, and timing amendment."
+  ],
+  "limitations": [
+    "The optional-model matrix uses recorded dependency symlinks and does not establish clean-room dependency installation.",
+    "The checks do not establish broad statistical recovery, general interval coverage, or timing guarantees on CRAN machines.",
+    "The DOI resolver access denial remains disclosed even though Crossref confirms article identity.",
+    "The unique warning-object capture attribution is unknown and overwritten concurrent history may be incomplete.",
+    "This review does not imply CRAN upload, maintainer confirmation, acceptance, or publication."
+  ],
+  "date": "2026-10-18"
+}

@@ -1,0 +1,9 @@
+{
+  "root_summary_sha256": "93587d646275fcec037e9941dec451f5a10ca177d4738939b2bb4ec51a7050fb",
+  "root_summarizer_sha256": "40c632280497c2b16b727b4da51fd8d090add0fd29e22a2c54be2d3d7ad67703",
+  "files_sha256": {
+    "README.md": "d5a7db08bfd067e5640538e5d8f5a760a8d62d4fd67f2f1b70e6330b3e78562b",
+    "actual-readback.json": "8fc0ac923d0e18bdd2f0dfe13a742203032278d0556a824fd638e5cd46282ef3",
+    "independent-readback.py": "11490ba30a6dd85897fdc717d636f098671054023c55b9c154ac7185cf903a6b"
+  }
+}

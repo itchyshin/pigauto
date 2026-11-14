@@ -1,0 +1,100 @@
+{
+  "bundle": "raw/final-mi.evidence.tar.gz",
+  "bundle_sha256": "3576cddf151faae6d6246f8f5fe878cc3bd88ba9b3bf75517bf1e1312283982e",
+  "bundle_size_bytes": 72301,
+  "kind": "evidence_bundle_not_release_archive",
+  "member_count": 15,
+  "members": [
+    {
+      "member": "final-mi-verification.json",
+      "sha256": "37725dbbca29d9fad149667cb9e2889ad8f4cbc4cd8e8b36ca4cd9f79a1d2709",
+      "size_bytes": 126954,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-mi-verification.json"
+    },
+    {
+      "member": "mi-matrix/both-fixtures.log",
+      "sha256": "cb398da193bd8c6eb8c8ecf46cdf7b115e328991a7f5aad39c66efcc529ecb4e",
+      "size_bytes": 203,
+      "source": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/mi-matrix/both-fixtures.log"
+    },
+    {
+      "member": "mi-matrix/both-install.log",
+      "sha256": "7f8a73b86b7d03565ff3003762e097a22aabf7fce7f9737a57df3161adc95993",
+      "size_bytes": 579,
+      "source": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/mi-matrix/both-install.log"
+    },
+    {
+      "member": "mi-matrix/both-real.log",
+      "sha256": "dcba11ad9f11fe5740af2f1301bc894fb7196ac2082e2483cb189cb8612cbac9",
+      "size_bytes": 692,
+      "source": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/mi-matrix/both-real.log"
+    },
+    {
+      "member": "mi-matrix/drm-only-fixtures.log",
+      "sha256": "cb398da193bd8c6eb8c8ecf46cdf7b115e328991a7f5aad39c66efcc529ecb4e",
+      "size_bytes": 203,
+      "source": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/mi-matrix/drm-only-fixtures.log"
+    },
+    {
+      "member": "mi-matrix/drm-only-install.log",
+      "sha256": "7f8a73b86b7d03565ff3003762e097a22aabf7fce7f9737a57df3161adc95993",
+      "size_bytes": 579,
+      "source": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/mi-matrix/drm-only-install.log"
+    },
+    {
+      "member": "mi-matrix/drm-only-real.log",
+      "sha256": "4d4cca3f2a713b1fb8ddc631347aab04484f9dc655d6335cb65e4ccab0b4ba6b",
+      "size_bytes": 416,
+      "source": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/mi-matrix/drm-only-real.log"
+    },
+    {
+      "member": "mi-matrix/gllvm-only-fixtures.log",
+      "sha256": "cb398da193bd8c6eb8c8ecf46cdf7b115e328991a7f5aad39c66efcc529ecb4e",
+      "size_bytes": 203,
+      "source": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/mi-matrix/gllvm-only-fixtures.log"
+    },
+    {
+      "member": "mi-matrix/gllvm-only-install.log",
+      "sha256": "7f8a73b86b7d03565ff3003762e097a22aabf7fce7f9737a57df3161adc95993",
+      "size_bytes": 579,
+      "source": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/mi-matrix/gllvm-only-install.log"
+    },
+    {
+      "member": "mi-matrix/gllvm-only-real.log",
+      "sha256": "e32344192ae01b7d8a0a6085b8271b180421cde77e6906023e2b4077f1c3729e",
+      "size_bytes": 385,
+      "source": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/mi-matrix/gllvm-only-real.log"
+    },
+    {
+      "member": "mi-matrix/manifest.json",
+      "sha256": "b9df2c6aab9c611af36020190c189cc893687d8554db695a982373795ab529b8",
+      "size_bytes": 158633,
+      "source": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/mi-matrix/manifest.json"
+    },
+    {
+      "member": "mi-matrix/neither-fixtures.log",
+      "sha256": "cb398da193bd8c6eb8c8ecf46cdf7b115e328991a7f5aad39c66efcc529ecb4e",
+      "size_bytes": 203,
+      "source": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/mi-matrix/neither-fixtures.log"
+    },
+    {
+      "member": "mi-matrix/neither-install.log",
+      "sha256": "7f8a73b86b7d03565ff3003762e097a22aabf7fce7f9737a57df3161adc95993",
+      "size_bytes": 579,
+      "source": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/mi-matrix/neither-install.log"
+    },
+    {
+      "member": "mi-matrix/neither-real.log",
+      "sha256": "334e8ca94f3b17898c1b414ca275907ced1e7b85330b272464073a5646634615",
+      "size_bytes": 158,
+      "source": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/mi-matrix/neither-real.log"
+    },
+    {
+      "member": "verify-final-mi.py",
+      "sha256": "ed6dcad34ff0ac5bf37f477e800d4e71c943dd2e7648bf5d40266d1e6f36c23c",
+      "size_bytes": 2399,
+      "source": "/private/tmp/pigauto-final-closure-20261017/verify-final-mi.py"
+    }
+  ],
+  "release_archive_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb"
+}

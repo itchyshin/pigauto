@@ -1,0 +1,11 @@
+{
+  "url": "http://builder2.rhub.io/api/-/package/46ba317ee4d4723712b5e5962f1e992d",
+  "sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+  "size_bytes": 5137648,
+  "matches_final_frozen_archive": true,
+  "rhub_run": 39081694892,
+  "rhub_input_processing_job": 117539787755,
+  "rhub_extracted_source_commit": "a371e6787e0cd7ce79b5c3bb4c20f1fb8aea85d5",
+  "readback_utc": "2026-10-18T00:12:09.663988+00:00",
+  "scope": "Public uploaded object readback only; R-hub rebuilds extracted source and is not the direct archive-in-place verdict."
+}

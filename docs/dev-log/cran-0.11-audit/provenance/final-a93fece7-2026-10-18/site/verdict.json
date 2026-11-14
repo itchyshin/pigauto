@@ -1,0 +1,54 @@
+{
+  "reviewer": "rose",
+  "verdict": "PASS",
+  "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "source_pr": 238,
+  "pages_run_id": "39090594794",
+  "pages_run_status": "completed",
+  "pages_run_conclusion": "success",
+  "pages_run_head_sha": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "deployment": {
+    "result": "success",
+    "deployment_id": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+    "pages_build_version": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+    "artifact_id": "12122696328",
+    "job_id": "117566315006"
+  },
+  "live_site": "https://itchyshin.github.io/pigauto/",
+  "build_exit_code": 0,
+  "site_root": "https://itchyshin.github.io/pigauto/",
+  "build_log": null,
+  "crawl_log": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/site/live-check/discovery-check.json",
+  "route_receipts": {
+    "retired_routes_checked": 44,
+    "retired_route_failures": 0,
+    "retained_routes_checked": 62,
+    "retained_route_failures": 0,
+    "sitemap_status": 200,
+    "sitemap_entries": 62,
+    "sitemap_retired_targets": 0,
+    "search_status": 200,
+    "search_entries": 614,
+    "search_retired_targets": 0,
+    "expected_404_status": 200
+  },
+  "pages_reviewed": [
+    "https://itchyshin.github.io/pigauto/reference/impute.html",
+    "https://itchyshin.github.io/pigauto/reference/pigauto_report.html",
+    "https://itchyshin.github.io/pigauto/articles/getting-started.html"
+  ],
+  "visual_review": "Reviewed live pages in Chrome using rendered screenshots and accessible page text. The impute and report references show the corrected baseline-only default (gnn=FALSE) and explicit GNN opt-in (gnn=TRUE); adjacent getting-started guidance is consistent. Text and layout were legible without overlap; long reference headings wrap beside the logo. Screenshots were inspected but not exported as files.",
+  "limitations": [
+    "This verifies the merged source commit's GitHub Pages deployment and current live-site routes/content only.",
+    "It does not validate a CRAN tarball, CRAN acceptance, or CRAN publication.",
+    "The generic search index contains a historical /dev/ text mention in news/index.html; the verifier found no retired route targets in search or sitemap.",
+    "The matching main CI run was owned and monitored separately; this receipt covers Pages and live-site verification."
+  ],
+  "local_server_stopped": true,
+  "checked_evidence": [
+    "GitHub Pages run 39090594794 completed successfully at the exact source head.",
+    "Pages job 117566315006 logged artifact 12122696328, pages_build_version b2e6054685e6bdedb073ba46e058af2c0a619a18, and successful deployment with matching deployment ID.",
+    "Existing verify_live_site.py completed with exit code 0 and LIVE_SITE_RETIREMENT_CHECK_OK.",
+    "Chrome inspection of the two corrected references and adjacent getting-started article confirmed wording and visible layout."
+  ]
+}

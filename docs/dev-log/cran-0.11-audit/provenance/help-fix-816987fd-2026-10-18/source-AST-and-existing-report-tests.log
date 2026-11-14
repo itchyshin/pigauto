@@ -1,0 +1,11 @@
+ALL_49_R_EXECUTABLE_ASTS_UNCHANGED
+ℹ Testing pigauto
+report-213: W.............W....
+
+══ Warnings ════════════════════════════════════════════════════════════════════
+1. pigauto_report rejects bad data, splits, title, output_path, and open ('test-report-213.R:39:3') - Small validation set for 1 trait(s): range (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (range (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+2. pigauto_report HTML-escapes a title that contains markup ('test-report-213.R:83:3') - Small validation set for 1 trait(s): range (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (range (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options.
+
+══ DONE ════════════════════════════════════════════════════════════════════════
+EXISTING_REPORT_TESTS_PASS passed=17 warnings=2 skipped=0

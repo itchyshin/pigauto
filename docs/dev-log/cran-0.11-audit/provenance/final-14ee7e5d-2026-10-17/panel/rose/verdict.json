@@ -1,0 +1,33 @@
+{
+  "reviewer": "rose",
+  "verdict": "NOT_READY",
+  "artifact_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+  "source_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636",
+  "scope": "Independent review of exact-artifact identity, platform and warning evidence, installation independence, bounded MI evidence, defaults and user-facing claims, rights/provenance, and release-record consistency.",
+  "blockers": [
+    "The current closeout draft says the four-platform warning audit is pending, contradicting the fresh actual-results-null-error-fix audit, which passes all four cells.",
+    "Canonical GATES.md and release-ledger.json have not been consolidated against completed exact-artifact evidence and still describe multiple completed checks as pending.",
+    "The native macOS Status NOTE for compare_methods remains UNADJUDICATED; a maintainer timing disposition must be recorded before a submission decision."
+  ],
+  "conditions": [
+    "Correct and reconcile the final closeout, GATES.md, and release-ledger.json against retained evidence; preserve the macOS native NOTE and its timing details.",
+    "Run the final closure validator and independent readback after consolidation.",
+    "CRAN upload and maintainer confirmation require their separately authorized steps; this verdict grants no such authorization."
+  ],
+  "checked_evidence": [
+    "Direct platform run 39082452558 on the exact archive: Windows release, Windows devel, and Linux release report Status OK and exit 0; macOS exit 0 with one timing NOTE.",
+    "Fresh four-cell warning audit passes; 3195 pass, 0 fail, 161 warnings, and 86 skips per cell; native NOTE remains UNADJUDICATED.",
+    "Exact archive SHA, byte size, source commit, inventory, retained public-object identity, unchanged R/data/NOTICE bytes, and provenance/consent carry-forward are consistent in reviewed evidence.",
+    "Source PR237 merged and matching Pages deployment and live retained/retired route checks are recorded as passed.",
+    "Installed optional-backend matrix passed 12 steps across four backend-availability cells; missing rgbif/terra checks passed 60 expectations with 8 expected skips.",
+    "Bounded recovery evidence and all warning consequences were reviewed with their stated regimes and limitations.",
+    "DOI resolver 403 is accurately distinguished from successful Crossref identity confirmation; reviewed spelling flags produced no ordinary-typo finding."
+  ],
+  "limits": [
+    "No general inferential-validity or nominal-coverage certificate.",
+    "No joint-covariance, loading, variance-component-pooling, GPU-hardware, or live external-service availability claim.",
+    "Installed-MI fresh libraries use recorded dependency symlinks and do not establish clean-room recompilation; real-object checks use three fits per backend, not the 20-imputation research regime.",
+    "Warning identities derive from separate replay objects, not original native object capture.",
+    "No CRAN upload, maintainer confirmation, CRAN acceptance, PR236 merge, tag, or release announcement is established."
+  ]
+}

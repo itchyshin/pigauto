@@ -1,0 +1,141 @@
+{
+  "objective": "pigauto CRAN 0.11.0 audit - candidate evidence record",
+  "source": {
+    "repository": "itchyshin/pigauto",
+    "commit": "780c08470b263cc26b4139c711a5c144fd29389c",
+    "main_head_rechecked": "780c08470b263cc26b4139c711a5c144fd29389c",
+    "github_source_archive": {
+      "path": "/private/tmp/pigauto-0.11.0-source-780c084.tar.gz",
+      "bytes": 61617958,
+      "sha256": "f22d5f27e216977a2644e5df1ca1e5a0ebe9fd39e08913114930db94f186453a"
+    },
+    "cran_version_record": {
+      "currently_published_version": "0.10.0",
+      "published": "2026-07-30",
+      "checked_url": "https://cran.r-project.org/web/packages/pigauto/index.html"
+    },
+    "git_tree": "26d5faed3aaa58cd72a3285a80fd7943228d947f",
+    "source_archive_tree_reconstruction": "independent reviewer recomputed all 1580 entries and matched GitHub commit tree",
+    "clean_checkout_status": "empty git status --porcelain=v1 at exact source commit; see provenance/clean-source-checkout-780c084.txt"
+  },
+  "artifact": {
+    "path": "/private/tmp/pigauto_0.11.0.tar.gz",
+    "package": "pigauto",
+    "version": "0.11.0",
+    "bytes": 5136073,
+    "sha256": "0fccf4bb0a179434fe15fa3a7ff514112bc5220e60c4b3e025fa00536f5ca29d",
+    "inventory_entries": 250,
+    "sorted_inventory_sha256": "d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d",
+    "hidden_entries": 0,
+    "forbidden_path_matches": [],
+    "DESCRIPTION_mentions_drmTMB": false,
+    "DESCRIPTION_mentions_gllvmTMB": false
+  },
+  "local_check": {
+    "command": "env -u NOT_CRAN _R_CHECK_FORCE_SUGGESTS_=true R CMD check --as-cran --run-donttest --timings",
+    "r_version": "4.6.0",
+    "platform": "aarch64-apple-darwin23; macOS Tahoe 26.7.1",
+    "status": "OK",
+    "testthat": {
+      "pass": 3194,
+      "fail": 0,
+      "warn": 161,
+      "skip": 86
+    },
+    "check_log": "/private/tmp/pigauto-check-780c084-network/pigauto.Rcheck/00check.log",
+    "check_log_sha256": "4300f0497b090aecbc6ee4abc64f99a2dd82ed77f1e03e5221c5038b9fb9513d",
+    "testthat_log": "/private/tmp/pigauto-check-780c084-network/pigauto.Rcheck/tests/testthat.Rout",
+    "testthat_log_sha256": "3a1ae96caa1136c03e360dcb1017ab029970120d9f929293f8f2aec83e87f3a8",
+    "incoming_feasibility": "ran with network access; sandboxed first attempt stopped at DNS before package tests"
+  },
+  "win_builder": {
+    "release": {
+      "form_http_status": 200,
+      "reported_filename": "pigauto_0.11.0.tar.gz",
+      "reported_bytes": 5136073,
+      "result": "pending; no result email found at 2026-10-16 22:40 UTC",
+      "uploaded_at_local": "2026-10-16 16:12 MDT"
+    },
+    "devel": {
+      "form_http_status": 200,
+      "reported_filename": "pigauto_0.11.0.tar.gz",
+      "reported_bytes": 5136073,
+      "result": "pending; no result email found at 2026-10-16 22:40 UTC",
+      "uploaded_at_local": "2026-10-16 16:12 MDT"
+    },
+    "server_side_sha256_attested": false,
+    "inbox_recheck": "No matching result email found as of 2026-10-16 22:40 UTC."
+  },
+  "deployed_site": {
+    "commit": "780c08470b263cc26b4139c711a5c144fd29389c",
+    "workflow_run": "38970604986",
+    "workflow_status": "success",
+    "live_page": "https://itchyshin.github.io/pigauto/reference/cross_validate.html?release-audit=780c084",
+    "verified_text": "cross_validate() uses k_eigen = 8L when omitted",
+    "retirement_and_full_site_inventories": "prior 8082ef deployment; current post-merge Pages workflow succeeded",
+    "retirement_inventory_current": {
+      "checked_at": "2026-10-16",
+      "retired_routes_checked": 44,
+      "retired_route_failures": 0,
+      "retained_routes_checked": 62,
+      "retained_route_failures": 0,
+      "sitemap_status": 200,
+      "sitemap_entries": 62,
+      "sitemap_retired_targets": 0,
+      "search_status": 200,
+      "search_entries": 613,
+      "search_retired_targets": 0,
+      "historical_news_search_result": "NEWS index contains historical development text, explicitly labelled historical in NEWS.md"
+    }
+  },
+  "main_r_cmd_check": {
+    "workflow_run": "38970604972",
+    "status": "success",
+    "macos_r_release": "success (22m15s)",
+    "ubuntu_r_devel": "success (10m34s)",
+    "ubuntu_r_release": "success (11m9s)",
+    "overall": "success; source CI only"
+  },
+  "independent_review": {
+    "grace_exact_artifact": {
+      "verdict": "local exact-artifact evidence verified; broader release gates remain open",
+      "artifact_sha256": "0fccf4bb0a179434fe15fa3a7ff514112bc5220e60c4b3e025fa00536f5ca29d",
+      "source_tree_matches_github_commit": true,
+      "local_check_rerun_by_reviewer": false
+    },
+    "pat_live_site": {
+      "verdict": "new Pages deployment and cross_validate help verified",
+      "retirement_recheck_included": true,
+      "news_exception": "intentional, visibly labelled historical entry; says no CRAN submission/public release is implied"
+    },
+    "rose_platform_binding": {
+      "verdict": "Win-builder upload associated by filename and bytes only",
+      "server_side_sha256_attested": false,
+      "G3": "not met"
+    }
+  },
+  "lane_preflight": {
+    "root_dirty_checkout_preserved": true,
+    "direct_commandlinetools_git_preflight": "cleanly reports no foreign lane for root and gate-refresh clone",
+    "lease": "granted for docs/dev-log/cran-0.11-audit/ via authorized escalated claim"
+  },
+  "rights_audit_exact_tarball": {
+    "maintainer_warranty_basis": "Shinichi confirmed example-tree use with citation and credit; prior rights-and-policy record distinguishes this from a published redistribution licence.",
+    "notice_in_tarball": {
+      "path": "pigauto/inst/NOTICE",
+      "sha256": "9cc7fa419cacea99dbb0b822c59d6fffad514ee072e119a1ce1c7f365883ba02"
+    },
+    "tree_objects_in_tarball": {
+      "tree300.rda": "6050855d2ae7de42fa0de239134aad8e8975a224610b8dffb48f3d7412bb383f",
+      "trees300.rda": "8293e06503e89e79d9233abd1cbae98fc8d0c18e05ef5a41cca99a071fee910a",
+      "tree_full.rda": "5f7b36a4b9c02fd53c98d12fe4871e0f34098e3aa7a8f34f2db38a21a8dc09f5"
+    },
+    "status": "exact shipped tree objects and notice confirmed present; no separate published BirdTree redistribution licence claimed; maintainer warranty remains stated basis"
+  },
+  "release_status": {
+    "verdict": "NOT READY",
+    "highest_proven_rung": "tarball-clean",
+    "next_unproven_rung": "platform-clean",
+    "cran_submission": "none"
+  }
+}

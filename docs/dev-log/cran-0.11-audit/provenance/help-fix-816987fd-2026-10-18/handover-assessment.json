@@ -1,0 +1,36 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "56a379483543039fe25463c75034d5cbc1fd047c799744ef9d86090153adf7c6",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex audit lead",
+  "method": "Separate saved-draft read against source816987fd, actual CI39087559368, provisional installed receipt, bounded independent source/site reviews and the documented approval boundary.",
+  "genre": "Approval-boundary handover",
+  "coverage": "Whole exact saved draft",
+  "score": 3,
+  "style_status": "assessed",
+  "score_reason": "Concrete actions and measured scope; repeated artifact identifiers and gate terminology are formal but useful for resuming this release.",
+  "confidence": "moderate",
+  "confidence_reason": "Self-assessment of perceived style, not authorship verification.",
+  "examples": [
+    {
+      "location": "Opening state",
+      "cue": "Specific scope and pending decision",
+      "impact": "The reader can distinguish source preparation from a released artifact.",
+      "repair": "no change needed",
+      "line": 3,
+      "quote": "Goal: finish the approved CRAN 0.11 audit through evidence PR #236. The goal remains open at the next explicit source-merge gate."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "No scientific change or broad validity claim; prior recovery and fixed-effect pooling scope preserved.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Source, CI, provisional install, local site and approval facts checked against retained primary receipts.",
+  "references_gate": "pass",
+  "references_gate_reason": "PR and CI identifiers resolve to the verified source head; no new external scientific claim or legal guarantee.",
+  "date": "2026-10-18T02:02:46.744186+00:00",
+  "calibration_status": "Protocol/template reviewed; no held-out calibration run.",
+  "interpretation": "perceived_style_not_authorship"
+}

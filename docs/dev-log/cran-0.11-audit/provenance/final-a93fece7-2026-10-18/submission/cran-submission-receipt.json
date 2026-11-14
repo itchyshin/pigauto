@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-10-18T07:37:49.893Z",
+  "submission_id": "359257",
+  "id_kind": "CRAN upload review page pkg_id",
+  "state": "submitted_unconfirmed",
+  "uploaded_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "uploaded_size_bytes": 5137837,
+  "package": "pigauto",
+  "version": "0.11.0",
+  "maintainer": "itchyshin@gmail.com",
+  "endpoint": "https://xmpalantir.wu.ac.at/cransubmit/index.php?strErr=0&submit=1",
+  "receipt": "Maintainer sent email; submission not completed until confirmed"
+}

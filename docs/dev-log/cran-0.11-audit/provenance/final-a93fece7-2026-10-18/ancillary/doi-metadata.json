@@ -1,0 +1,35 @@
+{
+  "url": "https://api.crossref.org/works/10.1126/science.1157704",
+  "method": "GET",
+  "no_retry": true,
+  "http_status": 200,
+  "final_url": "https://api.crossref.org/works/10.1126/science.1157704",
+  "sha256": "d3eae4736e61ac7b16fc81b7f96b00f6ba57f726fe7800291d1d9b420c6aa1f4",
+  "doi": "10.1126/science.1157704",
+  "title": [
+    "A Phylogenomic Study of Birds Reveals Their Evolutionary History"
+  ],
+  "journal": [
+    "Science"
+  ],
+  "volume": "320",
+  "issue": "5884",
+  "page": "1763-1768",
+  "published": {
+    "date-parts": [
+      [
+        2008,
+        6,
+        27
+      ]
+    ]
+  },
+  "first_author": "Hackett",
+  "identity_matches": true,
+  "elapsed_seconds": 0.3888,
+  "recorded_utc": "2026-10-18T07:12:20.249371+00:00",
+  "script_sha256": "907a7e9494f624f4fb574251a4c064f5250b1c169dd4a266290ed1df657b29c9",
+  "archive_sha256_before": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "archive_sha256_after": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "doi_access": "Exact-source URL checker still returned403; metadata identity does not make that URL clean."
+}

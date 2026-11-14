@@ -1,0 +1,200 @@
+[
+  {
+    "bundle": "service-url-spelling-absence",
+    "member": "README.md",
+    "normalization": "none",
+    "source_sha256": "f3a636ac168fc1610e2062ae1488e35bc9ccafb93cfef3860643f255b854ff33",
+    "view": "views/service-url-spelling-absence/README.md",
+    "view_sha256": "f3a636ac168fc1610e2062ae1488e35bc9ccafb93cfef3860643f255b854ff33"
+  },
+  {
+    "bundle": "service-url-spelling-absence",
+    "member": "absence-summary.json",
+    "normalization": "none",
+    "source_sha256": "41b610077071dea8ce559542e1a9280c43bdeedbe1aa6e7766a6c30f564976c1",
+    "view": "views/service-url-spelling-absence/absence-summary.json",
+    "view_sha256": "41b610077071dea8ce559542e1a9280c43bdeedbe1aa6e7766a6c30f564976c1"
+  },
+  {
+    "bundle": "service-url-spelling-absence",
+    "member": "adjudication.json",
+    "normalization": "none",
+    "source_sha256": "865f9b1ab39fc11f10b5bbc422438fc5efa67bcb12a19646640b8fd75a417043",
+    "view": "views/service-url-spelling-absence/adjudication.json",
+    "view_sha256": "865f9b1ab39fc11f10b5bbc422438fc5efa67bcb12a19646640b8fd75a417043"
+  },
+  {
+    "bundle": "service-url-spelling-absence",
+    "member": "execution-summary.json",
+    "normalization": "none",
+    "source_sha256": "d81ad8c47a1d6b27575c9abdb6027f0bdb6d3b65931405acbb15ee627e93c683",
+    "view": "views/service-url-spelling-absence/execution-summary.json",
+    "view_sha256": "d81ad8c47a1d6b27575c9abdb6027f0bdb6d3b65931405acbb15ee627e93c683"
+  },
+  {
+    "bundle": "service-url-spelling-absence",
+    "member": "identity.json",
+    "normalization": "none",
+    "source_sha256": "26adcf21e912be0369fda26cd31c186f2c6c5befee31960b0327d2be35f95c33",
+    "view": "views/service-url-spelling-absence/identity.json",
+    "view_sha256": "26adcf21e912be0369fda26cd31c186f2c6c5befee31960b0327d2be35f95c33"
+  },
+  {
+    "bundle": "service-url-spelling-absence",
+    "member": "proof-manifest.json",
+    "normalization": "none",
+    "source_sha256": "81abc037e6c88a93cb5904f8217de90fb3ff2336d4c59cda1f3b9c54d47e3314",
+    "view": "views/service-url-spelling-absence/proof-manifest.json",
+    "view_sha256": "81abc037e6c88a93cb5904f8217de90fb3ff2336d4c59cda1f3b9c54d47e3314"
+  },
+  {
+    "bundle": "service-url-spelling-absence",
+    "member": "spelling-results-flat.csv",
+    "normalization": "none",
+    "source_sha256": "d4e8303301d17841c6b8a47a3a3c6246837b6fe0393f3aa287aff2125401e8bf",
+    "view": "views/service-url-spelling-absence/spelling-results-flat.csv",
+    "view_sha256": "d4e8303301d17841c6b8a47a3a3c6246837b6fe0393f3aa287aff2125401e8bf"
+  },
+  {
+    "bundle": "service-url-spelling-absence",
+    "member": "spelling-results.csv",
+    "normalization": "none",
+    "source_sha256": "bd1ecd12e727644cce90880ea8e7b54b39685a0ee31e0c0d6eb329955b963d08",
+    "view": "views/service-url-spelling-absence/spelling-results.csv",
+    "view_sha256": "bd1ecd12e727644cce90880ea8e7b54b39685a0ee31e0c0d6eb329955b963d08"
+  },
+  {
+    "bundle": "service-url-spelling-absence",
+    "member": "url-network-results-flat.csv",
+    "normalization": "none",
+    "source_sha256": "89eb6a15328373da91bfccc4b0be21032ee6d69570d43c2d0d57249ce9c1e287",
+    "view": "views/service-url-spelling-absence/url-network-results-flat.csv",
+    "view_sha256": "89eb6a15328373da91bfccc4b0be21032ee6d69570d43c2d0d57249ce9c1e287"
+  },
+  {
+    "bundle": "service-url-spelling-absence",
+    "member": "url-results.csv",
+    "normalization": "none",
+    "source_sha256": "e7d7a8ff40f52a88b97d3b6190577f5e7e8bf8425758d5fe68ae745d4128837a",
+    "view": "views/service-url-spelling-absence/url-results.csv",
+    "view_sha256": "e7d7a8ff40f52a88b97d3b6190577f5e7e8bf8425758d5fe68ae745d4128837a"
+  },
+  {
+    "bundle": "vignette-timing-doi",
+    "member": "README.md",
+    "normalization": "none",
+    "source_sha256": "a276dc2900b4ac9eceae96f3032008492b390696bb0660d9500a94b6a0a64e11",
+    "view": "views/vignette-timing-doi/README.md",
+    "view_sha256": "a276dc2900b4ac9eceae96f3032008492b390696bb0660d9500a94b6a0a64e11"
+  },
+  {
+    "bundle": "vignette-timing-doi",
+    "member": "doi-adjudication.md",
+    "normalization": "none",
+    "source_sha256": "f41f25b57414fd6545e10500c4d1397983d2882518528ac2425b32bd9e4974f0",
+    "view": "views/vignette-timing-doi/doi-adjudication.md",
+    "view_sha256": "f41f25b57414fd6545e10500c4d1397983d2882518528ac2425b32bd9e4974f0"
+  },
+  {
+    "bundle": "vignette-timing-doi",
+    "member": "doi-metadata.json",
+    "normalization": "none",
+    "source_sha256": "80b7bde9ee828db6982f0a87ab0f67aed3d260ed037b07e8613ff38f0edd22ee",
+    "view": "views/vignette-timing-doi/doi-metadata.json",
+    "view_sha256": "80b7bde9ee828db6982f0a87ab0f67aed3d260ed037b07e8613ff38f0edd22ee"
+  },
+  {
+    "bundle": "vignette-timing-doi",
+    "member": "eval-false-proof.json",
+    "normalization": "none",
+    "source_sha256": "20c5eda39db53d968141cc4ebbe400a31d0e7b8b73bb201ded6c188f885c9c97",
+    "view": "views/vignette-timing-doi/eval-false-proof.json",
+    "view_sha256": "20c5eda39db53d968141cc4ebbe400a31d0e7b8b73bb201ded6c188f885c9c97"
+  },
+  {
+    "bundle": "vignette-timing-doi",
+    "member": "identity-after.json",
+    "normalization": "none",
+    "source_sha256": "dd4e5c2dd63db265a7294f25ee228f8f96861b5682a90b28f55f1dab2ea4e555",
+    "view": "views/vignette-timing-doi/identity-after.json",
+    "view_sha256": "dd4e5c2dd63db265a7294f25ee228f8f96861b5682a90b28f55f1dab2ea4e555"
+  },
+  {
+    "bundle": "vignette-timing-doi",
+    "member": "receipt-manifest.json",
+    "normalization": "none",
+    "source_sha256": "7a1f07b63d0c6e245b22124727855ae8299b8921caf595383a04e67c6d9c02c7",
+    "view": "views/vignette-timing-doi/receipt-manifest.json",
+    "view_sha256": "7a1f07b63d0c6e245b22124727855ae8299b8921caf595383a04e67c6d9c02c7"
+  },
+  {
+    "bundle": "vignette-timing-doi",
+    "member": "timing-summary.csv",
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/vignette-timing-doi/timing-summary.csv.raw.gz",
+    "raw_gzip_sha256": "31c5d4fa9e9978207fff6b4544d8c5b0ae8f4cc4f1686d0e9acbbc409562703d",
+    "source_sha256": "54664436e07a1d21ec4a723c1edcb06bcefdeb0759e26f2a82b62e7f94e0349f",
+    "view": "views/vignette-timing-doi/timing-summary.csv",
+    "view_sha256": "ee8f5ac47d7ab2a0993fbf6503a73b20ca4fee767f1c24e6e1148fb43492ddf8"
+  },
+  {
+    "bundle": "vignette-timing-doi",
+    "member": "timing-summary.json",
+    "normalization": "none",
+    "source_sha256": "7c65963d2257eca3517617d412a348455be28752002a6e22f586345fe99253c2",
+    "view": "views/vignette-timing-doi/timing-summary.json",
+    "view_sha256": "7c65963d2257eca3517617d412a348455be28752002a6e22f586345fe99253c2"
+  },
+  {
+    "bundle": "spelling-review",
+    "member": "README.md",
+    "normalization": "none",
+    "source_sha256": "a9ab1b9e4efda1fd1a83e698eeb7dae63e3ed9293b65d1572141fd3a2b53be93",
+    "view": "views/spelling-review/README.md",
+    "view_sha256": "a9ab1b9e4efda1fd1a83e698eeb7dae63e3ed9293b65d1572141fd3a2b53be93"
+  },
+  {
+    "bundle": "spelling-review",
+    "member": "receipt.json",
+    "normalization": "none",
+    "source_sha256": "23c77e6f4da89770f62a15bb67f8da6a8eebcf8e874a35f792df72e715a2dbd3",
+    "view": "views/spelling-review/receipt.json",
+    "view_sha256": "23c77e6f4da89770f62a15bb67f8da6a8eebcf8e874a35f792df72e715a2dbd3"
+  },
+  {
+    "bundle": "spelling-review",
+    "member": "source-contexts.csv",
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/spelling-review/source-contexts.csv.raw.gz",
+    "raw_gzip_sha256": "6952f68635e31bbda3a6110c867e7f90d12940aeb5053ab845576468918a28ee",
+    "source_sha256": "0c1702ca90cf47538aab67749bb9bc00c164eb634455dd281b9228d3278aa0e6",
+    "view": "views/spelling-review/source-contexts.csv",
+    "view_sha256": "8e1f071560054b439085721e89f20d5ac517b176ca91c4817006940e9eb9f284"
+  },
+  {
+    "bundle": "spelling-review",
+    "member": "token-adjudication.csv",
+    "normalization": "CRLF_TO_LF_ONLY",
+    "raw_gzip": "views/spelling-review/token-adjudication.csv.raw.gz",
+    "raw_gzip_sha256": "411d25449dc406b84b205c38897bf898e71e3b8e742d7d7be3e4754329d930c3",
+    "source_sha256": "ec02775ac5b83bf37852a4d6cc97b6d5a7e255a6461447917bdfef9ce4f14601",
+    "view": "views/spelling-review/token-adjudication.csv",
+    "view_sha256": "c163b43f577be1427930413d50554b03a57db74449fe571dd56c4bdd17dabea4"
+  },
+  {
+    "bundle": "final-mi",
+    "member": "final-mi-verification.json",
+    "normalization": "none",
+    "source_sha256": "37725dbbca29d9fad149667cb9e2889ad8f4cbc4cd8e8b36ca4cd9f79a1d2709",
+    "view": "views/final-mi/final-mi-verification.json",
+    "view_sha256": "37725dbbca29d9fad149667cb9e2889ad8f4cbc4cd8e8b36ca4cd9f79a1d2709"
+  },
+  {
+    "bundle": "final-mi",
+    "member": "mi-matrix/manifest.json",
+    "normalization": "none",
+    "source_sha256": "b9df2c6aab9c611af36020190c189cc893687d8554db695a982373795ab529b8",
+    "view": "views/final-mi/mi-matrix/manifest.json",
+    "view_sha256": "b9df2c6aab9c611af36020190c189cc893687d8554db695a982373795ab529b8"
+  }
+]

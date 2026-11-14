@@ -1,0 +1,36 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "ff044af1ac3311eb5e44e3132fd848d71d86e74240cf48e31951af1e1638609d",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "independent_ai",
+  "reviewer": "Pat",
+  "method": "Separate post-draft manual review following protocols/writing-naturalness.md; no model or network call.",
+  "genre": "Independent release-review note",
+  "coverage": "Entire saved panel/pat/README.md draft.",
+  "score": 3,
+  "style_status": "scored",
+  "score_reason": "The note is specific and evidence-led. Its verdict-first structure and repeated receipt terminology are somewhat procedural, which fits a release panel record. The score is a subjective perceived-style judgment, not an authorship test.",
+  "confidence": "medium",
+  "confidence_reason": "The draft is short and its style cues are visible, but perceived-style ratings are editorial judgments and no calibration control was used.",
+  "examples": [
+    {
+      "location": "Paragraph 4, first sentence",
+      "line": 9,
+      "quote": "There are no blockers in this review.",
+      "cue": "Direct verdict statement followed by a bounded description of evidence and limitations.",
+      "impact": "Lets a release reviewer identify the conclusion immediately; the concise procedural phrasing is somewhat formal.",
+      "repair": "No change needed; the sentence is clear and matches the panel purpose."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "The note reports bounded check outcomes and explicitly avoids claims of broad recovery or interval coverage.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Archive identity, installed help and workflow behavior, and the cited result summaries were compared with the frozen archive and retained receipts.",
+  "references_gate": "pass",
+  "references_gate_reason": "The DOI access denial and Crossref article identity statements were checked against retained URL and Crossref records; no unsupported citation claim remains.",
+  "date": "2026-10-18",
+  "calibration_status": "No calibration examples or controls were consulted; the score is an uncalibrated editorial judgment.",
+  "interpretation": "perceived_style_not_authorship"
+}

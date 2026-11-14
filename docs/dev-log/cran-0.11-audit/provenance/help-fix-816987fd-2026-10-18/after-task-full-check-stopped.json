@@ -1,0 +1,25 @@
+{
+  "reason": "Broad checker started inherited historical imputation-sim ledger re-verification. Stop only own checker tree before it can adopt another campaign. Structural check passed; use scoped current source-approval verification.",
+  "processes": [
+    {
+      "pid": 77509,
+      "parent": 437,
+      "command": "/bin/zsh -c OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 Rscript --vanilla /Users/z3437171/shinichi-brain/tools/check-after-task.R /private/tmp/pigauto-final-closure-20261017/source-help-after-task.md > /private/tmp/pigauto-final-closure-20261017/help-fix/after-task-full-check.log 2>&1; cat /private/tmp/pigauto-final-closure-20261017/help-fix/after-task-full-check.log"
+    },
+    {
+      "pid": 77511,
+      "parent": 77509,
+      "command": "/Library/Frameworks/R.framework/Resources/bin/exec/R --no-echo --no-restore --vanilla --file=/Users/z3437171/shinichi-brain/tools/check-after-task.R --args /private/tmp/pigauto-final-closure-20261017/source-help-after-task.md"
+    },
+    {
+      "pid": 78885,
+      "parent": 77511,
+      "command": "sh -c 'node' /Users/z3437171/shinichi-brain/skills/unlazy/scripts/gate-check.mjs --root . --cwd . --reverify ./.unlazy/imputation-sim/gates/leaf-env.md 2>&1"
+    },
+    {
+      "pid": 78886,
+      "parent": 78885,
+      "command": "node /Users/z3437171/shinichi-brain/skills/unlazy/scripts/gate-check.mjs --root . --cwd . --reverify ./.unlazy/imputation-sim/gates/leaf-env.md"
+    }
+  ]
+}

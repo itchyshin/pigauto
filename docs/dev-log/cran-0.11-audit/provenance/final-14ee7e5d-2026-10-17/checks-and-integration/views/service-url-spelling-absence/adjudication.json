@@ -1,0 +1,107 @@
+{
+  "archive": {
+    "path": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/pigauto_0.11.0.tar.gz",
+    "sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+    "size_bytes": 5137648,
+    "source_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636"
+  },
+  "archive_unchanged_after": true,
+  "scope": "Exact-source spelling/URLs and isolated installed optional-dependency absence; no live bulk services, fits, repository edits or submission.",
+  "spelling": {
+    "tool": "spelling 2.3.2; default en-US (DESCRIPTION has no Language field)",
+    "flags_all_surfaces": 404,
+    "description_title_flags": [
+      {
+        "word": "al",
+        "found": "avonet_full.Rd:14; avonet300.Rd:25; multi_impute_trees.Rd:32; multi_impute.Rd:371; read_tree.Rd:43; tree_full.Rd:13,34; tree300.Rd:13,29; trees300.Rd:14,15,37,41; description:22; NEWS.md:911,2424,2556,3122; README.md:56; getting-started.Rmd:171,648,650,652; gnn-architecture.Rmd:458,459; tree-uncertainty.Rmd:31,50,116,119,122"
+      },
+      {
+        "word": "compositional",
+        "found": "impute.Rd:65; multi_impute_trees.Rd:44; multi_impute.Rd:98; preprocess_traits.Rd:42; description:8; NEWS.md:2980,2982,3002; README.md:15; getting-started.Rmd:91,630; mixed-types.Rmd:168"
+      },
+      {
+        "word": "de",
+        "found": "multi_impute_trees.Rd:279; description:23; NEWS.md:1069,2135,2209; gnn-architecture.Rmd:466"
+      },
+      {
+        "word": "doi",
+        "found": "description:24; tree-uncertainty.Rmd:116,119,122"
+      },
+      {
+        "word": "et",
+        "found": "avonet_full.Rd:14; avonet300.Rd:25; multi_impute_trees.Rd:32; multi_impute.Rd:370; read_tree.Rd:42; tree_full.Rd:13,34; tree300.Rd:13,29; trees300.Rd:14,15,37,41; description:22; NEWS.md:911,2424,2556,3122; README.md:56; getting-started.Rmd:171,648,650,652; gnn-architecture.Rmd:458,459; tree-uncertainty.Rmd:31,50,116,119,122"
+      },
+      {
+        "word": "sysbio",
+        "found": "description:24"
+      },
+      {
+        "word": "syy",
+        "found": "description:24"
+      },
+      {
+        "word": "Villemereuil",
+        "found": "multi_impute_trees.Rd:279; description:23; NEWS.md:1069; gnn-architecture.Rmd:466"
+      },
+      {
+        "word": "Vovk",
+        "found": "description:22; gnn-architecture.Rmd:469"
+      }
+    ],
+    "description_adjudication": "al/et form et al.; de/Villemereuil and Vovk are cited author names; doi/sysbio/syy are DOI syntax/content; compositional is the statistical trait term. No ordinary-word typo established in these nine flags. Not a claim that all404 package-wide findings were exhaustively adjudicated.",
+    "export_failure": "Original checker completed and saved RDS; initial CSV writer failed on a list column. Flattened export read the existing RDS without rerunning check. Initial log/exit retained."
+  },
+  "urls": {
+    "initial_attempt": "Sandbox DNS curl6 failures; cannot establish broken URLs. Initial CSV writer also failed on list column, raw RDS retained.",
+    "network_execution": {
+      "command": [
+        "Rscript",
+        "--vanilla",
+        "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/urls-network.R",
+        "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d"
+      ],
+      "exit": 0,
+      "elapsed_seconds": 48.96180895800353,
+      "thread_cap": 1
+    },
+    "remaining_findings": [
+      {
+        "URL": "https://doi.org/10.1126/science.1157704",
+        "From": "inst/doc/getting-started.html; vignettes/getting-started.Rmd",
+        "Status": "403",
+        "Message": "Forbidden",
+        "New": "",
+        "CRAN": "",
+        "Spaces": "",
+        "R": "",
+        "root": "/private/tmp/pigauto-final-closure-20261017/grace-proof-14ee7e5d/exact-source/pigauto"
+      }
+    ],
+    "adjudication": "One distinct DOI URL returned403Forbidden in two sources. NLM PubMed18583609 confirms exact DOI/title/journal/year/pages; bibliographic identity is valid, but automated accessibility is NOT proven. Retain403 for final explicit URL adjudication/cran-comments; do not claim URL-clean or change artifact silently.",
+    "identity_source": "https://pubmed.ncbi.nlm.nih.gov/18583609/"
+  },
+  "absence": {
+    "result": {
+      "pass": 60,
+      "fail": 0,
+      "warn": 0,
+      "skip": 8,
+      "files": [
+        "test-gbif-centroids.R",
+        "test-worldclim-covariates.R"
+      ],
+      "not_cran": "UNSET",
+      "rgbif": false,
+      "terra": false
+    },
+    "expected_skips": {
+      "rgbif-dependent mocked/storage tests": 2,
+      "terra-dependent cache/extraction tests": 3,
+      "CRAN-excluded live/slow integrations": 3
+    },
+    "reached": "Helpful missing-rgbif and missing-terra error branches plus cache/helper/failure intent tests. Library paths restricted to scratch symlink library plus base R; no user/site-library fallthrough. Test files copied from frozen archive to native .Rcheck-like layout.",
+    "limits": "No live GBIF/WorldClim availability or download success; terra-dependent raster extraction and rgbif-dependent stored-points mocks skipped in this absence cell. Dependencies use measured symlinks, not clean-room compilation."
+  },
+  "estimate": "Expected1\u20135minutes; exceeded five-minute wall estimate due shared-host setup/package loading and permission/network retry; reported to parent/user and started no further long work.",
+  "release_status": "NOT_READY; URL403 finding and broader package dictionary review retained; native/platform/MI closure belongs to driver."
+}

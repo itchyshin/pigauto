@@ -1,0 +1,14 @@
+$paths
+                                         pdflatex 
+"/home/runner/.TinyTeX/bin/x86_64-linux/pdflatex" 
+                                        makeindex 
+                                               "" 
+                                         texi2dvi 
+                              "/usr/bin/texi2dvi" 
+                                           texify 
+                                               "" 
+
+$environment
+          MAKEINDEX      R_MAKEINDEXCMD       R_TEXI2DVICMD 
+                 ""                  "" "/usr/bin/texi2dvi" 
+

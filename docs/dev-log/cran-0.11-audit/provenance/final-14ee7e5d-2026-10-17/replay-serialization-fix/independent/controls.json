@@ -1,0 +1,2155 @@
+[
+  {
+    "case": "error-domain-0",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": true,
+    "accepted": true,
+    "refusal": null
+  },
+  {
+    "case": "error-domain-1",
+    "input": {
+      "error": {},
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": true,
+    "accepted": true,
+    "refusal": null
+  },
+  {
+    "case": "error-domain-2",
+    "input": {
+      "error": [],
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "error-domain-3",
+    "input": {
+      "error": false,
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "error-domain-4",
+    "input": {
+      "error": true,
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "error-domain-5",
+    "input": {
+      "error": 0,
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "error-domain-6",
+    "input": {
+      "error": 0.0,
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "error-domain-7",
+    "input": {
+      "error": 1,
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "error-domain-8",
+    "input": {
+      "error": -1,
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "error-domain-9",
+    "input": {
+      "error": "",
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "error-domain-10",
+    "input": {
+      "error": " ",
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "error-domain-11",
+    "input": {
+      "error": "null",
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "error-domain-12",
+    "input": {
+      "error": "{}",
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "error-domain-13",
+    "input": {
+      "error": "planted error",
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "error-domain-14",
+    "input": {
+      "error": {
+        "message": null
+      },
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "error-domain-15",
+    "input": {
+      "error": {
+        "message": ""
+      },
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "error-domain-16",
+    "input": {
+      "error": {
+        "message": false
+      },
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "error-domain-17",
+    "input": {
+      "error": {
+        "message": "failure"
+      },
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "error-domain-18",
+    "input": {
+      "error": {
+        "": null
+      },
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "error-domain-19",
+    "input": {
+      "error": {
+        "nested": {}
+      },
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "error-domain-20",
+    "input": {
+      "error": [
+        null
+      ],
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "error-domain-21",
+    "input": {
+      "error": [
+        {}
+      ],
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "not_cran-type/value-0",
+    "input": {
+      "error": null,
+      "not_cran": null,
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "not_cran-type/value-1",
+    "input": {
+      "error": null,
+      "not_cran": false,
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "not_cran-type/value-2",
+    "input": {
+      "error": null,
+      "not_cran": true,
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "not_cran-type/value-3",
+    "input": {
+      "error": null,
+      "not_cran": 0,
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "not_cran-type/value-4",
+    "input": {
+      "error": null,
+      "not_cran": 1,
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "not_cran-type/value-5",
+    "input": {
+      "error": null,
+      "not_cran": {},
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "not_cran-type/value-6",
+    "input": {
+      "error": null,
+      "not_cran": [],
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "not_cran-type/value-7",
+    "input": {
+      "error": null,
+      "not_cran": "",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "not_cran-type/value-8",
+    "input": {
+      "error": null,
+      "not_cran": " ",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "not_cran-type/value-9",
+    "input": {
+      "error": null,
+      "not_cran": "TRUE",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "not_cran-type/value-10",
+    "input": {
+      "error": null,
+      "not_cran": "true",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "not_cran-type/value-11",
+    "input": {
+      "error": null,
+      "not_cran": "True",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "not_cran-type/value-12",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": true,
+    "accepted": true,
+    "refusal": null
+  },
+  {
+    "case": "not_cran-type/value-13",
+    "input": {
+      "error": null,
+      "not_cran": "unset",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "not_cran-type/value-14",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET ",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "not_cran-type/value-15",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET\n",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "not_cran-type/value-16",
+    "input": {
+      "error": null,
+      "not_cran": "true ",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "not_cran-type/value-17",
+    "input": {
+      "error": null,
+      "not_cran": "true\n",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "not_cran-type/value-18",
+    "input": {
+      "error": null,
+      "not_cran": "false",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "not_cran-type/value-19",
+    "input": {
+      "error": null,
+      "not_cran": "UNSΕT",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "missing-not_cran",
+    "input": {
+      "error": null,
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "force_suggests-type/value-0",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": null
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "force_suggests-type/value-1",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": false
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "force_suggests-type/value-2",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": true
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "force_suggests-type/value-3",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": 0
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "force_suggests-type/value-4",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": 1
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "force_suggests-type/value-5",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": {}
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "force_suggests-type/value-6",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": []
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "force_suggests-type/value-7",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": ""
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "force_suggests-type/value-8",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": " "
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "force_suggests-type/value-9",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": "TRUE"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "force_suggests-type/value-10",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": true,
+    "accepted": true,
+    "refusal": null
+  },
+  {
+    "case": "force_suggests-type/value-11",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": "True"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "force_suggests-type/value-12",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": "UNSET"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "force_suggests-type/value-13",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": "unset"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "force_suggests-type/value-14",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": "UNSET "
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "force_suggests-type/value-15",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": "UNSET\n"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "force_suggests-type/value-16",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": "true "
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "force_suggests-type/value-17",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": "true\n"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "force_suggests-type/value-18",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": "false"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "force_suggests-type/value-19",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": "UNSΕT"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "missing-force_suggests",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "missing-error",
+    "input": {
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error field is missing"
+  },
+  {
+    "case": "wrong-envelope-None",
+    "input": null,
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error field is missing"
+  },
+  {
+    "case": "wrong-envelope-False",
+    "input": false,
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error field is missing"
+  },
+  {
+    "case": "wrong-envelope-True",
+    "input": true,
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error field is missing"
+  },
+  {
+    "case": "wrong-envelope-0",
+    "input": 0,
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error field is missing"
+  },
+  {
+    "case": "wrong-envelope-1",
+    "input": 1,
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error field is missing"
+  },
+  {
+    "case": "wrong-envelope-''",
+    "input": "",
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error field is missing"
+  },
+  {
+    "case": "wrong-envelope-[]",
+    "input": [],
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error field is missing"
+  },
+  {
+    "case": "wrong-envelope-[{'error': None, 'not_cran': 'UNSET', 'force_suggests': 'true'}]",
+    "input": [
+      {
+        "error": null,
+        "not_cran": "UNSET",
+        "force_suggests": "true"
+      }
+    ],
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error field is missing"
+  },
+  {
+    "case": "wrong-envelope-{}",
+    "input": {},
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error field is missing"
+  },
+  {
+    "case": "cross-environment-(None, 'UNSET', 'true')",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": true,
+    "accepted": true,
+    "refusal": null
+  },
+  {
+    "case": "cross-environment-(None, 'UNSET', 'false')",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": "false"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-(None, 'UNSET', None)",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": null
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-(None, 'UNSET', True)",
+    "input": {
+      "error": null,
+      "not_cran": "UNSET",
+      "force_suggests": true
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-(None, 'true', 'true')",
+    "input": {
+      "error": null,
+      "not_cran": "true",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-(None, 'true', 'false')",
+    "input": {
+      "error": null,
+      "not_cran": "true",
+      "force_suggests": "false"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-(None, 'true', None)",
+    "input": {
+      "error": null,
+      "not_cran": "true",
+      "force_suggests": null
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-(None, 'true', True)",
+    "input": {
+      "error": null,
+      "not_cran": "true",
+      "force_suggests": true
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-(None, None, 'true')",
+    "input": {
+      "error": null,
+      "not_cran": null,
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-(None, None, 'false')",
+    "input": {
+      "error": null,
+      "not_cran": null,
+      "force_suggests": "false"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-(None, None, None)",
+    "input": {
+      "error": null,
+      "not_cran": null,
+      "force_suggests": null
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-(None, None, True)",
+    "input": {
+      "error": null,
+      "not_cran": null,
+      "force_suggests": true
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-(None, False, 'true')",
+    "input": {
+      "error": null,
+      "not_cran": false,
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-(None, False, 'false')",
+    "input": {
+      "error": null,
+      "not_cran": false,
+      "force_suggests": "false"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-(None, False, None)",
+    "input": {
+      "error": null,
+      "not_cran": false,
+      "force_suggests": null
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-(None, False, True)",
+    "input": {
+      "error": null,
+      "not_cran": false,
+      "force_suggests": true
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-({}, 'UNSET', 'true')",
+    "input": {
+      "error": {},
+      "not_cran": "UNSET",
+      "force_suggests": "true"
+    },
+    "expected_accept": true,
+    "accepted": true,
+    "refusal": null
+  },
+  {
+    "case": "cross-environment-({}, 'UNSET', 'false')",
+    "input": {
+      "error": {},
+      "not_cran": "UNSET",
+      "force_suggests": "false"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-({}, 'UNSET', None)",
+    "input": {
+      "error": {},
+      "not_cran": "UNSET",
+      "force_suggests": null
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-({}, 'UNSET', True)",
+    "input": {
+      "error": {},
+      "not_cran": "UNSET",
+      "force_suggests": true
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-({}, 'true', 'true')",
+    "input": {
+      "error": {},
+      "not_cran": "true",
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-({}, 'true', 'false')",
+    "input": {
+      "error": {},
+      "not_cran": "true",
+      "force_suggests": "false"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-({}, 'true', None)",
+    "input": {
+      "error": {},
+      "not_cran": "true",
+      "force_suggests": null
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-({}, 'true', True)",
+    "input": {
+      "error": {},
+      "not_cran": "true",
+      "force_suggests": true
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-({}, None, 'true')",
+    "input": {
+      "error": {},
+      "not_cran": null,
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-({}, None, 'false')",
+    "input": {
+      "error": {},
+      "not_cran": null,
+      "force_suggests": "false"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-({}, None, None)",
+    "input": {
+      "error": {},
+      "not_cran": null,
+      "force_suggests": null
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-({}, None, True)",
+    "input": {
+      "error": {},
+      "not_cran": null,
+      "force_suggests": true
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-({}, False, 'true')",
+    "input": {
+      "error": {},
+      "not_cran": false,
+      "force_suggests": "true"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-({}, False, 'false')",
+    "input": {
+      "error": {},
+      "not_cran": false,
+      "force_suggests": "false"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-({}, False, None)",
+    "input": {
+      "error": {},
+      "not_cran": false,
+      "force_suggests": null
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "cross-environment-({}, False, True)",
+    "input": {
+      "error": {},
+      "not_cran": false,
+      "force_suggests": true
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "actual-0-planted-error-{'message': None}",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/local-macos/frozen-check/pigauto.Rcheck/pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 669.225,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": {
+        "message": null
+      }
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-0-planted-error-[]",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/local-macos/frozen-check/pigauto.Rcheck/pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 669.225,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": []
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-0-planted-error-False",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/local-macos/frozen-check/pigauto.Rcheck/pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 669.225,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": false
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-0-planted-error-0",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/local-macos/frozen-check/pigauto.Rcheck/pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 669.225,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": 0
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-0-planted-error-''",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/local-macos/frozen-check/pigauto.Rcheck/pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 669.225,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": ""
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-0-planted-error-'null'",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/local-macos/frozen-check/pigauto.Rcheck/pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 669.225,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": "null"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-0-missing-error",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/local-macos/frozen-check/pigauto.Rcheck/pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 669.225,
+      "scope": "Separate native-layout replay; not part of R CMD check timing"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error field is missing"
+  },
+  {
+    "case": "actual-0-missing-not_cran",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/local-macos/frozen-check/pigauto.Rcheck/pigauto",
+      "testthat": "3.3.2",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 669.225,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": {}
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "actual-0-missing-force_suggests",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/local-macos/frozen-check/pigauto.Rcheck/pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 669.225,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": {}
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "actual-1-planted-error-{'message': None}",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "D:\\a\\pigauto\\pigauto\\frozen-check\\pigauto.Rcheck\\pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 423.25,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": {
+        "message": null
+      }
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-1-planted-error-[]",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "D:\\a\\pigauto\\pigauto\\frozen-check\\pigauto.Rcheck\\pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 423.25,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": []
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-1-planted-error-False",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "D:\\a\\pigauto\\pigauto\\frozen-check\\pigauto.Rcheck\\pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 423.25,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": false
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-1-planted-error-0",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "D:\\a\\pigauto\\pigauto\\frozen-check\\pigauto.Rcheck\\pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 423.25,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": 0
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-1-planted-error-''",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "D:\\a\\pigauto\\pigauto\\frozen-check\\pigauto.Rcheck\\pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 423.25,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": ""
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-1-planted-error-'null'",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "D:\\a\\pigauto\\pigauto\\frozen-check\\pigauto.Rcheck\\pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 423.25,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": "null"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-1-missing-error",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "D:\\a\\pigauto\\pigauto\\frozen-check\\pigauto.Rcheck\\pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 423.25,
+      "scope": "Separate native-layout replay; not part of R CMD check timing"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error field is missing"
+  },
+  {
+    "case": "actual-1-missing-not_cran",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "D:\\a\\pigauto\\pigauto\\frozen-check\\pigauto.Rcheck\\pigauto",
+      "testthat": "3.3.2",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 423.25,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": {}
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "actual-1-missing-force_suggests",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "D:\\a\\pigauto\\pigauto\\frozen-check\\pigauto.Rcheck\\pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 423.25,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": {}
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "actual-2-planted-error-{'message': None}",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "/home/runner/work/pigauto/pigauto/frozen-check/pigauto.Rcheck/pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 196.181,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": {
+        "message": null
+      }
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-2-planted-error-[]",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "/home/runner/work/pigauto/pigauto/frozen-check/pigauto.Rcheck/pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 196.181,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": []
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-2-planted-error-False",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "/home/runner/work/pigauto/pigauto/frozen-check/pigauto.Rcheck/pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 196.181,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": false
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-2-planted-error-0",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "/home/runner/work/pigauto/pigauto/frozen-check/pigauto.Rcheck/pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 196.181,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": 0
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-2-planted-error-''",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "/home/runner/work/pigauto/pigauto/frozen-check/pigauto.Rcheck/pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 196.181,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": ""
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-2-planted-error-'null'",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "/home/runner/work/pigauto/pigauto/frozen-check/pigauto.Rcheck/pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 196.181,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": "null"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-2-missing-error",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "/home/runner/work/pigauto/pigauto/frozen-check/pigauto.Rcheck/pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 196.181,
+      "scope": "Separate native-layout replay; not part of R CMD check timing"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error field is missing"
+  },
+  {
+    "case": "actual-2-missing-not_cran",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "/home/runner/work/pigauto/pigauto/frozen-check/pigauto.Rcheck/pigauto",
+      "testthat": "3.3.2",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 196.181,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": {}
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "actual-2-missing-force_suggests",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "/home/runner/work/pigauto/pigauto/frozen-check/pigauto.Rcheck/pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 196.181,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": {}
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "actual-3-planted-error-{'message': None}",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "D:\\a\\pigauto\\pigauto\\frozen-check\\pigauto.Rcheck\\pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 409.41,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": {
+        "message": null
+      }
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-3-planted-error-[]",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "D:\\a\\pigauto\\pigauto\\frozen-check\\pigauto.Rcheck\\pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 409.41,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": []
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-3-planted-error-False",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "D:\\a\\pigauto\\pigauto\\frozen-check\\pigauto.Rcheck\\pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 409.41,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": false
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-3-planted-error-0",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "D:\\a\\pigauto\\pigauto\\frozen-check\\pigauto.Rcheck\\pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 409.41,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": 0
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-3-planted-error-''",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "D:\\a\\pigauto\\pigauto\\frozen-check\\pigauto.Rcheck\\pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 409.41,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": ""
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-3-planted-error-'null'",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "D:\\a\\pigauto\\pigauto\\frozen-check\\pigauto.Rcheck\\pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 409.41,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": "null"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error is present or malformed"
+  },
+  {
+    "case": "actual-3-missing-error",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "D:\\a\\pigauto\\pigauto\\frozen-check\\pigauto.Rcheck\\pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 409.41,
+      "scope": "Separate native-layout replay; not part of R CMD check timing"
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Replay error field is missing"
+  },
+  {
+    "case": "actual-3-missing-not_cran",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "D:\\a\\pigauto\\pigauto\\frozen-check\\pigauto.Rcheck\\pigauto",
+      "testthat": "3.3.2",
+      "force_suggests": "true",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 409.41,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": {}
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  },
+  {
+    "case": "actual-3-missing-force_suggests",
+    "input": {
+      "package": "0.11.0",
+      "package_path": "D:\\a\\pigauto\\pigauto\\frozen-check\\pigauto.Rcheck\\pigauto",
+      "testthat": "3.3.2",
+      "not_cran": "UNSET",
+      "native_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "replay_counts": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "diagnostic_elapsed_seconds": 409.41,
+      "scope": "Separate native-layout replay; not part of R CMD check timing",
+      "error": {}
+    },
+    "expected_accept": false,
+    "accepted": false,
+    "refusal": "Changed replay CRAN environment"
+  }
+]
