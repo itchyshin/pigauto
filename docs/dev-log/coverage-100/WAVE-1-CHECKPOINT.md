@@ -1,0 +1,17 @@
+# Wave 1 checkpoint
+
+9 November 2026. Presentation and input/evaluation implementation is reviewed; the campaign remains in progress. No coverage or repair PR is merged, and CRAN work remains separate.
+
+The presentation tests pass 111 assertions and the input/evaluation tests pass 170. Exact Cobertura location matching reaches 310 and 319 originally missed lines respectively, totalling 629 of the 1,904 baseline misses. Earlier expression-span estimates overstated input coverage; use these exact line counts instead. Retain the raw focused RDS/XML and compare class-level line records, not expression spans or method-summary duplicates.
+
+The full run at source 3de7c3f2, with NOT_CRAN=true and every Suggests installed, passed 4,094 assertions with 192 warnings and 33 skips. Its namespace-plus-graph XML reports 11,534 of 12,813 tracked lines. That denominator still omitted the main neural module's methods, so it is not a package-wide percentage. Its primary namespace component covers 11,474 of the original 12,749 lines, with all 629 recovered baseline misses accounted for.
+
+The first pilot at b981a092 omitted NOT_CRAN and skipped 55 supported tests. Treat it as debugging and timing evidence only. The final installed-package skips at 3de include absent BIEN cache, optional HTML Tidy, missing-dependency controls when the dependency is present, and source-only assertions outside the installed package. Preserve and classify them; do not silently call them exercised.
+
+The independent review found both torch module factories hidden from ordinary namespace instrumentation: GraphTransformerBlock was absent, while model_residual_dae.R recorded only scatter_mean. The source accounting now pins all 50 R source hashes and four module methods with 253 tracked locations. data.R consists of six dataset-documentation character literals. The shipped coverage-only helper registers those actual four closures, preserves primary counters and adds them to covr's restoration list. A small real CPU probe and independent review verify registration/restoration. A fresh complete-profile run is still required.
+
+Package check at 3de7c3f2 initially failed to build vignettes because Pandoc was absent. A task-local Pandoc 3.13 install matched the publisher's SHA-256 38aa33b325a2bc96a4c39409631212db55702f564250bcdbead180b3bf646389. Re-running with that binary passed with zero errors, warnings and notes, including vignette rebuilding; only the PDF manual was disabled. No frozen CRAN archive was touched.
+
+Repair PR 284 fixes sorted uncertainty ranks and PR 285 fixes singleton clade sampling; both have settled passing CI and remain drafts. PR 286 separately rejects discrete-score Gaussian ribbons, preserves ordered ordinal plots and improves missing-SE diagnostics; its focused regression passes 11 assertions and CI is pending. The coverage branch changes no package runtime source.
+
+Wave 2 begins with prediction/baselines and GNN/fitting in disjoint test files, then MI. Retain the original 7–12-hour planning range until the new full-profile result identifies the remaining gap; each remote run remains capped at 30 minutes and aggregate threads at 12. No new statistical campaign or hardware validation is included.

@@ -37,8 +37,10 @@
 # torch binds `self` when it constructs the module.
 utils::globalVariables("self")
 
-ResidualPhyloDAE <- function(...) {
-  module <- torch::nn_module(
+ResidualPhyloDAE_module <- local({
+  module <- NULL
+  function() {
+    if (is.null(module)) module <<- torch::nn_module(
   "ResidualPhyloDAE",
   initialize = function(input_dim = NULL, hidden_dim = NULL, coord_dim = NULL,
                         cov_dim,
@@ -434,9 +436,12 @@ ResidualPhyloDAE <- function(...) {
             fixed_effects = if (!is.null(fixed_effects)) fixed_effects else NULL)
     }
   }
-  )
-  module(...)
-}
+    )
+    module
+  }
+})
+
+ResidualPhyloDAE <- function(...) ResidualPhyloDAE_module()(...)
 
 
 # ---- Internal: scatter_mean for aggregation ----------------------------------
