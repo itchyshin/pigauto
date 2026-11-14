@@ -1,0 +1,33 @@
+{
+  "candidate_xml_sha256": "12a436bfcc688259104027970acb746abdbd13844d72ea010c01de691d462664",
+  "source_sha": "0aad929c263419ab238df326951d1f2ab186651a",
+  "covered": 12843,
+  "valid": 13019,
+  "uncovered": 176,
+  "baseline_lines": 12749,
+  "baseline_lines_covered": 8700,
+  "baseline_missed_lines": 1904,
+  "baseline_missed_lines_covered": 1002,
+  "new_lines": 1062,
+  "failures": 141,
+  "regressions": 0,
+  "source_changed_files": [
+    "R/draws_conditional.R",
+    "R/fit_helpers.R",
+    "R/fit_pigauto.R",
+    "R/mask_missing.R",
+    "R/pagel_lambda.R",
+    "R/phylo_signal.R",
+    "R/plot.R",
+    "R/plot_pigauto.R",
+    "R/pool_mi.R",
+    "R/predict_pigauto.R"
+  ],
+  "source_identity_verified": false,
+  "missing_source_files": [],
+  "torch_method_inventory_verified": true,
+  "missing_torch_methods": [],
+  "missing_torch_method_lines": [],
+  "complete": false,
+  "partial_report": true
+}

@@ -1,0 +1,47 @@
+{
+  "source_sha": "ae15cda0816c84d549b2aa623014c1fa4c26e5db",
+  "baseline_source_sha": "033649b93115c6d8191e791f06b1ddf52eb82d19",
+  "candidate_xml_sha256": "eff06af316ee1ca7e74b09c8723d544d12f87271b17572cd1c8c9b1bbbe7ad67",
+  "source_manifest_sha256": "58a97d11ede7c6d87d47b50fe103cfeeef8a6ecbbb4e305c31d521adc7ddc21d",
+  "report_tool_sha256": "1c6a02726e44f843a8534a648e233cbb2ad3057b6fb327f9908578adfb189ef9",
+  "current_counts": {
+    "covered": 12897,
+    "valid": 13000
+  },
+  "current_uncovered": 103,
+  "original_baseline_misses": 1904,
+  "accounted_locations": 13002,
+  "new_current_locations": 70,
+  "new_current_uncovered": 0,
+  "baseline_miss_dispositions": {
+    "covered_with_named_test_set": 1774,
+    "changed_or_removed_by_unmerged_repair": 27,
+    "uncovered": 103
+  },
+  "all_location_dispositions": {
+    "covered_with_named_test_set": 12827,
+    "changed_or_removed_by_unmerged_repair": 72,
+    "uncovered": 103
+  },
+  "changed_source_files": [
+    "R/active_impute.R",
+    "R/draws_conditional.R",
+    "R/exact_conditional.R",
+    "R/fit_helpers.R",
+    "R/fit_pigauto.R",
+    "R/gbif_centroids.R",
+    "R/joint_mvn_solver.R",
+    "R/mask_missing.R",
+    "R/multi_impute_analysis.R",
+    "R/pagel_lambda.R",
+    "R/phylo_signal.R",
+    "R/plot.R",
+    "R/plot_pigauto.R",
+    "R/pool_mi.R",
+    "R/predict_pigauto.R",
+    "R/simulate_benchmark.R"
+  ],
+  "named_test_csv_sha256": "f81a8b34a544fc40086a3e35147e8159867eb00566ca5f7716f6e0563f3a2f55",
+  "complete": false,
+  "limitation": "Changed or removed baseline locations remain unresolved pending separate repair approval. This report does not relax the strict verifier."
+}

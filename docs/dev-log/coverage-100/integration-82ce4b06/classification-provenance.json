@@ -1,0 +1,12 @@
+{
+  "source_sha": "82ce4b0625a679026a6f9a9e0494aaa43da31ecf",
+  "residuals_sha256": "b7414e6d63b1837978f1f8cd9a523a00d3a76c9345c89cb691a4457cfb5fe0f6",
+  "classification_sha256": "2cd01a9386188f892ca530ad9424743eebed0f8310dece9470218948086979a3",
+  "kind": "Manual triage, not an impossibility proof. Historical100 gate remains unmet; user approved delivery with exact remainder.",
+  "categories": {
+    "failure-fallback": 71,
+    "suspected-unreachable": 7,
+    "legacy-compatibility": 5,
+    "dependency-platform": 14
+  }
+}

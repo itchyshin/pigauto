@@ -1,0 +1,34 @@
+{
+  "source_sha": "82ce4b0625a679026a6f9a9e0494aaa43da31ecf",
+  "scope": "read-only final test-oracle and claims review; no new tests, repairs, or runs",
+  "delivery_basis": "DELIVERY-ACCEPTANCE.md four gates; historical 100% target remains unmet but is no longer a delivery condition",
+  "findings": [
+    {
+      "type": "limitation",
+      "detail": "CPU Cobertura 12905/13002, 97 uncovered; no aggregate multi-runtime coverage claim. Reconciliation identifies 29 baseline misses changed or removed by separately unmerged repairs; 95 original misses and two new current locations remain uncovered."
+    },
+    {
+      "type": "limitation",
+      "detail": "Focused real MPS test exercises a single 12-tip one-epoch GNN prediction with two covariates and known stored weights and scalar bias. No numerical or device-selection mocks. The focused run records 12 assertions within 1960 across 31 files. Does not establish learned coefficient recovery, general GPU support or statistical calibration. CPU full run skips MPS."
+    },
+    {
+      "type": "limitation",
+      "detail": "Check summary zero errors/warnings/notes is check-level, not warning-free test execution. Installed test log records 5737 passes, 192 warnings, 35 skips; instrumented log records 5740 passes, 192 warnings, 34 skips. Source-only gate records 192 clean assertions."
+    },
+    {
+      "type": "limitation",
+      "detail": "Predict-count validation deliberately rejects invalid stored GNN refine_steps including NULL/zero, while GNN-off ignores them. Tests exercise this legacy behavior change; no broader saved-fit compatibility claim."
+    },
+    {
+      "type": "limitation",
+      "detail": "Previously reviewed resource test permits bounded NULL or correct finite return; observed full CPU run has NULL then healthy completion, not a universal RSS cap or memory-failure guarantee. CV balanced-fold conclusion rests on source proof; post-encoding covariate guard remains uncovered."
+    }
+  ],
+  "positive_evidence": [
+    "Final MPS test SHA-256 50eec2bf6c3230beeb66ff222e724af6e5509d356f75423db481c84cd490ce91 and prediction-count test e4d7e9af547e058614fc2d304af953b474eea06229b413282e8321b6fb01d488 match frozen Git objects.",
+    "Prediction-count red log independently reaches helper, invalid count, refinement, and two early-device sentinels; green combined log reports 93; healthy fit controls pass. Device selection mocks are explicit CPU boundaries in this test, not numerical mocks.",
+    "CPU check and source manifests identify exact final SHA; R CMD check omits manual. MPS focused log displays 12 passes and total 1960 across 31 files."
+  ],
+  "not_assessed": "Live PR heads, CI state, protected-worktree identity and complete delivery ledger are coordinator checks, not established by this oracle review.",
+  "constraints": "No merges, issue updates, CRAN changes, releases, tags, new percentage-driven tests, new repairs or runs."
+}

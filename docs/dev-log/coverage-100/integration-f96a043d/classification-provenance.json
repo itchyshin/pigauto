@@ -1,0 +1,13 @@
+{
+  "source_sha": "f96a043db32ebf795b34eee348aa997109d92a9c",
+  "residuals_sha256": "bb9aedd15eb61a4ec29d682777b0f1cebf5f7ab27d4dc06675d9019431b7447f",
+  "classification_sha256": "67e321d7865626a4815d332feb1406120343beee0c478a4cbfacca8b1bb2879b",
+  "classification_kind": "Manual triage of exact uncovered locations; no impossibility or completion proof. Post-freeze evidence receives no coverage credit.",
+  "counts": {
+    "failure-fallback": 71,
+    "suspected-unreachable": 7,
+    "legacy-compatibility": 5,
+    "dependency-platform": 14,
+    "reachable": 1
+  }
+}

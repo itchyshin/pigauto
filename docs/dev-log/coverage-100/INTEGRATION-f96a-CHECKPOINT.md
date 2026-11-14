@@ -1,0 +1,15 @@
+# Reviewed f96a coverage checkpoint
+
+The combined candidate `f96a043db32ebf795b34eee348aa997109d92a9c` covers **12,902 of 13,000 executable locations (99.246154%)**, with 98 uncovered. It includes nineteen separately reviewable repair PRs. These results describe that frozen candidate; main and the coverage-only PR head have different source identities.
+
+The original 1,904 misses reconcile to 1,779 covered with named tests, 96 uncovered and 29 changed locations awaiting separate repair approval. That leaves 125 unresolved original entries. Two newly added defensive post-encoding guard lines are also uncovered. Every current miss is retained in the residual inventory with its owner, obstruction and required evidence.
+
+The complete 13,002-location catalog reconciles to 12,828 named-covered, 96 uncovered and 78 changed entries. There are 76 new current locations: 74 covered and two uncovered. Thus 13,002 minus 78 plus 76 equals the current denominator of 13,000. Five old misses gained actual named witnesses: exact-conditional lines 125 and 156, and baseline lines 371, 435 and 1726. Six catalog locations moved to approval-held status through the CV cleanup; these receive no test-coverage credit.
+
+The full instrumented suite passes 5,683 assertions with 192 inventoried warnings and 33 classified skips. The installed suite passes 5,680 assertions with 192 warnings and 34 skips. Package check reports zero errors, warnings or notes, with rebuilt vignettes and the PDF manual excluded. The source-only gate passes 192 clean assertions. Check-level cleanliness does not imply warning-free test logs. Verification took 25 minutes 39 seconds on one CPU thread per job. All suggested dependencies were available; this runtime has torch 0.17.0 and no CUDA or MPS backend.
+
+There are zero mapped coverage regressions. All 253 neural-method locations are covered. The named evidence contains 12,889 single-test witnesses and 13 collective witnesses. The full instrumented and installed runs both verify the isolated child's source identity and heap restoration; its guard-125 witness is recorded in the actual full run.
+
+A fresh panel of two bounded Terra reviewers and the independent Sol reviewer checked accounting, source identities, numerical oracles and bounded claims. The strict completion verifier still fails, as expected. G7 and final campaign-completion G8 remain unmet. No exclusions were added. Coverage does not establish statistical calibration, general GPU correctness or singleton resolution.
+
+The full retained evidence is in `integration-f96a043d/`. Later covariate-name and real-MPS tests, and prediction-count repair #306, are outside this snapshot and receive no coverage credit here. Following Shinichi's decision to stop percentage-driven expansion, the remaining work is to verify the prepared final combination and deliver reviewable PRs with this exact remainder. The 100% gate will remain recorded as unmet. Merging, issue updates and CRAN actions remain outside authority.

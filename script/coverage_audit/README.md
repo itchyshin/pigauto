@@ -19,3 +19,39 @@ python3 -B script/coverage_audit/audit.py verify --candidate OUTPUT_DIR/cobertur
 A partial report may exit zero only with explicit --allow-partial; it keeps complete=false and lists missing lines, missing source classes, regressions and source-identity changes. To prove completion, use --require-complete instead. That mode requires Git binding, all executable source classes, unchanged baseline R source identities, matching coverage configuration, a successful collection manifest and every candidate line covered. No source-line mapping for repairs is implemented: changed R files receive no baseline credit, so repair candidates remain separate.
 
 The collection runner retains coverage RDS/XML, line-level CSV, source/test/configuration hashes, installed packages, session records and process output. The package checker disables only the PDF manual, records notes separately, and rejects errors or warnings. These are development checks, not a CRAN release gate or exact-artifact release evidence.
+
+Inventory warnings and skips from the retained installed-package output:
+
+```sh
+python3 script/coverage_audit/conditions.py --selftest
+python3 script/coverage_audit/conditions.py /path/to/testthat.Rout /path/to/conditions
+```
+
+The parser reconciles every individual warning and skip with the final testthat counts. Its categories describe the fixture or prerequisite; they do not establish that a skipped path was exercised. Any unclassified condition remains available for review in the CSV. The audit summary's `uncovered` field is the unique tracked-line deficit; `failures` also counts overlapping provenance and neural-method diagnostics.
+
+Run the source-only assertions from a frozen export with its `SOURCE_SHA` marker:
+
+```sh
+Rscript script/coverage_audit/source_check.R SOURCE_ROOT OUTPUT_DIR FULL_SHA
+```
+
+This separate gate retains individual test results and requires zero failures, warnings and skips. Its output supplements the installed-package suite, where repository files are intentionally unavailable.
+
+Set `PIGAUTO_COVERAGE_RECORD_TESTS=true` for a collection that also retains covr's test-call records and writes `named-test-evidence.csv`. The CSV separates single-test witnesses from collective test sets for covered locations. A single-test witness must hit every overlapping counter on that function line; entry into the parent expression alone is insufficient. Setup-only calls remain labelled separately. The raw RDS retains the full counter-to-test traces for independent inspection. Recording these traces can increase collection time and memory; retain the 30-minute run limit.
+
+```sh
+Rscript script/coverage_audit/test_evidence_selftest.R
+```
+
+For a candidate that includes unmerged runtime repairs, keep the strict verifier unchanged and produce a separate line-accounting report:
+
+```sh
+python3 script/coverage_audit/reconcile_repairs.py selftest
+python3 script/coverage_audit/reconcile_repairs.py reconcile \
+  --candidate OUTPUT_DIR/cobertura.xml --manifest OUTPUT_DIR/manifest.json \
+  --expected-sha FULL_SHA --git-root REPOSITORY --out RECONCILIATION_DIR
+```
+
+This maps only unchanged lines outside zero-context Git diff hunks, checks their exact text, and retains changed or removed baseline entries as unresolved pending repair approval. It accounts for the original 12,749 locations and the 253 previously omitted neural locations, and lists added current locations separately. It always reports `complete: false` and cannot satisfy G7. The current implementation fails closed if an entire source file has been removed; the present repairs modify existing files.
+
+Optional `--named-tests FILE --named-tests-provenance RECEIPT` inputs add named test sets. Retain a receipt with `source_sha` and `csv_sha256` from the same frozen collection; an absent receipt, wrong source identity or modified CSV is rejected. Retain the source collection manifest and raw counter RDS alongside it for independent inspection. A collective test set must not be described as a single test witness.

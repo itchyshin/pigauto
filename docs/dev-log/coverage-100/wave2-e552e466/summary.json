@@ -1,0 +1,32 @@
+{
+  "candidate_xml_sha256": "6c2b211916ca1ebcbad12a94d8884baadb62594d9ed93f2678981ee571ebf457",
+  "source_sha": "e552e4664d341e4e6cf9dc3af4127aede81f2707",
+  "covered": 12550,
+  "valid": 13002,
+  "uncovered": 452,
+  "baseline_lines": 12749,
+  "baseline_lines_covered": 12298,
+  "baseline_missed_lines": 1904,
+  "baseline_missed_lines_covered": 1453,
+  "new_lines": 253,
+  "failures": 453,
+  "regressions": 0,
+  "source_changed_files": [],
+  "source_identity_verified": true,
+  "missing_source_files": [],
+  "torch_method_inventory_verified": true,
+  "missing_torch_methods": [
+    "ResidualPhyloDAE.forward"
+  ],
+  "missing_torch_method_lines": [
+    {
+      "factory": "ResidualPhyloDAE",
+      "method": "forward",
+      "file": "R/model_residual_dae.R",
+      "line": 426,
+      "status": "uncovered"
+    }
+  ],
+  "complete": false,
+  "partial_report": true
+}

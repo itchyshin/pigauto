@@ -1,0 +1,77 @@
+{
+  "status": "READ_ONLY_ASSEMBLY_REVIEW_PASS",
+  "base": "ae15cda0816c84d549b2aa623014c1fa4c26e5db",
+  "candidate": "f96a043db32ebf795b34eee348aa997109d92a9c",
+  "runtime_changed": [
+    "R/fit_helpers.R",
+    "R/preprocess_traits.R"
+  ],
+  "combined_helper_sha256": "56984690f6a99f44ba05122fb9b2a3bc3ae158046d189a490048449a2ed3c7f1",
+  "helper_exact_reviewed_transformation": true,
+  "reviewed_file_hashes": {
+    "R/preprocess_traits.R": "7f5a6c6c4cb0c8c5530f5a831bdb0378f8308c52362d1a0b8d7d9d5a1274841e",
+    "R/exact_conditional.R": "36168b3b9b0c800db827eb0c32b685db65e923b2b03025a8ccad1fa671953928",
+    "script/coverage_audit/conditions.py": "e1f02b9b712218dd5f16da2bc34c8c16647cbc6570c2019327c8c5dc8a7c972c",
+    "tests/testthat/test-coverage-100-resource.R": "b1ca86dff353fc83e4247ff902b11a27cf705ac808c5eed5fefc767d8061885d",
+    "tests/testthat/fixtures/resource-child-driver.R": "d3fc89213d9d092c1fde78060ad4cda3ee1208441e39280764e6c8f386516e45",
+    "tests/testthat/fixtures/resource-child-test.R": "d90a5443fb4159582a0dcac8c90569ffe7274dac269a7e5f680590e2b791b0d5",
+    "tests/testthat/test-covariate-scaling-overflow.R": "15aace1c5fde0e413eae83c947e1feeb4ceb9ef236de4833d299899f4160e266",
+    "tests/testthat/test-calibration-fold-contract.R": "3343b6993f94dd1e4ced6329c7b1ba774df70b3adfa35a4c7d0ea2c06941aea3",
+    "tests/testthat/test-coverage-100-baseline-defaults.R": "b90e749d75a3b5b6b4f7085884c46863885889c1a8ca7dbd1229ab79b57e45c8"
+  },
+  "prediction_test_sha256": "eafcf0ff32d0fa9b2cf87385594564f94b22ee4aca234104d4ba6dccc3323515",
+  "preserved_exact_files": [
+    "R/fit_pigauto.R",
+    "R/predict_pigauto.R",
+    "R/exact_conditional.R",
+    "tests/testthat/test-coverage-100-gnn.R",
+    "codecov.yml",
+    ".Rbuildignore",
+    ".github/workflows/test-coverage.yaml",
+    "script/coverage_audit/collect.R",
+    "script/coverage_audit/test_evidence.R",
+    "script/coverage_audit/audit.py",
+    "script/coverage_audit/reconcile_repairs.py"
+  ],
+  "constituents": [
+    {
+      "commit": "c9c21bb062913a183c512004a9153fcb87ddf0f3",
+      "title": "docs: explain mixed-trait prediction intervals (#299)",
+      "body": "docs: explain mixed-trait prediction intervals (#299)"
+    },
+    {
+      "commit": "8faa3570322543d7fcaf387964b5f0cf54652772",
+      "title": "fix: reject overflowed numeric covariate encodings",
+      "body": "fix: reject overflowed numeric covariate encodings"
+    },
+    {
+      "commit": "fdb04ffb3f772dcfed3e2b1da32883d26ee9bbb6",
+      "title": "refactor: remove unreachable empty calibration fold fallbacks",
+      "body": "refactor: remove unreachable empty calibration fold fallbacks"
+    },
+    {
+      "commit": "9485e1d2248e873e7e8d954b37dc99f7c79384f1",
+      "title": "docs: record reviewed 99.21 percent coverage candidate",
+      "body": "docs: record reviewed 99.21 percent coverage candidate"
+    },
+    {
+      "commit": "1f9314ee2fa64e0d84efd164d3bf2a6ed263b800",
+      "title": "test: assert safe rejection of unrepresentable conditional means",
+      "body": "test: assert safe rejection of unrepresentable conditional means"
+    },
+    {
+      "commit": "b4030a568dffba3e3016c6a8c2fc99c1f728709a",
+      "title": "test: distinguish exact defaults and preserve mixed ordinal routes",
+      "body": "test: distinguish exact defaults and preserve mixed ordinal routes"
+    },
+    {
+      "commit": "f96a043db32ebf795b34eee348aa997109d92a9c",
+      "title": "test: verify exact conditional resource boundaries in an owned child",
+      "body": "test: verify exact conditional resource boundaries in an owned child"
+    }
+  ],
+  "tests_run_by_reviewer": false,
+  "new_coverage_credit": 0,
+  "full_exact_candidate_gates": "PENDING",
+  "acceptance": "bounded assembly only; G7/G8 unmet"
+}

@@ -1,0 +1,90 @@
+{
+  "all_dispositions": {
+    "changed_or_removed_by_unmerged_repair": 78,
+    "covered_with_named_test_set": 12828,
+    "uncovered": 96
+  },
+  "catalog": 13002,
+  "collective_only": 13,
+  "complete": false,
+  "coverage_percent": 99.24615384615385,
+  "current": {
+    "covered": 12902,
+    "valid": 13000
+  },
+  "mapped_regressions": [],
+  "missing_torch_methods": [],
+  "new_current": 76,
+  "new_current_covered": 74,
+  "new_current_uncovered": 2,
+  "original_miss_dispositions": {
+    "changed_or_removed_by_unmerged_repair": 29,
+    "covered_with_named_test_set": 1779,
+    "uncovered": 96
+  },
+  "raw_RDS_bytes": "not locally recomputed",
+  "result": "INDEPENDENT_PROFILE_REVIEW_PASS",
+  "single_named": 12889,
+  "source_sha": "f96a043db32ebf795b34eee348aa997109d92a9c",
+  "strict_regressions": 0,
+  "torch_methods_verified": true,
+  "original_misses_unresolved": 125,
+  "current_misses": 98,
+  "new_uncovered_locations": [
+    [
+      "R/preprocess_traits.R",
+      553
+    ],
+    [
+      "R/preprocess_traits.R",
+      554
+    ]
+  ],
+  "comparison_to_ae15": {
+    "uncovered_to_named": 5,
+    "uncovered_to_changed_pending": 2,
+    "named_to_changed_pending": 4,
+    "new_changed_pending_all_CV_baseline_lines": [
+      355,
+      356,
+      357,
+      358,
+      359,
+      360
+    ],
+    "new_current_delta": 6,
+    "new_current_covered_delta": 4,
+    "new_current_uncovered_delta": 2,
+    "physical_denominator_delta": 0,
+    "physical_covered_delta": 5,
+    "physical_miss_delta": -5
+  },
+  "raw_log_counts": {
+    "instrumented": {
+      "pass": 5683,
+      "warn": 192,
+      "skip": 33,
+      "fail": 0
+    },
+    "installed": {
+      "pass": 5680,
+      "warn": 192,
+      "skip": 34,
+      "fail": 0
+    }
+  },
+  "every_raw_condition_row_matches": true,
+  "all_witness_filenames_in_manifest": true,
+  "check_summary_errors_warnings_notes": [
+    0,
+    0,
+    0
+  ],
+  "manual": false,
+  "source_gate_raw_assertions": 192,
+  "cpu_only": true,
+  "recorded_elapsed_seconds": 1539,
+  "raw_RDS_remote_receipt_sha256": "20d098bd52c54b67f478b620c0e2a3b4b5eb3fb418465e97230263967b89f858",
+  "post_freeze_mps_inputs_and_prediction_repair_included": false,
+  "gates": "partial exact-snapshot G5/G6 only; G7 and final G8 unmet"
+}

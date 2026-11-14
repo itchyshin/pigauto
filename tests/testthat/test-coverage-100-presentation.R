@@ -225,3 +225,84 @@ test_that("report open requests the written report once", {
   expect_match(paste(readLines(path, warn = FALSE), collapse = "\n"), "Open test", fixed = TRUE)
   expect_identical(opened, path)
 })
+
+test_that("unnamed category probabilities receive stable labels and ordering", {
+  grDevices::pdf(NULL)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  heights <- NULL
+  labels <- NULL
+  testthat::local_mocked_bindings(
+    barplot = function(height, ...) {
+      heights <<- height
+      graphics::barplot(height, ...)
+    },
+    legend = function(x, legend, ...) {
+      labels <<- legend
+      graphics::legend(x, legend = legend, ...)
+    }, .package = "pigauto")
+  probabilities <- rbind(c(.8, .2), c(.1, .9), c(.6, .4))
+  .plot_categorical_probs("class", probabilities, NULL, NULL)
+  expect_identical(labels, c("C2", "C1"))
+  expect_equal(heights, t(probabilities[c(1, 3, 2), ]))
+  expect_equal(colSums(heights), rep(1, 3))
+})
+
+test_that("uncertainty plots reject absent dataframe traits", {
+  pred <- .p100_pred()
+  expect_error(plot_uncertainty(pred, trait_name = "absent"),
+               "'absent' not found in pred_result\\$imputed")
+})
+
+test_that("continuous uncertainty fallback uses matching SEs and matrix truth", {
+  pred <- .p100_pred()
+  pred$conformal_lower <- pred$conformal_upper <- NULL
+  pred$se <- matrix(c(.1, .2, .3), 3, dimnames = list(NULL, "mass"))
+  truth <- matrix(c(30, 10, NA), 3, dimnames = list(NULL, "mass"))
+  p <- plot_uncertainty(pred, truth = truth, trait_name = "mass")
+  expect_equal(p$data$pred, c(1, 2, 3))
+  expect_equal(p$data$lower, c(1 - 1.96 * .2, 2 - 1.96 * .3, 3 - 1.96 * .1))
+  expect_equal(p$data$upper, c(1 + 1.96 * .2, 2 + 1.96 * .3, 3 + 1.96 * .1))
+  expect_equal(p$layers[[3]]$data$truth, c(10, 30))
+})
+
+test_that("uncertainty plots omit truth overlays for an unrelated matrix column", {
+  pred <- .p100_pred()
+  truth <- matrix(c(30, 10, 20), 3, dimnames = list(NULL, "other_trait"))
+  p <- plot_uncertainty(pred, truth = truth, trait_name = "mass")
+  expect_length(p$layers, 2L)
+  expect_equal(p$data$pred, c(1, 2, 3))
+  expect_equal(p$data$lower, c(0, 1, 2))
+  expect_equal(p$data$upper, c(2, 3, 4))
+})
+
+test_that("report labels a worse continuous blend using paired RMSE", {
+  tm <- list(name = "mass", type = "continuous", latent_cols = 1L)
+  fit <- list(species_names = c("a", "b"), trait_map = list(tm),
+              model_config = list(gnn = TRUE, k_eigen = 1L),
+              val_rmse = 0, test_rmse = 0)
+  # Truth (0, 1), baseline (1, 2), blend (2, 3) have RMSE 1 and 2.
+  metrics <- list(name = "mass", type = "continuous", n_test = 2L,
+    n_bm = 2L, n_gnn = 2L, n_paired = 2L, rmse_bm = 1, rmse_gnn = 2,
+    rmse_paired_bm = 1, rmse_paired_gnn = 2, r_bm = 1, r_gnn = 1)
+  html <- pigauto:::build_report_html("report", fit, list(), list(metrics), list(tm))
+  expect_match(html, "-100.0%", fixed = TRUE)
+  expect_match(html, "Baseline better", fixed = TRUE)
+  expect_match(html, "paired n=2", fixed = TRUE)
+})
+
+test_that("comparison plots return invisibly when NA traits aggregate to no groups", {
+  withr::local_options(na.action = "na.pass")
+  grDevices::pdf(NULL)
+  on.exit(grDevices::dev.off(), add = TRUE)
+  device <- grDevices::dev.cur()
+  metrics <- data.frame(trait = rep(NA_character_, 2), type = "continuous",
+    metric = "rmse", method = c("baseline", "pigauto"), value = c(1, 2))
+  grouped <- stats::aggregate(value ~ trait + type + method,
+    data = metrics, FUN = mean)
+  expect_equal(nrow(grouped), 0L)
+  expect_length(unique(grouped$trait), 0L)
+  result <- withVisible(plot_comparison(metrics, metric = "rmse"))
+  expect_null(result$value)
+  expect_false(result$visible)
+  expect_identical(grDevices::dev.cur(), device)
+})

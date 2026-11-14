@@ -1,0 +1,7 @@
+{
+  "source_sha": "6cc1ffa73b6e9fffa9fe203bbfe2a0715eb9156a",
+  "csv_sha256": "74c7e72f00f72a21896a4b48a647de0fcd073e18fe1f2dabf57f2d847185b52a",
+  "coverage_rds_sha256": "db43b8a008e0b0ff7b19f00fe71b23ad1f7674e796cc0fd322c7556d7d85ec3e",
+  "source_manifest_sha256": "51f30634bc5781a4e8bef5cabc17b3f3f4a79f1da73baf5a1214685e6a7f787a",
+  "extractor_sha256": "20f66d2414f0907fee6a315eaad9267c68aa7702a751382aaeb47b8c952b9ec1"
+}
