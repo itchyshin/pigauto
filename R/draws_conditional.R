@@ -164,6 +164,12 @@ draw_conditional_bm <- function(fit_or_result, m = 20L, seed = NULL,
          "preprocessed data (internal error).", call. = FALSE)
   }
 
+  # Both covariance estimators require at least one observed cell.
+  if (!any(!is.na(X))) {
+    stop("draw_conditional_bm(): no observed cells to condition on.",
+         call. = FALSE)
+  }
+
   # ---- Sigma: reuse pigauto's own joint-MVN estimator, read-only ---------
   # fit_mvn_bm_inhouse() (R/joint_mvn_solver.R) is exactly what
   # fit_joint_mvn_baseline() calls internally. max_iter = 0L / predict_method
@@ -236,11 +242,6 @@ draw_conditional_bm <- function(fit_or_result, m = 20L, seed = NULL,
       class = "pigauto_draws_conditional_bm"
     ))
   }
-  if (!length(obs_cells)) {
-    stop("draw_conditional_bm(): no observed cells to condition on.",
-         call. = FALSE)
-  }
-
   for (t in seq_len(K)) unk_cells <- c(unk_cells, cell_idx(t, I_idx))
   n_unk <- length(unk_cells)
   if (n_unk > max_cells) {
