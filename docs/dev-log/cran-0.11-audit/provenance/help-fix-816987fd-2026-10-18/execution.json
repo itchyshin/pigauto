@@ -1,0 +1,40 @@
+[
+  {
+    "step": "source-AST-and-existing-report-tests",
+    "command": [
+      "Rscript",
+      "--vanilla",
+      "/private/tmp/pigauto-final-closure-20261017/help-fix/check-source.R"
+    ],
+    "started_utc": "2026-10-18T01:39:06.213435+00:00",
+    "elapsed_seconds": 39.649,
+    "exit_code": 0,
+    "hard_cap_seconds": 300
+  },
+  {
+    "step": "provisional-install",
+    "command": [
+      "R",
+      "CMD",
+      "INSTALL",
+      "--library=/private/tmp/pigauto-final-closure-20261017/help-fix/installed-library",
+      "/Users/z3437171/.codex/worktrees/cran-011-final-artifact/pigauto"
+    ],
+    "started_utc": "2026-10-18T01:39:46.217683+00:00",
+    "elapsed_seconds": 56.077,
+    "exit_code": 0,
+    "hard_cap_seconds": 300
+  },
+  {
+    "step": "installed-help-and-novice",
+    "command": [
+      "Rscript",
+      "--vanilla",
+      "/private/tmp/pigauto-final-closure-20261017/help-fix/check-installed.R"
+    ],
+    "started_utc": "2026-10-18T01:40:42.315094+00:00",
+    "elapsed_seconds": 11.712,
+    "exit_code": 0,
+    "hard_cap_seconds": 300
+  }
+]

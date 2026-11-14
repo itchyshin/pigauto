@@ -1,0 +1,44 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "f620db12201dcb92152b1fac6249af19b679f398128a7d84ce5fba19b4d985e5",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "independent_ai",
+  "reviewer": "Grace Codex source-checkpoint reviewer",
+  "method": "Separate post-draft read of the exact saved report, with factual comparisons to committed four-file hashes, CI/PR metadata, source/install/site receipts, preservation hashes, current canonical records and retained process/checker receipts. Authoring lane is separate; no personal voice selected.",
+  "genre": "Source-merge approval checkpoint after-task report",
+  "coverage": "Whole exact saved draft; bounded engineering and process-evidence assessment, no new scientific/legal validation.",
+  "score": 3,
+  "style_status": "assessed",
+  "score_reason": "Specific evidence and concrete boundaries support a natural technical report; the longer after-task format necessarily repeats status distinctions.",
+  "confidence": "moderate",
+  "confidence_reason": "Perceived-style judgment by an independent lane; not authorship detection or calibrated human review.",
+  "examples": [
+    {
+      "location": "Proposed source and gate",
+      "cue": "Concrete scope, measured evidence and approval boundary",
+      "impact": "Keeps a source checkpoint distinct from the withdrawn artifact and future release gates.",
+      "repair": "no change needed",
+      "line": 11,
+      "quote": "PR #238 at 816987fd changes the descriptions for impute() and pigauto_report() and their generated Rd pages. Both now distinguish default baseline-only behavior from explicit GNN training/comparison. All 49 executable R syntax trees match merged 8e; no runtime, scientific default, dependency or example change is included. Fresh local rendered-page review and all three source CI jobs pass. PR #238 is ready for review and cleanly mergeable; explicit merge/deployment approval remains pending."
+    },
+    {
+      "location": "Coverage limits",
+      "cue": "Concrete scope, measured evidence and approval boundary",
+      "impact": "Keeps a source checkpoint distinct from the withdrawn artifact and future release gates.",
+      "repair": "no change needed",
+      "line": 63,
+      "quote": "This slice covers the proposed help correction, its provisional installed novice workflow, and preservation/reconciliation of predecessor evidence. It does NOT cover a corrected frozen archive, new deployment, CRAN submission/acceptance, general interval coverage, joint covariance/loading/variance-component pooling, untested missingness or model families, live service availability, or GPU hardware validity. Source CI does not validate a frozen gzip; R-hub rebuilt-source checks do not prove original-gzip execution."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "No new scientific result or broad coverage claim; prior MI/recovery fixtures remain explicitly bounded.49 executable AST equivalence is not equated with unchanged installed bytes or new artifact validity.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Identity, four-file scope, provisional installed results, CI3/3 exact-head success, local-site limits,6/3 gates, withdrawal, unchanged original votes, checker/process distinctions and authority boundaries compared to retained records. Unbound memory percentage was removed before this exact version; gap cause now correctly remains unestablished.",
+  "references_gate": "pass",
+  "references_gate_reason": "Internal source/evidence references and named CI record match opened records. DOI identity/access distinction was checked against retained primary metadata in the earlier artifact review; no new literature or legal assurance inferred.",
+  "date": "2026-10-18T02:04:35.788322+00:00",
+  "calibration_status": "Protocol examples and earlier drafts were seen; no held-out calibration claim.",
+  "interpretation": "perceived_style_not_authorship"
+}

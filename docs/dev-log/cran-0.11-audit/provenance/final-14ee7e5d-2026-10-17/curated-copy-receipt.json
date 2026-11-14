@@ -1,0 +1,11 @@
+{
+  "checks-and-integration": {
+    "indexed_files_verified": 40,
+    "copied_files": 41
+  },
+  "external-platforms": {
+    "indexed_files_verified": 162,
+    "copied_files": 163
+  },
+  "scope": "Curated evidence only; no release archive or source bytes changed"
+}

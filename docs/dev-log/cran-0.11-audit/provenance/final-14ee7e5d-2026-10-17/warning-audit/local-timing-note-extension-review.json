@@ -1,0 +1,12 @@
+{
+  "scope": "Scratch diagnostic extension only; actual final input audit not run.",
+  "archive_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+  "previous_script_sha256": "b54dbaf10f4728f9c3f401ab4b2d6246c090768b4b6fed1cfc62c15093f73bb2",
+  "extended_script_sha256": "054b343e920c7517b8a3906ef80f8fa8519ec141fdb713f81000112c7ed316d7",
+  "option": "--allow-local-compare-methods-timing-note",
+  "native_retained_verdict": "NOTE / UNADJUDICATED",
+  "permitted_only": "local-macos; exact examples header [13s/63s]; compare_methods user2.532 system0.992 elapsed18.406; Status:1 NOTE; native exit exactly0; all existing identity/CSV/RDS/count/skip/warning checks retained",
+  "selftest": "PASS original controls and exact local NOTE; 14 timing-native negative controls rejected",
+  "remote": "Status OK remains mandatory; option cannot admit a remote NOTE",
+  "actual_inputs": "NOT_RUN: waiting for explicit parent confirmation that completed inputs are ready"
+}

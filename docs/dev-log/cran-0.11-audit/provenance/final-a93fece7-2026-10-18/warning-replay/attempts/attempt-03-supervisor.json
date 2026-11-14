@@ -1,0 +1,15 @@
+{
+  "command": [
+    "Rscript",
+    "--vanilla",
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay/capture.R",
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay"
+  ],
+  "cwd": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/warning-replay",
+  "elapsed_seconds": 171.19967400000314,
+  "timeout_seconds": 1200,
+  "exit_code": 0,
+  "process_group": 94837,
+  "killed_own_group_on_timeout": false,
+  "capture_script_sha256": "99d01b0fe7bf96bcf2298d6111fde9b2afb8d8821bf38c41a61959aca38ecc74"
+}

@@ -1,0 +1,84 @@
+{
+  "reviewer": "grace",
+  "verdict": "PASS_BOUNDED_SPELLING_AND_OFFLINE_CHECKS_WITH_DISCLOSED_URL_403",
+  "artifact_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "artifact_size_bytes": 5137837,
+  "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "scope": "Actual successor exact-source spelling/URL checks and isolated installed offline/missing-optional-package helper tests only; not final panel or release readiness",
+  "blockers": [],
+  "findings": [
+    {
+      "kind": "url_access_denial",
+      "url": "https://doi.org/10.1126/science.1157704",
+      "status": 403,
+      "locations": "inst/doc/getting-started.html; vignettes/getting-started.Rmd",
+      "disposition": "Retain and explicitly disclose. Current primary Crossref200 confirms identifier identity only; no URL-clean claim."
+    }
+  ],
+  "spelling": {
+    "actual_flags": 404,
+    "contexts": 1886,
+    "source_files": 43,
+    "ordinary_typos_identified": [],
+    "uncertain_flags": [],
+    "context_changes_from_predecessor": 4,
+    "unknown_ordinary_typo_control": "REFUSED",
+    "adjudication": "PASS actual flagged-token list only; no fixed-count gate"
+  },
+  "offline": {
+    "pass": 60,
+    "fail": 0,
+    "warn": 0,
+    "skip": 8,
+    "files": [
+      "test-gbif-centroids.R",
+      "test-worldclim-covariates.R"
+    ],
+    "not_cran": "UNSET",
+    "rgbif": false,
+    "terra": false
+  },
+  "url_check": {
+    "initial_attempt": "26 sandbox DNS failures retained; not broken-URL evidence",
+    "network_rerun": "One authorized read-only rerun; one distinct403 in two sources",
+    "url_clean": false,
+    "doi_identifier_identity": "Current primary Crossref200 exact fields match"
+  },
+  "integrity": {
+    "archive_unchanged": true,
+    "all_236_extracted_regular_files_unchanged": true,
+    "all_52_installed_pigauto_files_unchanged": true,
+    "libraries": "New successor MI neither/pigauto and recorded dependency symlinks; isolated absence library excludes rgbif/terra and user/site fallthrough"
+  },
+  "limits": [
+    "No unflagged spelling/grammar/bibliographic certificate.",
+    "No live GBIF/WorldClim availability, successful download, skipped stored-point/raster integration or scientific recovery/coverage claim.",
+    "Dependency symlink libraries are not clean-room dependency installation.",
+    "Initial DNS failures, actual403, all raw RDS/flat outputs and all exits/timings retained.",
+    "No source/installed-byte/repo/dictionary edit, fit, native rerun, new campaign or CRAN action.",
+    "Final consequence/disclosure belongs in the root final release panel and ledger."
+  ],
+  "checked_evidence": [
+    "identity.json",
+    "execution-summary.json",
+    "urls-network-execution.json",
+    "spelling-results.rds",
+    "spelling-results-flat.csv",
+    "spelling-review/receipt.json",
+    "spelling-review/source-contexts.csv",
+    "spelling-review/context-deltas.json",
+    "spelling-review/controls.json",
+    "url-results.rds",
+    "url-network-results.rds",
+    "url-network-results-flat.csv",
+    "doi-metadata.json",
+    "crossref-raw.json",
+    "absence-results.rds",
+    "absence-results-flat.csv",
+    "absence-rds-readback.json",
+    "absence-session.txt",
+    "absence-skips.txt",
+    "final-integrity.json"
+  ],
+  "reviewed_utc": "2026-10-18T07:14:32.324913+00:00"
+}

@@ -1,0 +1,923 @@
+#' Impute missing phylogenetic traits (convenience wrapper)
+#'
+#' One-call interface for preprocessing, phylogenetic baseline fitting, and
+#' prediction. The default \code{gnn = FALSE} uses the baseline alone. Set
+#' \code{gnn = TRUE} to also train a GNN and calibrate its contribution.
+#' For fine-grained control, use the
+#' individual functions (\code{\link{preprocess_traits}},
+#' \code{\link{fit_baseline}}, \code{\link{fit_pigauto}}, etc.) directly.
+#'
+#' @param traits data.frame with species as rownames and trait columns,
+#'   or (when \code{species_col} is supplied) a data.frame with a species
+#'   column that may have multiple rows per species.
+#'   Supported column types: \code{numeric} (continuous), \code{integer}
+#'   (count), \code{factor} (binary/categorical), \code{ordered} (ordinal),
+#'   \code{character} (factor → binary/categorical), \code{logical} (binary).
+#'   See the \strong{Trait type auto-detection} section below.
+#' @param tree object of class \code{"phylo"}.
+#' @param k_eigen integer or \code{"auto"}. Number of spectral node
+#'   features used to build the phylogenetic graph. The default \code{"auto"}
+#'   scales the dimension to tree size; an integer overrides that choice.
+#' @param species_col character. Name of the column in \code{traits} that
+#'   identifies species.  When supplied, multiple observations per species
+#'   are supported.  Default \code{NULL} uses row names (one row per species).
+#' @param trait_types named character vector overriding the auto-detected
+#'   type for specific trait columns, e.g.
+#'   \code{c(Survival = "proportion", Parasites = "zi_count")}. Required for
+#'   the two types that cannot be inferred from R class (see
+#'   \strong{Trait type auto-detection} below). Default \code{NULL} (auto).
+#' @param multi_proportion_groups named list declaring compositional
+#'   (\code{multi_proportion}) traits, e.g.
+#'   \code{list(colour = c("black", "blue", "red", "yellow"))}. Each list
+#'   element names a group and gives the K trait columns that form a
+#'   simplex (rows summing to 1). Encoded via CLR + per-component z-score.
+#'   Multi_proportion traits \emph{cannot} be declared through
+#'   \code{trait_types} — use this argument instead. Default \code{NULL}
+#'   (no multi_proportion groups).
+#' @param log_transform logical. Log-transform every continuous trait whose
+#'   observed values are all positive
+#'   (default \code{TRUE}), then back-transform the imputations. Set it to
+#'   \code{FALSE} when traits are already on a log scale (for example log body
+#'   mass): otherwise they are logged a second time and imputed on a
+#'   log(log) scale, which can bias analyses done on the log scale. With a
+#'   mix of raw and already-logged traits, log the raw ones yourself and set
+#'   \code{FALSE}. In a real-data check (PanTHERIA, 4,027 mammal species, four
+#'   already-logged traits, posterior draws), the default shifted
+#'   Rubin-pooled regression slopes by up to 3.9 standard errors of the
+#'   complete-data slope, in a direction that depended on which values were
+#'   missing; with \code{FALSE} the largest shift was 1.8.
+#' @param missing_frac numeric. Fraction of observed cells held out for
+#'   validation/test evaluation (default \code{0.25}). Must be in
+#'   \code{[0, 1)}. \code{0} adds no extra missingness (no val/test
+#'   hold-out).
+#' @param n_imputations integer. Number of MC-dropout imputation sets
+#'   (default \code{1}). Must be a positive integer. Values > 1 enable
+#'   between-imputation uncertainty.
+#' @param covariates data.frame or matrix of environmental covariates
+#'   (fully observed — no NAs).  Covariates are conditioners: they inform
+#'   imputation but are not themselves imputed.  Numeric/integer columns are
+#'   z-scored; factor/ordered columns are one-hot encoded automatically.
+#'   If a variable has missing values, include it in \code{traits} instead.
+#'   Rows are aligned to the same species / observation order as
+#'   \code{traits} after tree matching (single-obs: rownames vs tip labels;
+#'   multi-obs: \code{species_col} if present, otherwise input-row order).
+#'   Matching \code{nrow} alone does not pair species to environment.
+#'   Default \code{NULL} (no covariates).
+#' @param epochs integer. Maximum GNN training epochs (default \code{2000}).
+#'   Must be a positive integer.
+#' @param verbose logical. Print progress (default \code{TRUE}).
+#' @param seed optional integer. When supplied, makes the stochastic fitting
+#'   and prediction steps reproducible; the default \code{NULL} uses the
+#'   current RNG stream.
+#' @param multi_obs_aggregation character. How to aggregate multiple
+#'   observations per species before the Level-C baseline.  \code{"hard"}
+#'   (default) thresholds binary proportions at 0.5 and uses argmax for
+#'   categorical.  \code{"soft"} preserves species-level proportions and
+#'   dispatches a soft E-step so that intermediate class frequencies
+#'   contribute fractional liability evidence.  Passed to
+#'   \code{\link{fit_baseline}}.
+#' @param lambda_mode character. Pagel-lambda mode for the BM baseline.
+#'   \code{"estimate"} (default) fits a per-trait Pagel's lambda on each
+#'   continuous-family (BM-eligible) latent column -- continuous, count,
+#'   proportion, and zi_count magnitude, via the joint MVN /
+#'   threshold-joint baseline's own \code{lambda_cols} machinery when that
+#'   joint path fires, or a per-column re-fit otherwise. Binary, ordinal and
+#'   categorical traits get their own lambda by default
+#'   (\code{discrete_lambda = "estimate"}); the rest of this paragraph
+#'   describes \code{discrete_lambda = "fixed_1"}, where discrete traits
+#'   (binary, categorical, zi gate) AND ordinal have no discrete-trait
+#'   analogue of Pagel's lambda of their own -- there is no lambda_k to
+#'   estimate for them. Under \code{predict_method = "per_column"} (see
+#'   below) they stay fixed at lambda = 1 in every path, matching pre-S3
+#'   behaviour. Under \code{predict_method = "exact"} (and for traits the
+#'   default \code{"auto"} routes to \code{"exact"}) they
+#'   instead share the joint fit's \code{lambda_block} -- the exact
+#'   conditional's covariance model uses ONE shared phylogenetic
+#'   correlation matrix \code{R(lambda_block)} for every column, so the
+#'   Sigma estimate feeding it must itself come from an internally
+#'   consistent init, not a mix of \code{R(1)} for discrete columns and
+#'   \code{R(lambda_k)} for continuous ones (Shinichi's decision,
+#'   docs/dev-log/exact-default/S3-default-report.md). \code{"fixed_1"}
+#'   preserves the pre-lambda Brownian correlation matrix everywhere;
+#'   \code{"cv"} and \code{"bayes"} are alternative per-column estimators
+#'   that force continuous-family columns onto the per-column BM path (no
+#'   joint analogue). When \code{predict_method = "exact"} or
+#'   \code{joint_refine_iter > 0}, the joint (multi-trait) prediction path
+#'   additionally uses the single shared \code{lambda_block} for
+#'   cross-trait computations that need one common phylogenetic
+#'   correlation matrix, never overriding a continuous-family column's own
+#'   estimated lambda_k. Passed to \code{\link{fit_baseline}} and stored in
+#'   the fitted model config. When \code{covariates} are supplied, the
+#'   covariate-aware BM path (\code{bm_impute_col_with_cov()}) accepts a
+#'   numeric lambda or \code{"estimate"}, so \code{lambda_mode \%in\%
+#'   c("estimate", "fixed_1")} reaches it and each covariate-aware
+#'   BM-eligible column gets its own estimated lambda; it does NOT accept
+#'   \code{"cv"} / \code{"bayes"}, which fall back to lambda = 1 for
+#'   BM-eligible columns with a warning from \code{fit_baseline}.
+#' @param joint_solver character. Which solver estimates the joint MVN /
+#'   threshold-joint / OVR categorical baselines. \code{"inhouse"}
+#'   (default) is byte-identical to prior releases; \code{"rphylopars"}
+#'   delegates to \code{Rphylopars::phylopars()}'s converged REML fit,
+#'   with automatic fallback to \code{"inhouse"} on failure. Passed to
+#'   \code{\link{fit_baseline}} and stored in the fitted model config.
+#'   See \code{docs/dev-log/2026-08-16-continuous-gap-diagnosis.md}.
+#' @param predict_method character. Prediction route for the in-house joint
+#'   solver, passed to \code{\link{fit_baseline}}. \code{"auto"} (default,
+#'   S5b) fits the baseline with both the \code{"exact"} and
+#'   \code{"per_column"} routes and picks, per trait, whichever has the
+#'   lower loss on that trait's validation cells (mean squared error on the
+#'   z-scored latent scale for continuous/count/proportion/ordinal/zi_count
+#'   magnitude; mean log-loss for binary/zi_count gate; mean multinomial
+#'   log-loss for categorical), falling back to \code{"exact"} on a tie or
+#'   when fewer than 5 validation cells belong to that trait (including
+#'   when there is no validation split at all). \code{"exact"} uses the
+#'   full cross-trait conditional
+#'   mean and variance of \code{vec(L) ~ MVN(0, Sigma \%x\% R(lambda_block))}
+#'   (Hadfield & Nakagawa, 2010 sparse precision form), each column
+#'   GLS-mean-centred at \code{lambda_block} before the solve; discrete
+#'   liability columns share \code{lambda_block} under this route (see
+#'   \code{lambda_mode} above). Falls back to \code{"per_column"} above
+#'   roughly 20000 unknown cells (roughly 4000 species at 5 traits), on a
+#'   singular/unusable Sigma, or when fewer than 2 joint columns or no
+#'   Henderson sparse precision are available; prints a one-time
+#'   \code{message()} per R session when \code{predict_method} was left at
+#'   its default, or a \code{warning()} every time when \code{"exact"} was
+#'   requested explicitly. \code{"per_column"} retains the original
+#'   per-column conditional prediction route (no cross-trait borrowing in
+#'   the prediction step). None of the three options change covariance
+#'   estimation or the \code{"rphylopars"} solver. The route actually used
+#'   is recorded in \code{fit$model_config$predict_method_used}
+#'   (\code{"exact"}, \code{"per_column"}, or \code{"auto"}) and, per
+#'   trait, in \code{fit$model_config$predict_method_by_trait}. Under
+#'   \code{"auto"} with real validation cells, \code{fit$model_config
+#'   $route_val_n} / \code{$score_val_n} record, per trait, how many of
+#'   its validation cells chose the route versus were reserved for gate
+#'   calibration and conformal scoring (see \code{\link{fit_baseline}}'s
+#'   \code{predict_method} docs).
+#' @param joint_refine_iter integer, default \code{0L}. Enables
+#'   cross-trait refinement of the joint baseline's cell imputations
+#'   using the estimated Sigma (the in-house solver's \code{max_iter}
+#'   EM cell-refinement; \code{R/joint_mvn_solver.R}). \code{0L} preserves
+#'   current behaviour byte-for-byte. The refinement is guarded: the
+#'   Sigma step must shrink each iteration, or the loop rolls back to the
+#'   last good iterate and sets \code{$diverged}. Assess this opt-in control
+#'   with held-out evaluation on the intended data. Has no effect on any
+#'   trait predicted by the \code{"exact"} route (see
+#'   \code{\link{fit_baseline}}'s \code{predict_method} docs); under the
+#'   default \code{predict_method = "auto"} it therefore only applies to
+#'   traits \code{"auto"} routes to \code{"per_column"}. Passed to
+#'   \code{\link{fit_baseline}} and stored in the fitted model config.
+#' @param em_iterations integer. Phase 6 EM iterations for the
+#'   threshold-joint baseline (binary + ordinal + OVR categorical).
+#'   Default \code{0L} preserves v0.9.1 behaviour byte-for-byte. When
+#'   \code{>= 2L}, the BM rate \eqn{\Sigma} learned by the joint solver
+#'   (\code{joint_solver}; the in-house solver by default) at iteration
+#'   \eqn{k} is fed back as the per-trait prior SD at iteration \eqn{k+1}, up to
+#'   \code{em_iterations} times or until \code{em_tol} convergence.
+#'   Passed to \code{\link{fit_baseline}}.
+#' @param em_tol numeric. Relative-Frobenius convergence tolerance for
+#'   the Phase 6 / 7 EM loop. Default \code{1e-3}.
+#' @param em_offdiag logical. Phase 7 opt-in: when \code{TRUE} AND
+#'   \code{em_iterations >= 2L}, each liability cell's prior uses the
+#'   full conditional-MVN from \eqn{\Sigma}'s off-diagonal entries, so that
+#'   observing one discrete trait shifts (not just tightens) the prior
+#'   on correlated other traits.  Binary + ordinal only; OVR categorical
+#'   stays on Phase 6 diagonal.  Default \code{FALSE}.  Passed to
+#'   \code{\link{fit_baseline}}.
+#' @param pool_method character. How to pool multiple imputation draws
+#'   (\code{n_imputations > 1}) for count, proportion, and zi_count
+#'   magnitude traits: \code{"median"} (default) takes the per-cell
+#'   median of the \code{M} decoded draws — robust to dropout-noisy
+#'   latents amplified by \code{expm1()} / \code{plogis()} decoders.
+#'   \code{"mean"} restores the pre-v0.9.2 arithmetic-mean pooling.
+#'   \code{"mode"} (Phase H, v0.9.1.9010+) is intended for ordinal
+#'   traits: per-cell majority vote across the \code{M} draws,
+#'   avoiding the integer-mean-round bias toward middle classes.  For
+#'   continuous-family traits, \code{"mode"} falls back to
+#'   \code{"median"}.  Binary / categorical / multi_proportion traits
+#'   always pool by probability average; unaffected by this argument.  See
+#'   \href{https://github.com/itchyshin/pigauto/issues/40}{issue #40}.
+#' @param safety_floor logical. Default \code{FALSE} (it was \code{TRUE}
+#'   from v0.9.1.9002 until 0.11.0.9002; see [fit_pigauto()] for why it
+#'   changed; set \code{TRUE} to restore). When \code{TRUE}, calibration searches the 3-way simplex
+#'   \code{r_BM * BM + r_GNN * GNN + r_MEAN * MEAN} so the grand mean is
+#'   always in the candidate set. Under the validation metric used for
+#'   calibration, the selected candidate cannot be worse than that
+#'   grand-mean corner on the validation cells. This is a validation
+#'   safeguard, not a guarantee about future held-out data. When
+#'   \code{FALSE}, the v0.9.1 1-D calibration is used exactly. See the
+#'   Safety floor section below.
+#' @param phylo_signal_gate,phylo_signal_threshold,phylo_signal_method
+#'   Pass-through to [fit_pigauto()]. See that help page for details.
+#'   \code{phylo_signal_gate} now defaults to \code{FALSE} (it was \code{TRUE}
+#'   from v0.9.1.9003 until 0.11.0.9002): with Pagel's \eqn{\lambda}
+#'   estimated for every trait type the gate no longer improved accuracy in
+#'   any tested setting, and at \eqn{\lambda} of 0 to 0.1 it was worse than
+#'   predicting the mean. Set \code{phylo_signal_gate = TRUE} to restore the
+#'   old behaviour.
+#' @param discrete_lambda character, \code{"estimate"} (default) or
+#'   \code{"fixed_1"}. With \code{"estimate"}, the binary, ordinal and
+#'   zero-inflated-count gate liability columns of the threshold-joint
+#'   baseline, and the one-vs-rest column of each categorical class, get
+#'   their own Pagel's lambda, so a weak-signal discrete trait shrinks toward
+#'   its prevalence instead of copying close relatives. \code{"fixed_1"}
+#'   restores the previous behaviour (binary and ordinal at lambda = 1, or at
+#'   the shared joint lambda on the "exact" route; categorical at 1).
+#'   Evidence (simulated Brownian-motion and OU data, n = 100 to 1000, 30\%
+#'   missing; \code{docs/dev-log/discrete-lambda/README.md}): estimating
+#'   discrete lambda alone added about 0.01 to 0.04 discrete accuracy at Pagel's
+#'   lambda of 0.3 or below; together with \code{safety_floor = FALSE} and
+#'   \code{phylo_signal_gate = FALSE} (also the defaults) the gain was 0.04
+#'   to 0.12, and binary and categorical accuracy matched or beat BACE's.
+#'   Costs: with lambda near 1 and n >= 1000, accuracy -0.002 to -0.005 and
+#'   Brier score +0.010 to +0.016; on AVONET300's categorical traits, Brier
+#'   +0.014 to +0.020 with accuracy unchanged or better. Ordinal accuracy
+#'   still trails BACE's at lambda = 0.3. The categorical one-vs-rest lambdas
+#'   are not reported in \code{$lambda_per_trait}.
+#'   See [fit_pigauto()].
+#' @param gnn logical. When \code{TRUE}, trains the
+#'   attention-based GNN correction (see \code{\link{fit_pigauto}}). When
+#'   \code{FALSE} (default), no GNN is constructed or trained -- \code{impute()} makes
+#'   no torch/GPU calls, and the fit is the phylogenetic baseline alone
+#'   (optionally re-weighted against a grand-mean floor when
+#'   \code{safety_floor = TRUE}). With the defaults
+#'   (\code{safety_floor = FALSE, phylo_signal_gate = FALSE}) this is the pure
+#'   traditional-stats arm. Production predictions
+#'   (\code{result$completed}, \code{result$prediction}) use a tax-free
+#'   \code{baseline_full} fit on ALL observed cells (no val/test hold-out);
+#'   \code{result$evaluation} and every other scorer keep using the
+#'   held-out \code{baseline}, so evaluation never leaks test cells.
+#'   User \code{covariates} enter pigauto only through the GNN, so under
+#'   \code{gnn = FALSE} they are ignored (with a warning); without a
+#'   validation split (\code{missing_frac = 0}) the fit is pure baseline
+#'   and carries no conformal scores.
+#'   Default \code{FALSE} since pigauto 0.11.0.9001: on simulated and real
+#'   data at the current baseline defaults the GNN did not lower
+#'   imputation error and took 20 to 90 times longer to fit
+#'   (\code{docs/dev-log/arc/2026-10-02-campaign-gnn-rerun.md}). Set
+#'   \code{gnn = TRUE} to train it, for example to use \code{covariates},
+#'   which only the GNN uses, or to restore the behaviour of earlier
+#'   versions.
+#' @param clamp_outliers logical.  Phase G (v0.9.1.9011+).  When
+#'   \code{TRUE}, post-back-transform predictions for log-transformed
+#'   continuous, count, and zi_count magnitude traits are capped at
+#'   \code{tm$obs_max * clamp_factor} (and \code{tm$obs_max} is the
+#'   observed maximum on the original scale, recorded at preprocess
+#'   time).  Targets the AVONET Mass tail-extrapolation mode
+#'   documented in
+#'   \code{useful/MEMO_2026-05-01_avonet_mass_diag.md} where a
+#'   \eqn{+3}-\eqn{4 \sigma} latent overshoot becomes a 50x-100x
+#'   value error after \code{expm1()}.  Default \code{FALSE}
+#'   preserves v0.9.1 behaviour exactly.
+#' @param clamp_factor numeric scalar (>= 1).  Multiplicative factor
+#'   on the observed maximum used by \code{clamp_outliers}.  Default
+#'   \code{5} (Tukey-style outlier definition: anything >= 5x the
+#'   observed max is implausible).  Ignored when
+#'   \code{clamp_outliers = FALSE}.
+#' @param match_observed character, one of \code{c("none", "pmm")}.
+#'   Phase G' (v0.9.1.9012+).  Pass-through to
+#'   \code{\link{predict.pigauto_fit}}.  When \code{"pmm"}, uses
+#'   Predictive Mean Matching for log-transformed continuous, count,
+#'   zi_count magnitude, and proportion traits: imputed values are
+#'   drawn from the observed value pool, never extrapolated.
+#'
+#'   \strong{When to use:} PMM is a niche feature.  pigauto already
+#'   provides conformal prediction intervals calibrated against held-out
+#'   residuals and stochastic prediction draws for diagnostics. PMM is only
+#'   worth enabling for: (a) methodological
+#'   comparison against mice, or (b) workflows that specifically
+#'   require imputed values to come from the observed data pool.
+#'   For tail safety, prefer \code{clamp_outliers = TRUE}. PMM failed the
+#'   downstream fixed-effect redesign pilot and is unsupported for inference;
+#'   see \code{multi_impute_analysis()} for the analysis-aware backend.
+#'
+#'   Default \code{"none"} preserves pre-G' behaviour.
+#' @param pmm_K integer (>= 1).  Donor pool size for PMM.  Default
+#'   \code{5L} (mice convention).  Ignored when
+#'   \code{match_observed = "none"}.
+#' @param conformal_split_val logical. Default \code{FALSE}. When
+#'   \code{TRUE}, the validation cells are split 50/50 per trait into a
+#'   gate-calibration half and a conformal-scoring half, so the conformal
+#'   quantile is not post-selected on the same cells the gate was tuned
+#'   on. Costs interval width at small validation sizes; see
+#'   \code{\link{fit_pigauto}} for details. Previously reachable only via
+#'   \code{...}; exposed here for discoverability.
+#' @param ... additional arguments passed to \code{\link{fit_pigauto}}.
+#' @return An object of class \code{"pigauto_result"} with components:
+#'   \describe{
+#'     \item{completed}{The input \code{traits} data.frame with observed
+#'       values preserved and only missing cells filled in.  This is the
+#'       primary output -- typically what users want.}
+#'     \item{imputed_mask}{Logical matrix (same shape as \code{completed})
+#'       that is \code{TRUE} for cells that were imputed (originally
+#'       \code{NA}) and \code{FALSE} for observed cells.}
+#'     \item{prediction}{A \code{pigauto_pred} object from
+#'       \code{\link{predict.pigauto_fit}} containing raw model
+#'       predictions for every cell (observed + missing), per-cell
+#'       uncertainty (\code{$se} -- see \code{\link{predict.pigauto_fit}}'s
+#'       "What \code{$se} means per trait type" section; it is
+#'       \strong{not} uniformly a standard error), class probabilities, and
+#'       conformal intervals.}
+#'     \item{fit}{The trained \code{pigauto_fit} object.}
+#'     \item{baseline}{The phylogenetic baseline.}
+#'     \item{data}{The preprocessed \code{pigauto_data} object.}
+#'     \item{splits}{The val/test splits (or \code{NULL} if
+#'       \code{missing_frac = 0}).}
+#'     \item{evaluation}{Evaluation metrics on test set (or \code{NULL}).}
+#'     \item{check}{A compact \code{pigauto_check} preflight summary.}
+#'   }
+#' @section Trait type auto-detection:
+#' pigauto infers each trait's type from its R class — no \code{trait_types}
+#' argument is needed for most data:
+#' \tabular{ll}{
+#'   \strong{R class} \tab \strong{pigauto type} \cr
+#'   \code{numeric} \tab continuous (auto-log if all-positive) \cr
+#'   \code{integer} \tab count \cr
+#'   \code{factor} with 2 levels \tab binary \cr
+#'   \code{factor} (unordered) with >2 levels \tab categorical \cr
+#'   \code{ordered} / \code{factor(..., ordered = TRUE)} \tab ordinal \cr
+#'   \code{character} \tab → factor → binary or categorical \cr
+#'   \code{logical} \tab binary \cr
+#' }
+#' Two types cannot be inferred from class alone and \emph{must} be declared
+#' via \code{trait_types}:
+#' \describe{
+#'   \item{\code{"proportion"}}{A \code{numeric} bounded 0–1, e.g. survival
+#'     rate: \code{trait_types = c(Survival = "proportion")}.}
+#'   \item{\code{"zi_count"}}{An \code{integer} with excess zeros, e.g.
+#'     parasite count: \code{trait_types = c(Parasites = "zi_count")}.}
+#' }
+#' Use the \code{trait_types} argument directly (it is an explicit
+#' parameter, not a \code{...} pass-through).
+#'
+#' @section Traits vs covariates:
+#' The distinction is \strong{functional, not ontological}: a trait is something
+#' you want to impute (NA values allowed in \code{traits}); a covariate is
+#' something you use to sharpen imputation accuracy (must be fully observed,
+#' passed via \code{covariates}).  The same variable can be either depending on
+#' the scientific question.
+#'
+#' Examples:
+#' \itemize{
+#'   \item \strong{IUCN status with Data Deficient species} → put it in
+#'     \code{traits} as \code{ordered(c("LC","NT","VU","EN","CR"))} so
+#'     pigauto predicts the unknown categories.
+#'   \item \strong{IUCN status fully known for all species} → pass as a
+#'     covariate to inform imputation of other traits (e.g. body mass,
+#'     range size).
+#'   \item \strong{Realm / biome (factor)} → pass as a covariate; pigauto
+#'     one-hot encodes factor columns automatically (v0.6.1+).
+#' }
+#'
+#' Variables that belong in \code{traits}: anything with missing values you
+#' care about predicting.  Variables that belong in \code{covariates}: fully
+#' observed, exogenous to the trait space (geography, climate, habitat,
+#' experimental treatment).
+#'
+#' @section Safety floor (v0.9.1.9002+):
+#'   With \code{safety_floor = TRUE} (opt-in since 0.11.0.9002; it was the
+#'   default from v0.9.1.9002), the post-training
+#'   calibration grid searches a 3-way convex combination of the
+#'   Brownian-motion baseline, the GNN delta, and the per-trait grand
+#'   mean.  The simplex is sampled at step 0.05 (231 candidates per latent
+#'   column).  Because the corner \code{(0, 0, 1)} — pure grand mean —
+#'   is always in the grid, the selected candidate cannot be worse than
+#'   the grand-mean corner on the validation cells under the calibration
+#'   metric.  The fit object gains four new slots:
+#'   \code{r_cal_bm}, \code{r_cal_gnn}, \code{r_cal_mean} (each a named
+#'   numeric of length \code{p_latent}), and
+#'   \code{mean_baseline_per_col}.
+#'
+#'   Set \code{safety_floor = FALSE} to reproduce the pre-v0.9.1.9002
+#'   1-D calibration bit-identically (no mean term; \code{r_cal_mean = 0};
+#'   \code{r_cal_bm = 1 - r_cal_gnn}).  See
+#'   \code{specs/2026-04-23-safety-floor-mean-gate-design.md} for the
+#'   design rationale and
+#'   \code{plans/2026-04-23-safety-floor-mean-gate.md} for the
+#'   implementation plan.
+#'
+#' @section What gets imputed (read this first):
+#'   pigauto only \emph{imputes} cells that are \code{NA} in the input.
+#'   Observed cells are preserved as-is in \code{result$completed}.  The
+#'   slot \code{result$prediction$imputed} contains the model's
+#'   prediction for \strong{every} cell -- observed and missing alike --
+#'   and is intended for diagnostics (e.g. checking calibration on
+#'   training cells), \emph{not} as the imputed-values output.  The
+#'   imputed values themselves are \code{result$completed[result$imputed_mask]}.
+#'
+#'   \strong{Common pitfall.}  If you call \code{impute()} on a fully
+#'   observed trait matrix (no \code{NA}s among matched target rows), there
+#'   is nothing to impute. \code{impute()} stops before graph construction or
+#'   training and directs you to \code{cross_validate()} for predictive
+#'   assessment. To exercise imputation, supply a real missing target cell.
+#'
+#'   \strong{Imbalanced K-class traits.}  At default settings
+#'   (\code{n_imputations = 1L}, \code{pool_method = "median"}), a
+#'   small ordinal / categorical trait whose marginal distribution is
+#'   heavily skewed (e.g. AVONET \code{Migration} is ~78\% Resident /
+#'   ~14\% Partial / ~8\% Full at n=300) can have its calibrated gate
+#'   collapse onto a corner that predicts the majority class
+#'   everywhere. Compare candidate settings, including
+#'   \code{pool_method = "mode"}, with \code{cross_validate()} on the
+#'   intended trait table rather than applying a generic setting.
+#'
+#' @examples
+#' \donttest{
+#' data(avonet300, tree300)
+#' tree <- ape::keep.tip(tree300, tree300$tip.label[seq_len(30L)])
+#' df <- avonet300[match(tree$tip.label, avonet300$Species_Key),
+#'                 c("Mass", "Wing.Length"), drop = FALSE]
+#' rownames(df) <- tree$tip.label
+#' df$Mass[seq_len(3L)] <- NA_real_
+#' result <- impute(df, tree, epochs = 5L, verbose = FALSE)
+#' head(result$completed)
+#' }
+#' @export
+impute <- function(traits, tree, species_col = NULL,
+                   trait_types = NULL,
+                   multi_proportion_groups = NULL,
+                   k_eigen = "auto",
+                   log_transform = TRUE,
+                   missing_frac = 0.25, n_imputations = 1L,
+                   covariates = NULL,
+                   epochs = 2000L, verbose = TRUE, seed = NULL,
+                   multi_obs_aggregation = c("hard", "soft"),
+                   lambda_mode = c("estimate", "fixed_1", "cv", "bayes"),
+                   discrete_lambda = c("estimate", "fixed_1"),
+                   joint_solver = c("inhouse", "rphylopars"),
+                   predict_method = c("auto", "exact", "per_column"),
+                   joint_refine_iter = 0L,
+                   em_iterations = 0L,
+                   em_tol = 1e-3,
+                   em_offdiag = FALSE,
+                   pool_method = c("median", "mean", "mode"),
+                   clamp_outliers = FALSE,
+                   clamp_factor = 5,
+                   match_observed = c("none", "pmm"),
+                   pmm_K = 5L,
+                   safety_floor = FALSE,
+                   phylo_signal_gate = FALSE,
+                   phylo_signal_threshold = 0.2,
+                   phylo_signal_method = "lambda",
+                   conformal_split_val = FALSE,
+                   gnn = FALSE,
+                   ...) {
+  # S3 default flip: capture BEFORE match.arg() reassigns predict_method.
+  predict_method_explicit <- !missing(predict_method)
+  multi_obs_aggregation <- match.arg(multi_obs_aggregation)
+  pool_method <- match.arg(pool_method)
+  lambda_mode <- match.arg(lambda_mode)
+  discrete_lambda <- match.arg(discrete_lambda)
+  joint_solver <- match.arg(joint_solver)
+  predict_method <- match.arg(predict_method)
+  match_observed <- match.arg(match_observed)
+  clamp_outliers <- isTRUE(clamp_outliers)
+  n_imputations <- .check_positive_integer(n_imputations, "n_imputations")
+  epochs <- .check_positive_integer(epochs, "epochs")
+  missing_frac <- .check_open_unit(missing_frac, "missing_frac")
+  if (!is.logical(gnn) || length(gnn) != 1L || is.na(gnn)) {
+    stop("'gnn' must be TRUE or FALSE.", call. = FALSE)
+  }
+  if (!is.numeric(clamp_factor) || length(clamp_factor) != 1L ||
+      !is.finite(clamp_factor) || clamp_factor < 1) {
+    stop("'clamp_factor' must be a single finite numeric >= 1.",
+         call. = FALSE)
+  }
+  pmm_K <- as.integer(pmm_K)
+  if (length(pmm_K) != 1L || is.na(pmm_K) || pmm_K < 1L) {
+    stop("'pmm_K' must be a single positive integer.", call. = FALSE)
+  }
+  if (!is.numeric(joint_refine_iter) || length(joint_refine_iter) != 1L ||
+      !is.finite(joint_refine_iter) ||
+      joint_refine_iter != as.integer(joint_refine_iter) ||
+      joint_refine_iter < 0L) {
+    stop("'joint_refine_iter' must be a non-negative integer scalar.",
+         call. = FALSE)
+  }
+  joint_refine_iter <- as.integer(joint_refine_iter)
+
+  # Phase B3 Safety Check
+  if (n_imputations == 1L && pool_method == "median") {
+    for (trait_name in names(traits)) {
+      col <- traits[[trait_name]]
+      
+      # Is it an Ordinal factor with K >= 3?
+      is_ordinal_k3 <- is.factor(col) && is.ordered(col) && length(levels(col)) >= 3
+      
+      if (is_ordinal_k3) {
+        # Is it highly imbalanced? (Majority class > 70%)
+        class_freqs <- table(col) / sum(table(col), na.rm = TRUE)
+        is_imbalanced <- max(class_freqs) > 0.7
+        
+        # Is the validation set small? (e.g., fewer than 500 valid observations)
+        val_n <- sum(!is.na(col))
+        is_small_val <- val_n < 500 
+        
+        # If ALL conditions are met, throw a formal CRAN-safe warning
+        if (is_imbalanced && is_small_val) {
+          warning(
+            sprintf(
+              "Imbalanced K>=3 ordinal trait '%s' with a small validation set may collapse to the majority class.\nConsider setting: n_imputations = 20L, pool_method = 'mode'.\nSee ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').",
+              trait_name
+            ),
+            call. = FALSE
+          )
+        }
+      }
+    }
+  }
+
+  # Compute Scale Estimator (Added to prevent silent compute traps)
+  if (nrow(traits) >= 5000 && n_imputations >= 10) {
+    # as.numeric prevents integer overflow on massive datasets
+    total_updates <- as.numeric(nrow(traits)) * as.numeric(epochs) * as.numeric(n_imputations)
+    message(
+      sprintf(
+        "Note: You requested %d imputations on %d species. ",
+        n_imputations, nrow(traits)
+      ),
+      sprintf(
+        "This will take ~%dx longer than a default run (approx. %s total updates). ",
+        n_imputations, format(total_updates, scientific = FALSE, big.mark = ",")
+      ),
+      "Consider setting `verbose = TRUE` to track progress."
+    )
+  }
+
+  # 1. Preflight and preprocess. The internal checker captures the prepared
+  # object so validation does not repeat preprocessing before graph creation.
+  preflight <- .check_pigauto_internal(
+    traits, tree, species_col = species_col, trait_types = trait_types,
+    multi_proportion_groups = multi_proportion_groups,
+    log_transform = log_transform, covariates = covariates,
+    probe_runtime = isTRUE(gnn)
+  )
+  check <- preflight$check
+  if (identical(check$status, "error")) {
+    problems <- check$messages[check$messages$severity == "error", , drop = FALSE]
+    stop("pigauto input check failed: ", paste(problems$text, collapse = " "),
+         " Action: ", paste(unique(problems$action), collapse = " "), call. = FALSE)
+  }
+  if (identical(check$status, "not_needed")) {
+    stop("All matched target cells are observed; fitting is not needed. Use ",
+         "`cross_validate()` to assess predictive performance.", call. = FALSE)
+  }
+  check_warnings <- check$messages[check$messages$severity == "warning", , drop = FALSE]
+  for (i in seq_len(nrow(check_warnings))) warning(check_warnings$text[[i]], call. = FALSE)
+  prep_messages <- check$messages[check$messages$code == "preprocess_message", , drop = FALSE]
+  for (i in seq_len(nrow(prep_messages))) message(prep_messages$text[[i]])
+  pd <- preflight$prepared
+
+  # 2. Create val/test splits (unless user opts out).  We give the
+  #    validation set a larger share (50%) than the default so that
+  #    post-hoc gate calibration has enough cells to detect real
+  #    improvements.
+  if (missing_frac > 0) {
+    splits <- make_missing_splits(pd$X_scaled, missing_frac = missing_frac,
+                                  val_frac = 0.5,
+                                  seed = seed, trait_map = pd$trait_map)
+  } else {
+    splits <- NULL
+  }
+
+  # 3. Build phylogenetic graph (auto k_eigen scales with tree size).
+  #    The graph object carries the cophenetic distance matrix in
+  #    graph$D; we pass it to fit_baseline() below so that it is
+  #    computed exactly once for the whole pipeline.
+  graph <- build_phylo_graph(tree, k_eigen = k_eigen)
+
+  # 4. Fit phylogenetic baseline (reuses graph$D for label propagation)
+  baseline <- .fit_baseline_dispatch(pd, tree, splits = splits, graph = graph,
+                           multi_obs_aggregation = multi_obs_aggregation,
+                           em_iterations = em_iterations,
+                           em_tol = em_tol,
+                           em_offdiag = em_offdiag,
+                           lambda_mode = lambda_mode,
+                           discrete_lambda = discrete_lambda,
+                           joint_solver = joint_solver, predict_method = predict_method,
+                           joint_refine_iter = joint_refine_iter,
+                           predict_method_explicit = predict_method_explicit,
+                           seed = seed)
+
+  # gnn = FALSE (S3, docs/dev-log/arc/2026-09-18-gnn-off-contract.md): also
+  # fit the tax-free PRODUCTION baseline here (splits = NULL, so every
+  # observed cell can inform every other cell), before graph$D is freed
+  # below, so fit_pigauto() doesn't need to recompute it. `baseline` above
+  # stays the held-out fit used for every scorer (evaluate(), val_rmse,
+  # test_rmse, conformal_scores).
+  baseline_full <- NULL
+  if (isFALSE(gnn)) {
+    # S5b: reuse `baseline`'s (above, fit WITH splits) per-trait "auto"
+    # choice -- this splits = NULL refit has no validation cells of its
+    # own to re-decide with. predict_route overrides predict_method inside
+    # fit_baseline(); falls back to predict_method unchanged when
+    # `baseline` predates this field.
+    baseline_full <- .fit_baseline_dispatch(pd, tree, splits = NULL, graph = graph,
+                                  multi_obs_aggregation = multi_obs_aggregation,
+                                  em_iterations = em_iterations,
+                                  em_tol = em_tol,
+                                  em_offdiag = em_offdiag,
+                                  lambda_mode = lambda_mode,
+                                  discrete_lambda = discrete_lambda,
+                                  joint_solver = joint_solver, predict_method = predict_method,
+                                  joint_refine_iter = joint_refine_iter,
+                                  predict_method_explicit = predict_method_explicit,
+                                  predict_route = baseline$predict_method_by_trait)
+    # See the identical relabel comment in fit_pigauto()'s baseline_full
+    # construction: a forced predict_route always reports "auto"; restore
+    # `baseline`'s own verdict so an explicit predict_method request is not
+    # misreported once replayed onto baseline_full.
+    if (!is.null(baseline$predict_method_used)) {
+      baseline_full$predict_method_used <- baseline$predict_method_used
+    }
+  }
+
+  # Free the cached cophenetic distance matrix: fit_pigauto() only
+  # needs graph$adj and graph$coords, and at n = 10,000 the ~800 MB
+  # D matrix held in R memory during training caused a large
+  # per-epoch slowdown. This is safe because no downstream caller
+  # reads graph$D -- see the v0.3.1 NEWS entry.
+  graph$D     <- NULL
+  graph$R_phy <- NULL
+  invisible(gc(full = TRUE, verbose = FALSE))
+
+  # 5. Train GNN (or, when gnn = FALSE, fit the baseline-only pigauto_fit --
+  # see fit_pigauto()'s gnn = FALSE branch, which makes zero torch:: calls)
+  fit <- fit_pigauto(
+    data                   = pd,
+    tree                   = tree,
+    splits                 = splits,
+    graph                  = graph,
+    baseline               = baseline,
+    gnn                    = gnn,
+    baseline_full          = baseline_full,
+    epochs                 = as.integer(epochs),
+    verbose                = verbose,
+    seed                   = if (is.null(seed)) NULL else as.integer(seed),
+    safety_floor           = safety_floor,
+    phylo_signal_gate      = phylo_signal_gate,
+    phylo_signal_threshold = phylo_signal_threshold,
+    phylo_signal_method    = phylo_signal_method,
+    lambda_mode            = lambda_mode,
+    discrete_lambda      = discrete_lambda,
+    joint_solver           = joint_solver,
+    predict_method         = predict_method,
+    joint_refine_iter      = joint_refine_iter,
+    conformal_split_val    = conformal_split_val,
+    ...
+  )
+
+  # Belt-and-braces GPU memory reclaim before predict().  fit_pigauto()
+  # already moves its state_dict to CPU and calls cuda_empty_cache()
+  # internally, but doing it again here handles any R-level references
+  # to graph/baseline tensors that may linger between calls.  Essential
+  # at n >= 5000 on cards with <= 46 GB to avoid OOM on the first
+  # predict-stage allocation. Skipped entirely under gnn = FALSE: there is
+  # no GNN, no CUDA state, and no torch:: call to make (S3 gnn-off contract).
+  if (isTRUE(gnn)) {
+    invisible(gc(full = TRUE, verbose = FALSE))
+    if (torch::cuda_is_available()) {
+      try(torch::cuda_empty_cache(), silent = TRUE)
+    }
+  }
+
+  # 6. Predict
+  pred <- predict(fit, return_se = TRUE,
+                  n_imputations = as.integer(n_imputations),
+                  pool_method = pool_method,
+                  clamp_outliers = clamp_outliers,
+                  clamp_factor   = clamp_factor,
+                  match_observed = match_observed,
+                  pmm_K          = pmm_K)
+
+  # 7. Build the completed data.frame: observed values preserved,
+  #    missing cells filled with model predictions.  This is the primary
+  #    user-facing output.
+  #
+  # `pd$input_row_order[k]` tells us the original-input row index for
+  # internal position k.  build_completed needs this whenever
+  # preprocess_traits reordered rows (multi-obs always; single-obs when
+  # input row order didn't already match tree-tip order).
+  completed_info <- build_completed(traits, pred$imputed, species_col,
+                                     input_row_order = pd$input_row_order)
+  completed      <- completed_info$completed
+  imputed_mask   <- completed_info$imputed_mask
+
+  # 8. Evaluate on test set (if splits exist)
+  evaluation <- NULL
+  if (!is.null(splits) && length(splits$test_idx) > 0) {
+    eval_pred <- predict(fit, return_se = TRUE,
+                         n_imputations = as.integer(n_imputations),
+                         pool_method = pool_method,
+                         clamp_outliers = clamp_outliers,
+                         clamp_factor   = clamp_factor,
+                         match_observed = match_observed,
+                         pmm_K          = pmm_K,
+                         .mask_observed_idx = c(splits$val_idx, splits$test_idx))
+    evaluation <- tryCatch(
+      evaluate_imputation(eval_pred, pd$X_scaled, splits),
+      error = function(e) NULL
+    )
+  }
+
+  structure(
+    list(
+      completed    = completed,
+      imputed_mask = imputed_mask,
+      prediction   = pred,
+      fit          = fit,
+      baseline     = baseline,
+      data         = pd,
+      tree         = tree,
+      splits       = splits,
+      evaluation   = evaluation,
+      check        = check
+    ),
+    class = "pigauto_result"
+  )
+}
+
+
+# ---- Internal: merge observed values with model predictions ---------------
+# Returns the original traits data.frame with NAs replaced by imputed
+# values, plus a boolean mask of which cells were filled.
+#
+# `input_row_order` (from `pd$input_row_order`) maps internal positions back
+# to original input rows: imputed[k, ] corresponds to original[input_row_order[k], ].
+# When supplied (post 2026-04-26 row-alignment fix) it is used to recover the
+# user's row order; passing NULL falls back to the legacy match-by-rowname /
+# 1-to-1 alignment behaviour for backward compat.
+build_completed <- function(original, imputed, species_col = NULL,
+                             input_row_order = NULL) {
+  # Align row order: imputed has rownames = species / obs ids used by the fit
+  # Original may have row names OR a species column. We match on the
+  # column types.
+
+  # 1. Start from the original so columns are in user order and
+  #    non-trait columns (if any, e.g. species_col) are preserved.
+  completed <- original
+  n_row <- nrow(original)
+  trait_cols <- setdiff(names(original), species_col)
+
+  imputed_mask <- matrix(FALSE, nrow = n_row, ncol = length(trait_cols),
+                         dimnames = list(rownames(original), trait_cols))
+
+  # 2. Row alignment.
+  #
+  # Pre-2026-04-26: multi-obs assumed `imputed` rows aligned 1:1 with input
+  # rows ("Multi-obs: imputed rows align 1:1 with original rows in input
+  # order"), but `preprocess_traits()` reorders rows internally to tree-tip
+  # order, breaking that assumption when the input data.frame's species
+  # column isn't already tree-tip-sorted.  Result: predictions for masked
+  # cells were assigned to the wrong rows in `completed`, producing
+  # near-zero correlation with truth on shuffled-input data.
+  #
+  # Fix: when `input_row_order` is supplied, use it to invert the reorder.
+  # input_row_order[k] gives the original input-row index for internal
+  # position k; we want the inverse: for each original row i, find the
+  # internal position k such that input_row_order[k] == i.  That is
+  # `match(seq_len(n_row), input_row_order)`, which is robust to the
+  # synthetic NA rows that `preprocess_traits` appends for tree tips that
+  # have no input data (those have input_row_order == NA and are simply
+  # not matched).
+  if (!is.null(input_row_order)) {
+    imp_row <- match(seq_len(n_row), input_row_order)
+  } else if (is.null(species_col)) {
+    # Legacy path: match by rowname (single-obs without input_row_order)
+    imp_row <- match(rownames(original), rownames(imputed))
+  } else {
+    # Legacy path: assume 1:1 (kept for backward compat with any external
+    # callers of build_completed; not used by impute() itself anymore).
+    imp_row <- seq_len(n_row)
+  }
+
+  for (nm in trait_cols) {
+    if (!(nm %in% names(imputed))) next
+    obs_col <- original[[nm]]
+    imp_col <- imputed[[nm]][imp_row]
+    # Rows with no internal counterpart are data-only input rows. They remain
+    # visible in `$completed`, but are outside the fitted tree and must neither
+    # be marked as filled nor receive an indexed prediction.
+    missing_i <- is.na(obs_col) & !is.na(imp_row)
+    imputed_mask[, nm] <- missing_i
+
+    if (is.factor(obs_col)) {
+      # Preserve factor levels and ordering from the original
+      new_col <- obs_col
+      if (any(missing_i)) {
+        # imp_col is a factor with potentially the same levels
+        imp_chars <- as.character(imp_col)
+        new_col <- as.character(obs_col)
+        new_col[missing_i] <- imp_chars[missing_i]
+        new_col <- factor(new_col, levels = levels(obs_col),
+                          ordered = is.ordered(obs_col))
+      }
+      completed[[nm]] <- new_col
+
+    } else if (is.logical(obs_col)) {
+      new_col <- obs_col
+      if (any(missing_i)) {
+        imp_as_logical <- if (is.factor(imp_col)) {
+          as.character(imp_col) %in% c("TRUE", "yes", "1")
+        } else {
+          as.logical(imp_col)
+        }
+        new_col[missing_i] <- imp_as_logical[missing_i]
+      }
+      completed[[nm]] <- new_col
+
+    } else if (is.integer(obs_col)) {
+      new_col <- obs_col
+      if (any(missing_i)) {
+        new_col[missing_i] <- as.integer(round(imp_col[missing_i]))
+      }
+      completed[[nm]] <- new_col
+
+    } else if (is.character(obs_col)) {
+      new_col <- obs_col
+      if (any(missing_i)) new_col[missing_i] <- as.character(imp_col[missing_i])
+      completed[[nm]] <- new_col
+
+    } else {
+      # numeric / double
+      new_col <- obs_col
+      if (any(missing_i)) {
+        new_col[missing_i] <- as.numeric(imp_col[missing_i])
+      }
+      completed[[nm]] <- new_col
+    }
+  }
+
+  list(completed = completed, imputed_mask = imputed_mask)
+}
+
+
+#' @export
+print.pigauto_result <- function(x, ...) {
+  cat("pigauto imputation result\n")
+  if (isFALSE(x$fit$model_config$gnn)) {
+    cat("  GNN: off (baseline only)\n")
+  }
+  cat("  Species :", length(x$data$species_names), "\n")
+  cat("  Traits  :", length(x$data$trait_map),
+      "--", paste(vapply(x$data$trait_map, "[[", character(1), "name"),
+                  collapse = ", "), "\n")
+
+  # Trait type counts
+  types <- vapply(x$data$trait_map, "[[", character(1), "type")
+  type_tab <- table(types)
+  cat("  Types   :",
+      paste(names(type_tab), type_tab, sep = "=", collapse = ", "), "\n")
+
+  # Imputation summary
+  if (!is.null(x$imputed_mask)) {
+    per_trait <- colSums(x$imputed_mask)
+    total_imp <- sum(per_trait)
+    total_cells <- length(x$imputed_mask)
+    cat(sprintf("  Cells   : %d imputed / %d total (%.1f%%)\n",
+                total_imp, total_cells, 100 * total_imp / total_cells))
+    if (total_imp > 0) {
+      cat("  Per-trait imputed cell counts:\n")
+      for (nm in names(per_trait)) {
+        if (per_trait[[nm]] > 0) {
+          cat(sprintf("    %-20s %d\n", nm, per_trait[[nm]]))
+        }
+      }
+    }
+  }
+
+  # Evaluation metrics (held-out test set)
+  if (!is.null(x$evaluation)) {
+    test_df <- x$evaluation[x$evaluation$split == "test", ]
+    if (nrow(test_df) > 0) {
+      cat("\n  Held-out test-set metrics:\n")
+      cat(sprintf("    %-20s %-12s %10s %10s\n",
+                  "trait", "type", "metric", "value"))
+      cat(sprintf("    %-20s %-12s %10s %10s\n",
+                  strrep("-", 20), strrep("-", 12),
+                  strrep("-", 10), strrep("-", 10)))
+      for (i in seq_len(nrow(test_df))) {
+        row <- test_df[i, ]
+        if (row$type %in% c("continuous", "count")) {
+          cat(sprintf("    %-20s %-12s %10s %10.4f\n",
+                      row$trait, row$type, "RMSE", row$rmse))
+          if (!is.na(row$pearson_r)) {
+            cat(sprintf("    %-20s %-12s %10s %10.4f\n",
+                        "", "", "r", row$pearson_r))
+          }
+        } else if (row$type == "ordinal") {
+          cat(sprintf("    %-20s %-12s %10s %10.4f\n",
+                      row$trait, row$type, "rho", row$spearman_rho))
+        } else if (row$type %in% c("binary", "categorical")) {
+          cat(sprintf("    %-20s %-12s %10s %10.3f\n",
+                      row$trait, row$type, "accuracy", row$accuracy))
+        }
+      }
+    }
+  }
+
+  roles <- .describe_pigauto_result(x)
+  cat("\n  Access the completed data.frame with  result$completed\n")
+  cat("  Note:", roles$text[roles$role == "inference"], "\n")
+  invisible(x)
+}

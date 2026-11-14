@@ -1,0 +1,52 @@
+{
+  "assessment_performed": true,
+  "assessor_type": "self",
+  "calibration_status": "No held-out evaluation; task controls and earlier examples already seen.",
+  "confidence": "medium",
+  "confidence_reason": "Self-review of a factual technical document, not a calibrated detector or authorship judgment.",
+  "coverage": "Whole README.md exact bytes",
+  "date": "2026-10-18T01:15:44.800981+00:00",
+  "draft_sha256": "71882592487103d8425aec7f4d7c02d647c3f3c6b4f9311236ff81fa6b18a4c1",
+  "draft_version": "v1",
+  "evidence_none_reason": null,
+  "examples": [
+    {
+      "cue": "Distinct timing intervals",
+      "impact": "Separates native Windows totals from vignette durations and the Linux paired timing format.",
+      "line": 13,
+      "location": "README.md:13",
+      "quote": "Linux stage pairs mean rounded CPU/elapsed seconds. Windows single values remain labelled reported seconds; unrounded Rout process timings are separate in JSON. Windows totals 645.813 and 622.432 seconds exceed 600 seconds, while vignette rebuilding is 22 seconds on each. This does not establish that CRAN will accept the timings. The protocol calls 600 seconds an observed incoming signal, not an immutable policy limit. Its strict first-submission rule is distinct: the retained CRAN snapshot shows 0.10.0, so this is an update. Maintainer/final-panel timing review stays open.",
+      "repair": "No change needed; the stated boundary is material to interpreting the receipts."
+    },
+    {
+      "cue": "Specific intervals",
+      "impact": "Distinguishes render, summed R-process and enclosing-loop measurements.",
+      "line": 19,
+      "location": "README.md:19",
+      "quote": "All six individual vignette diagnostics exited 0, with render-time sum 74.8865 seconds and whole-R-process sum 308.2825 seconds. The enclosing sequential loop took 310.1696 seconds, including between-call overhead. Package/runtime startup is outside the render interval. These separate local measurements do not replace native or Windows timing. Thirty-two explicit `eval = FALSE` chunks and the multiple-imputation global `eval = FALSE` setting remained disabled.",
+      "repair": "No change needed; the stated boundary is material to interpreting the receipts."
+    },
+    {
+      "cue": "Explicit unresolved state",
+      "impact": "Retains the NOTE and driver rejection without implying release readiness.",
+      "line": 15,
+      "location": "README.md:15",
+      "quote": "The local Mac native check is `COMPLETED_UNADJUDICATED`; warning replay is `PENDING_NOT_YET_PROVEN`. The known compare_methods NOTE reports user 2.532/system 0.992/elapsed 18.406 seconds (CPU 3.524 seconds). It remains unadjudicated; no native check was rerun to obtain faster timings. The native process exited 0, while the strict checker driver exited 1 because it rejects a NOTE. The measured native total is 3564.464 seconds. The native tests stage reports rounded CPU/elapsed 5m/31m; its Rout reports 1855.943 elapsed seconds. Observed counts match 3,195 passes/161 warnings/86 skips/0 failures, pending consequence review. The guarded refresh helper preserves native exit versus strict checker-driver rejection and leaves any completed warning replay unadjudicated.",
+      "repair": "No change needed; the stated boundary is material to interpreting the receipts."
+    }
+  ],
+  "facts_gate": "pass",
+  "facts_gate_reason": "Figures compared with137hash-bound inputs, native logs, archive inventory/files, service/spelling/MI receipts and known-answer controls. Summed process time corrected to308.2825versus enclosing-loop310.1696. Local native completion and unadjudicated NOTE kept separate from pending replay/approval.",
+  "genre": "Engineering release-evidence synopsis",
+  "interpretation": "perceived_style_not_authorship",
+  "method": "Separate post-draft full README read against retained primary receipts, source-hash verification and negative-control verifier; no extra model call.",
+  "references_gate": "pass",
+  "references_gate_reason": "The sole external bibliographic assertion is supported by retained Crossref HTTP200raw bytes and exact DOI,title,journal,volume,issue,pages,date and first-author metadata. This does not claim current DOI access or general reference quality. Internal proof paths and protocol statements checked within stated scope.",
+  "requested_mode": "independent",
+  "reviewer": "platform_gate_review",
+  "science_gate": "not_applicable",
+  "science_gate_reason": "Reports software/check evidence; no new scientific inference, model recovery result or causal claim.",
+  "score": 3,
+  "score_reason": "Specific figures and concrete unresolved states fit a technical evidence report. Repeated scope qualifications and long numeric paragraphs make parts more formal and patterned than ordinary prose.",
+  "style_status": "known"
+}

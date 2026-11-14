@@ -1,0 +1,7 @@
+{
+  "unknown_ordinary_typo": "definately",
+  "refused": true,
+  "exit_code": 1,
+  "scope": "Planted control input only; original actual flag CSV and source unchanged",
+  "review_script_sha256": "702f2cbd5629d53c44146269640433b5a842989d29796431098bce74370dc8be"
+}

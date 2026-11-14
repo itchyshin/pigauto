@@ -1,0 +1,3 @@
+script/cran-0.11-integration/test-real-backends.R: 0 expectations passed against installed pigauto
+SAVED_OPTIONAL_CLASS_MISSING_PACKAGE_OK
+NEITHER_BACKEND_OK

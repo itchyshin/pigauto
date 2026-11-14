@@ -1,0 +1,11 @@
+{
+  "source_commit": "816987fd160c1d2c5c58b020b07357ff17c077e5",
+  "base_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636",
+  "exact_four_committed_file_hashes": {
+    "R/impute.R": "b75d47cf1c602507492331856a78544cc0b6bc7fe7873a5c4a75b9e58a8139f8",
+    "R/report.R": "6f9a4ae97d398b9647622bb2c7e3d5254ad47d357aa344e8192cedb74884a5d2",
+    "man/impute.Rd": "74500308e3bd95ac1f963d73a14a2af56bb7555be92b93135abb7cdacd2d56ea",
+    "man/pigauto_report.Rd": "cf22cbbf3ccef4a6197b658c9e3e4c672bd738c4fe6526da232033fdb70cef85"
+  },
+  "matches_pat_review_and_worktree": true
+}

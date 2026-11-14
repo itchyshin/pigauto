@@ -1,0 +1,578 @@
+[
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__session-info.txt.gz",
+    "original_path": "platform-evidence/session-info.txt",
+    "raw_sha256": "99708a4f3626cc77a2df9b3ca3a22b78315bbb98ea6760b5714d54b1872dd094",
+    "gzip_sha256": "ec4d4cd371e7340dbba1cb902d6d7beb499b05b3aba92ab99f67fd356fe8f25b"
+  },
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__index-before-stderr.txt.gz",
+    "original_path": "platform-evidence/index-before-stderr.txt",
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+  },
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__index-after-exit.txt.gz",
+    "original_path": "platform-evidence/index-after-exit.txt",
+    "raw_sha256": "2e7f47b6eef33663f1aae9cbbdc5704d6732655d845428eade81a4051bd27802",
+    "gzip_sha256": "d362236e78eb47cbc93ecb6c3221aab76f704e94986c6312cbcc083dcba63ddf"
+  },
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__courier-canary.ilg.gz",
+    "original_path": "platform-evidence/courier-canary.ilg",
+    "raw_sha256": "4a26b12f27d802063ef0a8e5c1b1f11b9cd4f253fd9c3dcfb2c10f4c321f2bae",
+    "gzip_sha256": "ed08eb26ddde37e93beba8134398e2e1e0529bc20276047a69c2262a89130173"
+  },
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__index-before-exit.txt.gz",
+    "original_path": "platform-evidence/index-before-exit.txt",
+    "raw_sha256": "09ec5bb78802069d1eb9a2e396944a9e852f438f2d75ea9685d023df6bdf7462",
+    "gzip_sha256": "49f36775772aff87d41fd51cedb642b532d954f68f7c8c155d60f0aa82a5e366"
+  },
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__identity-post.json.gz",
+    "original_path": "platform-evidence/identity-post.json",
+    "raw_sha256": "bdca52170782592fb8d42bae73a58332f61f2e7f98d567cda260e39e4295abe2",
+    "gzip_sha256": "57ad8ab394c7cc4b218a77991d20be58e3008dd19d3ee213a2d431804de1d096"
+  },
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__identity-pre.json.gz",
+    "original_path": "platform-evidence/identity-pre.json",
+    "raw_sha256": "c74d318202aa0390bda10c02d856ff99a61dff2263ce37a3c3343d17afc65ee7",
+    "gzip_sha256": "e0ef43997912ed4f6ad9f23f6aadbe77eb1cddbbccafb72f8807d619b9f73bce"
+  },
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__courier-canary.ind.gz",
+    "original_path": "platform-evidence/courier-canary.ind",
+    "raw_sha256": "bbdf5de01e41931199c31432a95061d4629eb1a9f8ec3e14727e5c9f5f6a5bf9",
+    "gzip_sha256": "79f57552144ec496842042511bd7f07736ecfcca8dd7c951dd992fb3c175701e"
+  },
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__courier-canary.tex.gz",
+    "original_path": "platform-evidence/courier-canary.tex",
+    "raw_sha256": "785e906142597ce7bf94dc973423be94116b1b9c5ad8eaeecf7ce475b560f76c",
+    "gzip_sha256": "4de0917334a15563c8f7cefed9af1def10b910e7c0bbb2dbb58cc6d79c98875e"
+  },
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__check-console.log.gz",
+    "original_path": "platform-evidence/check-console.log",
+    "raw_sha256": "6f492f715ce587f12238a3d7284a1a36de7461b3413a0e16ab109696b526af11",
+    "gzip_sha256": "ebd7dbc370d2646f5346f70903ea8b63970a378a89f22ca69fb2fbaec54ed6fd"
+  },
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__check-exit.txt.gz",
+    "original_path": "platform-evidence/check-exit.txt",
+    "raw_sha256": "e2f627d9dbe710937dd37e316868ae653e1c3f3e9a099d38d953e5c8a7a726dd",
+    "gzip_sha256": "b4edfa834bb41233e915fc91a0854953b6663fab18ee32e074276110ed021368"
+  },
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__index-after-stdout.txt.gz",
+    "original_path": "platform-evidence/index-after-stdout.txt",
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+  },
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__index-before-stdout.txt.gz",
+    "original_path": "platform-evidence/index-before-stdout.txt",
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+  },
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__index-probe.ind.gz",
+    "original_path": "platform-evidence/index-probe.ind",
+    "raw_sha256": "bbdf5de01e41931199c31432a95061d4629eb1a9f8ec3e14727e5c9f5f6a5bf9",
+    "gzip_sha256": "79f57552144ec496842042511bd7f07736ecfcca8dd7c951dd992fb3c175701e"
+  },
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__check-environment.txt.gz",
+    "original_path": "platform-evidence/check-environment.txt",
+    "raw_sha256": "7fb3ab5321e61532a4d341798c0631cddd9af324ecd4b63734dab2b9f723cd8b",
+    "gzip_sha256": "438357f42affd3717c704304530adfc1ea899187dc3a46226a561147ca9601ea"
+  },
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__installed-packages.csv.gz",
+    "original_path": "platform-evidence/installed-packages.csv",
+    "raw_sha256": "5f6a14327e3772d4b881ce162ae1ba6f3015f4926fba8fe929ce13538776a22d",
+    "gzip_sha256": "2e2e674154d67c8d10febfc779f45d53108f6dab536cec311ea89a45a43e0a82"
+  },
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__identity-download.json.gz",
+    "original_path": "platform-evidence/identity-download.json",
+    "raw_sha256": "c0ac78adce5b44ccd44d79c3d0fa6089f7e1493541615c1b08b129b1ac2d1423",
+    "gzip_sha256": "3e18ffae6af3ec7841cb57a15bd0dd17a3f822d5af8119cf469da14f526a3499"
+  },
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__manual-tools.txt.gz",
+    "original_path": "platform-evidence/manual-tools.txt",
+    "raw_sha256": "e5405c76a3bd8781f0a0c5a8e031bd9388706c0727ffd6bddfef402a8c2f3b63",
+    "gzip_sha256": "a1d732a6816ec501ff5ccea8c6d300f72db4b5fcaac482840b5563044b863e6f"
+  },
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__index-probe.ilg.gz",
+    "original_path": "platform-evidence/index-probe.ilg",
+    "raw_sha256": "39123455fc7865cd8d21b0a1d3ad139dec733d11d2e1cd0fc551bf5b30dc1912",
+    "gzip_sha256": "f809c392c0c9bea72463b757dc78f43356bfd5b5b1cf58511939ca5096e37f40"
+  },
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__index-tools-before.txt.gz",
+    "original_path": "platform-evidence/index-tools-before.txt",
+    "raw_sha256": "b00295770b7dd451ffc8ed62914d59cd78773254d766c8626c15be91b7409566",
+    "gzip_sha256": "667e14b609e9e76d4669c4cf152f27d42ef112cf61c2a2015d6003c8be1ec22b"
+  },
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__check-command.txt.gz",
+    "original_path": "platform-evidence/check-command.txt",
+    "raw_sha256": "7dce5c2196c872d2144c60a0dd5ce7bc491826f3cb4be36af8d4e5da8f39a20a",
+    "gzip_sha256": "35f91b523c31d5350ec62f957e10b4255af62d469f5077e6ef8ec63f3dabe205"
+  },
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__declared-dependencies.csv.gz",
+    "original_path": "platform-evidence/declared-dependencies.csv",
+    "raw_sha256": "8c36e8d024418d2c45a61a8569ababb79c6c58a613f73eff4e8b3a97c712c2df",
+    "gzip_sha256": "e653bfa758a300728e03061672045b9ff9c3091a7a426b3571d6ebf98dda18f2"
+  },
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__index-after-stderr.txt.gz",
+    "original_path": "platform-evidence/index-after-stderr.txt",
+    "raw_sha256": "884cdfb6a95e0bf0ae26e60d9063d3c5a3e033afcc2ae69bebe190e9a1bf9bbb",
+    "gzip_sha256": "6b7e2eee6c824b6216a58b8841def60b156af8c7dadc97e82896551108f5e5fc"
+  },
+  {
+    "path": "attempt4/windows-latest-release/platform-evidence__courier-canary.log.gz",
+    "original_path": "platform-evidence/courier-canary.log",
+    "raw_sha256": "e79b40930d72ece59f03e02a1259ab00df045567393d4ea33f0cafdfcf918232",
+    "gzip_sha256": "da1ff2e18ff2c94d8adb1b0b19d13af215e291966b026eb489d70232de55222d"
+  },
+  {
+    "path": "attempt4/windows-latest-release/frozen-check__pigauto.Rcheck__00check.log.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/00check.log",
+    "raw_sha256": "67ab1f14f8796fe6073bad46c48b1e7c9161672a6ae828e65c0cf9b54a25ba3b",
+    "gzip_sha256": "f355c5ab36a302fcc1cae7547d379ab4efba4628b16dfe40cc677b3c684edd12"
+  },
+  {
+    "path": "attempt4/windows-latest-release/frozen-check__pigauto.Rcheck__00install.out.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/00install.out",
+    "raw_sha256": "27ceff6e4b795be92c0c426cccd61799b8feacfad9fdbfada03195dd6328ea6b",
+    "gzip_sha256": "9f0e9720fee1ed1e81916339ecb5227de51399cc0dd4fae18206e7b8c73ae018"
+  },
+  {
+    "path": "attempt4/windows-latest-release/frozen-check__pigauto.Rcheck__Rdlatex.log.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/Rdlatex.log",
+    "raw_sha256": "3d584a02c27ebfda2dcca804cd7b0132160fd21b18343fa37a8a511b14bee61a",
+    "gzip_sha256": "0ee6d781413b14dbd3d246ab1cdd1b5afee8eb0969ee5433764c0f2b911d26ca"
+  },
+  {
+    "path": "attempt4/windows-latest-release/frozen-check__pigauto.Rcheck__pigauto-manual.log.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/pigauto-manual.log",
+    "raw_sha256": "834f508cb5adf71712aed8e8f898fede32cfada68d89f310fbdf4eabeecc8cf6",
+    "gzip_sha256": "53520e3cd2a1f64124b77bfd288d2876a96dcec7c10e20867f0c555441ee66f7"
+  },
+  {
+    "path": "attempt4/windows-latest-release/frozen-check__pigauto.Rcheck__build_vignettes.log.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/build_vignettes.log",
+    "raw_sha256": "3145443a4178a2e0edd8ab71b038dc435a813988bf6ed164949dc2a96f2d3394",
+    "gzip_sha256": "5b5ac702e599993a24d08824c9095656f70f97ec05f1af60a0416e34b4cf3e18"
+  },
+  {
+    "path": "attempt4/windows-latest-release/frozen-check__pigauto.Rcheck__tests__testthat.Rout.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/tests/testthat.Rout",
+    "raw_sha256": "4f54f31931c7e5ebd91ca51f7359946ced6cb03d6b04a5e1b4fbcca715f91b91",
+    "gzip_sha256": "93ee72a50dbe395aaa33360f883b6ee87b416af8005a888e5d0fb6b3f31126d4"
+  },
+  {
+    "path": "attempt4/windows-latest-release/frozen-check__pigauto.Rcheck__pigauto-Ex.timings.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/pigauto-Ex.timings",
+    "raw_sha256": "0c18c412de43fdc1f1db6e4361bfa974dc7cc4e77be2e45f63770dd85dd4b72f",
+    "gzip_sha256": "3e33d3181bf1d01153e95766fc5c9a4b0fa98cd92df0b4c51dce7d774dcb6ad3"
+  },
+  {
+    "path": "attempt4/windows-latest-release/frozen-check__pigauto.Rcheck__pigauto-Ex.Rout.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/pigauto-Ex.Rout",
+    "raw_sha256": "27cd2bc65232010addf75fa5d21aaa2495adbe7143ab457040c4964bcfd56533",
+    "gzip_sha256": "2c1e0a0983451436ddde69200e0da394d34e933d4bc250f9a1b886ed010eb273"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__session-info.txt.gz",
+    "original_path": "platform-evidence/session-info.txt",
+    "raw_sha256": "4583f3d2928778328fe300da45c6a07e74454f22683cfbe3502be2b64de7fba1",
+    "gzip_sha256": "1b4b6752ac7f6c46999aeee27d0de916913d7b4b0cbf7f3d8e394b91f0ae38b3"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__index-before-stderr.txt.gz",
+    "original_path": "platform-evidence/index-before-stderr.txt",
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__index-after-exit.txt.gz",
+    "original_path": "platform-evidence/index-after-exit.txt",
+    "raw_sha256": "2e7f47b6eef33663f1aae9cbbdc5704d6732655d845428eade81a4051bd27802",
+    "gzip_sha256": "d362236e78eb47cbc93ecb6c3221aab76f704e94986c6312cbcc083dcba63ddf"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__courier-canary.ilg.gz",
+    "original_path": "platform-evidence/courier-canary.ilg",
+    "raw_sha256": "4a26b12f27d802063ef0a8e5c1b1f11b9cd4f253fd9c3dcfb2c10f4c321f2bae",
+    "gzip_sha256": "ed08eb26ddde37e93beba8134398e2e1e0529bc20276047a69c2262a89130173"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__index-before-exit.txt.gz",
+    "original_path": "platform-evidence/index-before-exit.txt",
+    "raw_sha256": "09ec5bb78802069d1eb9a2e396944a9e852f438f2d75ea9685d023df6bdf7462",
+    "gzip_sha256": "49f36775772aff87d41fd51cedb642b532d954f68f7c8c155d60f0aa82a5e366"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__identity-post.json.gz",
+    "original_path": "platform-evidence/identity-post.json",
+    "raw_sha256": "bdca52170782592fb8d42bae73a58332f61f2e7f98d567cda260e39e4295abe2",
+    "gzip_sha256": "57ad8ab394c7cc4b218a77991d20be58e3008dd19d3ee213a2d431804de1d096"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__identity-pre.json.gz",
+    "original_path": "platform-evidence/identity-pre.json",
+    "raw_sha256": "c74d318202aa0390bda10c02d856ff99a61dff2263ce37a3c3343d17afc65ee7",
+    "gzip_sha256": "e0ef43997912ed4f6ad9f23f6aadbe77eb1cddbbccafb72f8807d619b9f73bce"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__courier-canary.ind.gz",
+    "original_path": "platform-evidence/courier-canary.ind",
+    "raw_sha256": "bbdf5de01e41931199c31432a95061d4629eb1a9f8ec3e14727e5c9f5f6a5bf9",
+    "gzip_sha256": "79f57552144ec496842042511bd7f07736ecfcca8dd7c951dd992fb3c175701e"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__courier-canary.tex.gz",
+    "original_path": "platform-evidence/courier-canary.tex",
+    "raw_sha256": "785e906142597ce7bf94dc973423be94116b1b9c5ad8eaeecf7ce475b560f76c",
+    "gzip_sha256": "4de0917334a15563c8f7cefed9af1def10b910e7c0bbb2dbb58cc6d79c98875e"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__check-console.log.gz",
+    "original_path": "platform-evidence/check-console.log",
+    "raw_sha256": "7c98bcac7950b9e440692477fda01dc6df7181f153aa4217092e2d64a50e36d7",
+    "gzip_sha256": "44ff649e71fbc08966213ef973d4dbda37f1c0c908a1822c0120a4101c42b875"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__check-exit.txt.gz",
+    "original_path": "platform-evidence/check-exit.txt",
+    "raw_sha256": "d2ef9d98a66a36abc89ccbae259ce79f167e944aad91c8c271fabf7f569abc5d",
+    "gzip_sha256": "f41d1728da2628ed8d9ca509bdad3c8e44f33056f9c58f08a7760565065321fe"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__index-after-stdout.txt.gz",
+    "original_path": "platform-evidence/index-after-stdout.txt",
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__index-before-stdout.txt.gz",
+    "original_path": "platform-evidence/index-before-stdout.txt",
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__index-probe.ind.gz",
+    "original_path": "platform-evidence/index-probe.ind",
+    "raw_sha256": "bbdf5de01e41931199c31432a95061d4629eb1a9f8ec3e14727e5c9f5f6a5bf9",
+    "gzip_sha256": "79f57552144ec496842042511bd7f07736ecfcca8dd7c951dd992fb3c175701e"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__check-environment.txt.gz",
+    "original_path": "platform-evidence/check-environment.txt",
+    "raw_sha256": "7fb3ab5321e61532a4d341798c0631cddd9af324ecd4b63734dab2b9f723cd8b",
+    "gzip_sha256": "438357f42affd3717c704304530adfc1ea899187dc3a46226a561147ca9601ea"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__installed-packages.csv.gz",
+    "original_path": "platform-evidence/installed-packages.csv",
+    "raw_sha256": "c8e67be6fe716a8eadb2d63e7e9f9fb1f05aff02f131ae6288cc21c4cce34dc6",
+    "gzip_sha256": "c7c2203252ab7463787184f7e4b5f5d1de9b59d7c2798a1856c6b2ab6dadbec9"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__identity-download.json.gz",
+    "original_path": "platform-evidence/identity-download.json",
+    "raw_sha256": "c0ac78adce5b44ccd44d79c3d0fa6089f7e1493541615c1b08b129b1ac2d1423",
+    "gzip_sha256": "3e18ffae6af3ec7841cb57a15bd0dd17a3f822d5af8119cf469da14f526a3499"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__manual-tools.txt.gz",
+    "original_path": "platform-evidence/manual-tools.txt",
+    "raw_sha256": "e5405c76a3bd8781f0a0c5a8e031bd9388706c0727ffd6bddfef402a8c2f3b63",
+    "gzip_sha256": "a1d732a6816ec501ff5ccea8c6d300f72db4b5fcaac482840b5563044b863e6f"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__index-probe.ilg.gz",
+    "original_path": "platform-evidence/index-probe.ilg",
+    "raw_sha256": "39123455fc7865cd8d21b0a1d3ad139dec733d11d2e1cd0fc551bf5b30dc1912",
+    "gzip_sha256": "f809c392c0c9bea72463b757dc78f43356bfd5b5b1cf58511939ca5096e37f40"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__index-tools-before.txt.gz",
+    "original_path": "platform-evidence/index-tools-before.txt",
+    "raw_sha256": "b00295770b7dd451ffc8ed62914d59cd78773254d766c8626c15be91b7409566",
+    "gzip_sha256": "667e14b609e9e76d4669c4cf152f27d42ef112cf61c2a2015d6003c8be1ec22b"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__check-command.txt.gz",
+    "original_path": "platform-evidence/check-command.txt",
+    "raw_sha256": "7dce5c2196c872d2144c60a0dd5ce7bc491826f3cb4be36af8d4e5da8f39a20a",
+    "gzip_sha256": "35f91b523c31d5350ec62f957e10b4255af62d469f5077e6ef8ec63f3dabe205"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__declared-dependencies.csv.gz",
+    "original_path": "platform-evidence/declared-dependencies.csv",
+    "raw_sha256": "8c36e8d024418d2c45a61a8569ababb79c6c58a613f73eff4e8b3a97c712c2df",
+    "gzip_sha256": "e653bfa758a300728e03061672045b9ff9c3091a7a426b3571d6ebf98dda18f2"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__index-after-stderr.txt.gz",
+    "original_path": "platform-evidence/index-after-stderr.txt",
+    "raw_sha256": "884cdfb6a95e0bf0ae26e60d9063d3c5a3e033afcc2ae69bebe190e9a1bf9bbb",
+    "gzip_sha256": "6b7e2eee6c824b6216a58b8841def60b156af8c7dadc97e82896551108f5e5fc"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/platform-evidence__courier-canary.log.gz",
+    "original_path": "platform-evidence/courier-canary.log",
+    "raw_sha256": "e79b40930d72ece59f03e02a1259ab00df045567393d4ea33f0cafdfcf918232",
+    "gzip_sha256": "da1ff2e18ff2c94d8adb1b0b19d13af215e291966b026eb489d70232de55222d"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/frozen-check__pigauto.Rcheck__00check.log.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/00check.log",
+    "raw_sha256": "fa7b129dd377899beff28230826fac88d620643f53d7bbdd29696378226ed898",
+    "gzip_sha256": "dcdd2ce134abec9fbd1086e45dde0681c7343f87f89e0b9d23ee608caea9e8a9"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/frozen-check__pigauto.Rcheck__00install.out.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/00install.out",
+    "raw_sha256": "27ceff6e4b795be92c0c426cccd61799b8feacfad9fdbfada03195dd6328ea6b",
+    "gzip_sha256": "9f0e9720fee1ed1e81916339ecb5227de51399cc0dd4fae18206e7b8c73ae018"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/frozen-check__pigauto.Rcheck__Rdlatex.log.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/Rdlatex.log",
+    "raw_sha256": "8a87243076a4698ef0dbc107a230e2a36799a448720912b990984d4f9295c994",
+    "gzip_sha256": "be20e12bba486a4eb11dfd94f8d1e8eaa76b27d7530979afc84692f912a3086b"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/frozen-check__pigauto.Rcheck__pigauto-manual.log.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/pigauto-manual.log",
+    "raw_sha256": "0fdcc45fde85a34f04ade1d19da78271711ae69cc31ae007c3d35c7318097b98",
+    "gzip_sha256": "0a6b7733df138be71f4ab0adace374748dafa43d84eb0241d65c2f304b597dc2"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/frozen-check__pigauto.Rcheck__build_vignettes.log.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/build_vignettes.log",
+    "raw_sha256": "3145443a4178a2e0edd8ab71b038dc435a813988bf6ed164949dc2a96f2d3394",
+    "gzip_sha256": "5b5ac702e599993a24d08824c9095656f70f97ec05f1af60a0416e34b4cf3e18"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/frozen-check__pigauto.Rcheck__tests__testthat.Rout.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/tests/testthat.Rout",
+    "raw_sha256": "396e16f3dc39debdf4508e23938e3d4a4310683c1e3d0d29dc184d8a09dba899",
+    "gzip_sha256": "428e31c189704c117ea57aed9bfa109fdeda84cde35a760a0c3a0015ac0ae5e9"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/frozen-check__pigauto.Rcheck__pigauto-Ex.timings.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/pigauto-Ex.timings",
+    "raw_sha256": "94fac5a427efa571b73100f6e4d7d9bd322bcc0d40c8fa3a5a929623020dbafc",
+    "gzip_sha256": "08057d79f22d3ea3d6176cb6781955bb611a53c44adf825dff7193343231eb68"
+  },
+  {
+    "path": "attempt4/windows-latest-devel/frozen-check__pigauto.Rcheck__pigauto-Ex.Rout.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/pigauto-Ex.Rout",
+    "raw_sha256": "a207444ff27082b14fe38e176005768a9dd8b6caa31df440864c87867f317a31",
+    "gzip_sha256": "4f022050b5e5d05a87828e5207902af3b0c7a1e3a3cd29fb2d2b4147a9fa6906"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__session-info.txt.gz",
+    "original_path": "platform-evidence/session-info.txt",
+    "raw_sha256": "fc826d12f3aff27a7396b6f71273381e829dba6579c416182e78b3fb6a76bf8b",
+    "gzip_sha256": "ddcf76fb8bfb9654ef976c12529a4b6b0c25a4da080cb5eb817072e29f1b4d3d"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__index-before-stderr.txt.gz",
+    "original_path": "platform-evidence/index-before-stderr.txt",
+    "raw_sha256": "37425d4ba011c14015648dc46cde3ec89eecadab72e3e8df9b606eb9939fb071",
+    "gzip_sha256": "5074af282dea816a8dff1f301180b425e42bfd32aa98f8daf92b9e8b1d9f774b"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__index-after-exit.txt.gz",
+    "original_path": "platform-evidence/index-after-exit.txt",
+    "raw_sha256": "a98b6e5c561734573064072eff35d807aef8b295e2c67f6eb6b00b96fe421322",
+    "gzip_sha256": "476396606b6b74c40eec9b66c71bffead8ce0568a49cc3cb4d1d6def136588ee"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__courier-canary.ilg.gz",
+    "original_path": "platform-evidence/courier-canary.ilg",
+    "raw_sha256": "4a26b12f27d802063ef0a8e5c1b1f11b9cd4f253fd9c3dcfb2c10f4c321f2bae",
+    "gzip_sha256": "ed08eb26ddde37e93beba8134398e2e1e0529bc20276047a69c2262a89130173"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__index-before-exit.txt.gz",
+    "original_path": "platform-evidence/index-before-exit.txt",
+    "raw_sha256": "80e184c8130c77360957a79a32bf613c08f4869adee944323fdb32bb231ad673",
+    "gzip_sha256": "8834e48c720f28448d402e0c778f236240cc40e6d19232c63c5e76d066ad074c"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__identity-post.json.gz",
+    "original_path": "platform-evidence/identity-post.json",
+    "raw_sha256": "eca45a5ff836e0ad515ec9afed699e52da2710a55bd7a5bd4c73daad8e02525c",
+    "gzip_sha256": "78dbab8bd82db4e39667a80424c7458d2e6d31270244f1243142f706560b912f"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__identity-pre.json.gz",
+    "original_path": "platform-evidence/identity-pre.json",
+    "raw_sha256": "00696cd715d4ebf0329c9c941c9a2f8846b983184ff3b188f1e1a5b3af1dfc42",
+    "gzip_sha256": "769672feed7ecaa6e7ede7885175491e51b9085a473025534ab961db1a35cd64"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__courier-canary.ind.gz",
+    "original_path": "platform-evidence/courier-canary.ind",
+    "raw_sha256": "bbdf5de01e41931199c31432a95061d4629eb1a9f8ec3e14727e5c9f5f6a5bf9",
+    "gzip_sha256": "79f57552144ec496842042511bd7f07736ecfcca8dd7c951dd992fb3c175701e"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__courier-canary.tex.gz",
+    "original_path": "platform-evidence/courier-canary.tex",
+    "raw_sha256": "cee2752145e5495c93e44d02f87a93cf199ea337b04e9f4320ed9b5518c5b359",
+    "gzip_sha256": "7762a67335f37d9ecd8ea7adfd2533ec0b540d2904bc82bfda63696c9833d23c"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__check-console.log.gz",
+    "original_path": "platform-evidence/check-console.log",
+    "raw_sha256": "0dac99a5477f3ff18e34eefc2e8e8b839b59f15e925f48042cef166d71f58145",
+    "gzip_sha256": "84ccc8d358b0ba6f3c2c20cc1669deb10d2fac8674a570aff9004cc99a2a3aac"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__check-exit.txt.gz",
+    "original_path": "platform-evidence/check-exit.txt",
+    "raw_sha256": "59bca4bb90b65067f6f4b2025f545e3a50a148c53fd5b353f4b30319ed4b2ac2",
+    "gzip_sha256": "f09421a16aba00d31b405b8ce8f62d389c5a8243c15e9e9af8db402ce0bbaa3d"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__index-after-stdout.txt.gz",
+    "original_path": "platform-evidence/index-after-stdout.txt",
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__index-before-stdout.txt.gz",
+    "original_path": "platform-evidence/index-before-stdout.txt",
+    "raw_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "gzip_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__index-probe.ind.gz",
+    "original_path": "platform-evidence/index-probe.ind",
+    "raw_sha256": "bbdf5de01e41931199c31432a95061d4629eb1a9f8ec3e14727e5c9f5f6a5bf9",
+    "gzip_sha256": "79f57552144ec496842042511bd7f07736ecfcca8dd7c951dd992fb3c175701e"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__check-environment.txt.gz",
+    "original_path": "platform-evidence/check-environment.txt",
+    "raw_sha256": "32db3ba9587bd5ec6608f27494675f65e260f2db94802b47f7ad411c2947907b",
+    "gzip_sha256": "3c900fe97a57d7ba5cda0927a2cebedc2e9155307c6037767b5b9148b21e1c86"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__installed-packages.csv.gz",
+    "original_path": "platform-evidence/installed-packages.csv",
+    "raw_sha256": "10dc14422afb69fdf328551faa5b1d9f5df706771545cb177377e27dc17fd96e",
+    "gzip_sha256": "0f2c8d0a785865578accaf171f9165f7c05fff6ade1f5c794dd6cadd1d1112e6"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__identity-download.json.gz",
+    "original_path": "platform-evidence/identity-download.json",
+    "raw_sha256": "2fb0c08b5098ab2f9e7dd563811126870e5afaf852f8e223ddb0a197a6fd060b",
+    "gzip_sha256": "e00834414e93f4f47377711eecc759efec7a3fe98fb5dde303969c00b1d29bd2"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__manual-tools.txt.gz",
+    "original_path": "platform-evidence/manual-tools.txt",
+    "raw_sha256": "90aaf3f34d510d9356bb8b0f0bfc6b4d6b8ae92a4e638933359209503dcc98a2",
+    "gzip_sha256": "a482479ed09ce528971377250543de94e2395ace4408b0647cbee42ba9f80a92"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__index-probe.ilg.gz",
+    "original_path": "platform-evidence/index-probe.ilg",
+    "raw_sha256": "39123455fc7865cd8d21b0a1d3ad139dec733d11d2e1cd0fc551bf5b30dc1912",
+    "gzip_sha256": "f809c392c0c9bea72463b757dc78f43356bfd5b5b1cf58511939ca5096e37f40"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__index-tools-before.txt.gz",
+    "original_path": "platform-evidence/index-tools-before.txt",
+    "raw_sha256": "64936188840418908d1034ec39f4a6eef50a9aa6fc7e8632110ff42b4d706bc8",
+    "gzip_sha256": "baa920a27033da9e77e3e15641659a82df1b5c8b2dcf47a9301e559e4ca2e3c7"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__check-command.txt.gz",
+    "original_path": "platform-evidence/check-command.txt",
+    "raw_sha256": "0abc7069e31ff3fea631129a75557932aba26c06adadc19471c2c4d7cd35ea5c",
+    "gzip_sha256": "9a8bdb03a7fc731d30c0c762d501633fdd60b95105ccee4b1b50c67aee256ff0"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__declared-dependencies.csv.gz",
+    "original_path": "platform-evidence/declared-dependencies.csv",
+    "raw_sha256": "da620bb55999537b678b44cc61708a167d54583d3bfd05e45d626cf63567a44b",
+    "gzip_sha256": "e610ffaa25bbf28edf84b5d1bf979f5f23631920baa155c380db9c194579dd8c"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__index-after-stderr.txt.gz",
+    "original_path": "platform-evidence/index-after-stderr.txt",
+    "raw_sha256": "39123455fc7865cd8d21b0a1d3ad139dec733d11d2e1cd0fc551bf5b30dc1912",
+    "gzip_sha256": "f809c392c0c9bea72463b757dc78f43356bfd5b5b1cf58511939ca5096e37f40"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/platform-evidence__courier-canary.log.gz",
+    "original_path": "platform-evidence/courier-canary.log",
+    "raw_sha256": "8ddcccedb3431a6c2113c169d64d90e940d0877c6572112c44d9ed7729d08a9f",
+    "gzip_sha256": "5c503231eb58387dfe3aef541eaab3d0f546ad16a63cab1502ab011fa8919992"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/frozen-check__pigauto.Rcheck__00check.log.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/00check.log",
+    "raw_sha256": "e29f3924d8b6637fabb55d11ed06a340cda1b91ba8265e2565368407b99cb7ab",
+    "gzip_sha256": "9173334f37a6db24e1f0527406a7c0d8fe0756710010f7500bec7b7ac33ee97f"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/frozen-check__pigauto.Rcheck__00install.out.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/00install.out",
+    "raw_sha256": "7f8a73b86b7d03565ff3003762e097a22aabf7fce7f9737a57df3161adc95993",
+    "gzip_sha256": "5008fe3781561053fca49a9f5d031531a7d8b8d5657a61d41fc30243558ee630"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/frozen-check__pigauto.Rcheck__Rdlatex.log.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/Rdlatex.log",
+    "raw_sha256": "eaac212a1b62318d86ce1136f6335da5e250970de08c42971e7d76924e9f167a",
+    "gzip_sha256": "c38d58fdb74d453a3152c75c9c47f5cdb00c9b1e396c0a57443c5d06b47da058"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/frozen-check__pigauto.Rcheck__pigauto-manual.log.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/pigauto-manual.log",
+    "raw_sha256": "6a3360e84e65cfa0c94eecd41e4a464671971be8b74a79eb1f1ff2454ead2d3c",
+    "gzip_sha256": "04eb720ab2867707b77fa32bc77f13357622991206c683f675af07409aa0718f"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/frozen-check__pigauto.Rcheck__build_vignettes.log.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/build_vignettes.log",
+    "raw_sha256": "a43f66a25ce23a4c37eebceeff62b0973e1bee67f277ae119e452a608039c2ff",
+    "gzip_sha256": "4ad98108c63c1579eff567ae9d141381a6b24539bf6e406be78bd59fb3af0dd7"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/frozen-check__pigauto.Rcheck__tests__testthat.Rout.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/tests/testthat.Rout",
+    "raw_sha256": "73cfcff8f46c61caec82ff832df2cb41687bd7f88c4159ab6132fe92b69a1043",
+    "gzip_sha256": "52fbc2a3bb272e793b804cfb4fd5aa16a51f6fd6c4ee661bfc39b1d254dab0e9"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/frozen-check__pigauto.Rcheck__pigauto-Ex.timings.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/pigauto-Ex.timings",
+    "raw_sha256": "7065be7033feabe0f5d17c3d57e58fa7fd9d6d2a13ba7c4deb7c8307c1241c2d",
+    "gzip_sha256": "84257611de59dafa8be575e6c669ae5a2f1f727717af48a62424bf7429fc0550"
+  },
+  {
+    "path": "attempt4/ubuntu-latest-release/frozen-check__pigauto.Rcheck__pigauto-Ex.Rout.gz",
+    "original_path": "frozen-check/pigauto.Rcheck/pigauto-Ex.Rout",
+    "raw_sha256": "8071c05a3dee006ab4fd03758880ccb723fe0a94a68c68c61d7e796c38e6dfb1",
+    "gzip_sha256": "f58f2803a6e6b2d9a153b37291a94ad77a16c86bad05c88e6827fe51c38d7c45"
+  }
+]

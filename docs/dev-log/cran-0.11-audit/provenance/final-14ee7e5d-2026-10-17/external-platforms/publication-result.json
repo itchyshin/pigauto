@@ -1,0 +1,43 @@
+{
+  "archive_after": {
+    "sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+    "size_bytes": 5137648
+  },
+  "archive_before": {
+    "sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+    "size_bytes": 5137648
+  },
+  "bundles": [
+    {
+      "bundle": "raw/ubuntu-latest-release.evidence.tar.gz",
+      "bundle_sha256": "1a10dc086e114da76bf8423fd1709961a39aeeff956df2ee322adfbba865aac7",
+      "bundle_size_bytes": 2060387,
+      "kind": "evidence_bundle_not_release_archive",
+      "member_count": 43,
+      "release_archive_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb"
+    },
+    {
+      "bundle": "raw/windows-latest-devel.evidence.tar.gz",
+      "bundle_sha256": "f27c1c0ca4b4d8da0a2696a99f8e569c5b4b2e84e965fd2218a88e49b828241f",
+      "bundle_size_bytes": 2055577,
+      "kind": "evidence_bundle_not_release_archive",
+      "member_count": 43,
+      "release_archive_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb"
+    },
+    {
+      "bundle": "raw/windows-latest-release.evidence.tar.gz",
+      "bundle_sha256": "a22cb98b47c2d12a9ea0b5b5d510a1de01cde8db3407ca4f45b6c8cbb173bab9",
+      "bundle_size_bytes": 2055550,
+      "kind": "evidence_bundle_not_release_archive",
+      "member_count": 43,
+      "release_archive_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb"
+    }
+  ],
+  "mechanical_readback": "readback-result.json",
+  "normalized_views": 48,
+  "original_members": 129,
+  "python": "3.13.2 | packaged by Anaconda, Inc. | (main, Feb  6 2025, 12:55:35) [Clang 14.0.6 ]",
+  "scope": "Remote three only. Warning consequences, local macOS timing/note and final panel remain unadjudicated.",
+  "status": "PASS_REMOTE_PLATFORM_PACKAGING_READBACK",
+  "zlib": "1.2.13"
+}

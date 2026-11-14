@@ -1,0 +1,216 @@
+{
+  "package": "pigauto",
+  "version": "0.11.0",
+  "release_type": "update",
+  "status_claim": "source-clean",
+  "next_unproven_rung": "tarball-clean",
+  "audit_verdict": "NOT_READY_SUCCESSOR_DEPLOYMENT_FREEZE_CHECKS_AND_FINAL_PANEL_PENDING",
+  "artifact": {
+    "path": "/Users/z3437171/.codex/artifacts/pigauto-cran-0.11.0/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/pigauto_0.11.0.tar.gz",
+    "sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+    "size_bytes": 5137648,
+    "source_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636",
+    "clean_worktree": true,
+    "inventory_evidence": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/post-merge-8e275ca-2026-10-17/inventory.txt"
+    },
+    "inventory_sha256": "d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d",
+    "archive_entries": 250,
+    "forbidden_entries": [],
+    "current_candidate": false,
+    "state": "Withdrawn: installed help contradicts baseline-only default; retained predecessor checks only",
+    "original_checked_path": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/pigauto_0.11.0.tar.gz",
+    "identical_retained_copy_evidence": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/persistent-archive-retention.json"
+    },
+    "withdrawal_evidence": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/help-fix-816987fd-2026-10-18/withdrawal-and-successor.json"
+    }
+  },
+  "profile": {
+    "compiled_code": false,
+    "reverse_dependencies": false,
+    "system_or_external_services": true,
+    "large_data_or_vignettes": true
+  },
+  "evidence": {
+    "product_contract": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/post-merge-8e275ca-2026-10-17/README.md"
+    },
+    "rights_and_consent": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/post-merge-8e275ca-2026-10-17/README.md"
+    },
+    "current_cran_policy": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/submission-preparation-2026-10-17/README.md"
+    },
+    "rendered_site": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/post-merge-8e275ca-2026-10-17/live-main-8e275ca-receipt.json"
+    },
+    "reverse_dependencies": {
+      "kind": "rationale",
+      "value": "NOT_APPLICABLE: authoritative primary CRAN index refreshed2026-10-17 measured zero reverse dependencies across Depends, Imports, LinkingTo, Suggests and Enhances; timestamped result is in provenance/submission-preparation-2026-10-17/cran-publication-and-revdeps.json. No reverse package set exists to check."
+    },
+    "compiled_diagnostics": {
+      "kind": "rationale",
+      "value": "NOT_APPLICABLE: final archive has no package-owned src files or native binaries and DESCRIPTION NeedsCompilation:no; see freeze-receipt.json and inventory.txt. Compiled optional runtimes remain dependency/runtime checks."
+    },
+    "local_as_cran": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/local-capture-snapshot/publication-index.json"
+    },
+    "incoming_feasibility": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/closure-summary.json"
+    },
+    "installed_package": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/checks-and-integration/views/final-mi/final-mi-verification.json"
+    },
+    "timing": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/checks-synopsis-snapshot/synopsis.json"
+    },
+    "platform_matrix": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/external-platforms/platform-summary.json"
+    },
+    "external_logs": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/external-platforms/README.md"
+    },
+    "external_service_behaviour": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/checks-and-integration/views/service-url-spelling-absence/adjudication.json"
+    },
+    "size_and_vignette_budget": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/checks-synopsis-snapshot/synopsis.json"
+    }
+  },
+  "panel": {
+    "grace": "READY for predecessor14ee technical preparation only; human timing/upload conditions remain",
+    "rose": "NOT_READY predecessor14ee record reconciliation and human timing disposition",
+    "pat": "NOT_READY predecessor14ee installed-help blocker; separate proposed-source fix PASS"
+  },
+  "submission": {
+    "state": "not_submitted",
+    "cran_upload_authorized": true,
+    "maintainer_confirmation_authorized": true,
+    "authorization_scope": "Conditional user approval: submit pigauto0.11 release after help fix and all applicable exact-artifact/platform/independent release gates pass; no waiver of technical findings or scientific scope expansion",
+    "user_approval_text": "After this I approve CRAN submission"
+  },
+  "evidence_pr": {
+    "number": 236,
+    "url": "https://github.com/itchyshin/pigauto/pull/236",
+    "state": "open_draft",
+    "merged": false,
+    "publication_head_policy": "Actual published head and final CI readback recorded in PR body to avoid self-reference"
+  },
+  "source_candidate": {
+    "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+    "source_pr": 238,
+    "source_pr_merged": true,
+    "source_ci": 39087559368,
+    "source_ci_state": "PASS_ALL3_EXACT_HEAD",
+    "pages_run": 39090594794,
+    "deployed_site_gate": "PENDING_MATCHING_DEPLOYMENT",
+    "approved_pr_head": "816987fd160c1d2c5c58b020b07357ff17c077e5",
+    "main_source_ci": 39090594763
+  },
+  "approvals": {
+    "source_merge_and_automatic_deployment": "Explicit Merge238 approval exercised; merged b2e6054; actual deployment verification pending",
+    "public_builder_upload": "Previously explicitly authorized for this0.11 audit; existing validated account used, no new token request",
+    "cran_upload": "Conditionally approved after all release gates pass; not performed",
+    "evidence_pr236_merge": "Not authorized; remains unmerged"
+  },
+  "historical_ledger": "docs/dev-log/cran-0.11-audit/historical-release-ledger-pre-14ee7e5d-2026-10-17.json",
+  "updated_utc": "2026-10-18T02:56:50.061478+00:00",
+  "final_proof_summary": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/closure-summary.json",
+  "timing_decision": {
+    "technical_preparation_review": "Grace accepts disclosed predecessor14ee sole Mac NOTE for technical preparation; raw native NOTE/strict-driver failure unchanged",
+    "maintainer_disposition": "PENDING_FOR_SUCCESSOR_ARTIFACT_AFTER_FRESH_TIMINGS",
+    "predecessor_note": {
+      "method": "compare_methods",
+      "user_seconds": 2.532,
+      "system_seconds": 0.992,
+      "elapsed_seconds": 18.406
+    }
+  },
+  "claim_scope": "Approved source238 merged b2e6054; premerge exactheadCI/source/local-site PASS. Matching mainCI/deployment pending; no current successor archive.",
+  "panel_evidence": {
+    "grace": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/panel/grace/verdict.json"
+    },
+    "rose": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/panel/rose/verdict.json"
+    },
+    "pat": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/panel/pat/verdict.json"
+    }
+  },
+  "source_help_correction": {
+    "status": "WITHDRAWN_AS_SUBMISSION_CANDIDATE",
+    "reason": "Pat found installed impute and pigauto_report help descriptions promising GNN training/comparison unconditionally despite default gnn=FALSE.",
+    "artifact_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+    "source_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636",
+    "successor_source_pr": 238,
+    "successor_source_head": "816987fd160c1d2c5c58b020b07357ff17c077e5",
+    "successor_archive_frozen": false,
+    "source_fix_review": "PASS provisional installed help and novice workflow; not a release verdict",
+    "merge_and_automatic_deployment_authorized": true,
+    "cran_upload_authorized": false,
+    "maintainer_confirmation_authorized": false,
+    "recorded_utc": "2026-10-18T01:45:08.327129+00:00",
+    "provisional_evidence": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/help-fix-816987fd-2026-10-18/execution.json"
+    },
+    "independent_review": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/help-fix-816987fd-2026-10-18/pat-review/verdict.json"
+    },
+    "local_site": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/help-fix-816987fd-2026-10-18/site-review/verdict.json"
+    },
+    "source_ci": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/help-fix-816987fd-2026-10-18/source-ci-final.json"
+    },
+    "pr_state": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/help-fix-816987fd-2026-10-18/pr238-final.json"
+    },
+    "merged_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18"
+  },
+  "last_merged_source": {
+    "source_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636",
+    "source_pr": 237,
+    "source_pr_merged": true,
+    "main_source_ci": 39080327341,
+    "pages_run": 39080327369,
+    "deployed_site_gate": "PASS"
+  },
+  "successor_candidate": {
+    "sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+    "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+    "size_bytes": 5137837,
+    "state": "frozen; exact artifact gates pending",
+    "evidence_directory": "docs/dev-log/cran-0.11-audit/provenance/successor-a93fece7-2026-10-18",
+    "mi_matrix": "PASS 12 steps across4cells",
+    "native_macos": "running",
+    "direct_platform_matrix": "not yet launched",
+    "final_panel": "not yet reviewed",
+    "cran_submission": "not submitted"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "original_votes_preserved": {
+    "grace": {
+      "same_bytes": true,
+      "sha256": "b8cf7d1aa2edff517cdff9de6e7e6175f6e4f32453b2a77723887ff61e273985",
+      "verdict": "READY"
+    },
+    "rose": {
+      "same_bytes": true,
+      "sha256": "0a5bdd6a801883a8a6350d95439d49cdd1cec0d8f7ae82dc3322e24ff6cb7e20",
+      "verdict": "NOT_READY"
+    },
+    "pat": {
+      "same_bytes": true,
+      "sha256": "456d662e63615c112e2f626ad94feb1f3a578417a4136afd64b896b22400f9a2",
+      "verdict": "NOT_READY"
+    }
+  },
+  "old_archive_identity_unchanged": true,
+  "all_actual_warning_audit_inputs_unchanged": true,
+  "withdrawal_current_candidate_false": true,
+  "successor_archive_frozen": false,
+  "source_ci_site_final_checkpoint": "pending"
+}

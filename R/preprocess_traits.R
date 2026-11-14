@@ -543,8 +543,16 @@ preprocess_traits <- function(traits, tree, species_col = NULL,
         col   <- as.double(col)
         cmean <- mean(col)
         csd   <- stats::sd(col)
+        if (!is.finite(cmean) || (length(col) > 1L && !is.finite(csd))) {
+          stop("Column '", nm, "' in `covariates` could not be scaled to finite values. ",
+               "Rescale this covariate and try again.", call. = FALSE)
+        }
         if (!is.finite(csd) || csd < 1e-12) csd <- 1.0  # constant column
         scaled_col <- (col - cmean) / csd
+        if (any(!is.finite(scaled_col))) {
+          stop("Column '", nm, "' in `covariates` could not be scaled to finite values. ",
+               "Rescale this covariate and try again.", call. = FALSE)
+        }
         mat <- matrix(scaled_col, ncol = 1, dimnames = list(NULL, nm))
         cov_parts[[nm]]      <- mat
         cov_means_list[[nm]] <- cmean

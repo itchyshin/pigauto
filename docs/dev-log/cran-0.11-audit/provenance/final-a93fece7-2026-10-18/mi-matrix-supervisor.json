@@ -1,0 +1,97 @@
+{
+  "status": "PASS",
+  "started_utc": "2026-10-18T02:53:47.346030+00:00",
+  "hard_cap_seconds": 1200,
+  "command": [
+    "/Users/z3437171/miniconda3/bin/python3",
+    "/private/tmp/pigauto-pr236-validator-20261017/script/cran-0.11-integration/run-exact-artifact-matrix.py",
+    "/private/tmp/pigauto-release-candidate/sha256-a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb/pigauto_0.11.0.tar.gz",
+    "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix",
+    "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/mi-matrix"
+  ],
+  "environment_controls": {
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "R_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "BLIS_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "JULIA_NUM_THREADS": "1",
+    "TORCH_NUM_THREADS": "1",
+    "NOT_CRAN": "unset",
+    "PIGAUTO_GIT": "/Library/Developer/CommandLineTools/usr/bin/git"
+  },
+  "archive": "/private/tmp/pigauto-release-candidate/sha256-a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb/pigauto_0.11.0.tar.gz",
+  "archive_sha256_before": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "archive_size_bytes_before": 5137837,
+  "final_receipt_sha256": "781c6cf956656399abc1dc6363e6f64afe57672b11a73027dea982ed31576a8f",
+  "archive_source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "producer_head": "ebade832ac1cb2dcf9e5d8d351ff36d708d49767",
+  "producer_dirty_status": "M docs/dev-log/cran-0.11-audit/release-ledger.json",
+  "runner_sha256": "6d6cc86d7c17f1e5e91c5e4a8e9841eef2dadbc793c2775657874fe79cda2bf7",
+  "harness_sha256": "d2b0b5f01e3470ce1f0f0d2116cadbd1a9a2beffcd864a5644e71c0b7d53fb7d",
+  "wrapper_sha256": "0d874b60efa3234982cee0e27fedded1a422714e848f9edd84d3df02da0e13d1",
+  "executed_sources_sha256": {
+    "script/cran-0.11-integration/check-adapters.R": "d2b0b5f01e3470ce1f0f0d2116cadbd1a9a2beffcd864a5644e71c0b7d53fb7d",
+    "script/cran-0.11-integration/test-real-backends.R": "7edb499a09820ecd9c8efc6799f2adf4233c824f064bc88462b9f1720098b6be",
+    "script/cran-0.11-integration/reload-fit.R": "8db40649b97f074eefb71cfd591453d9540f8b4518b464ac4a6d13472f68401d",
+    "tests/testthat/test-pool-mi-adapter-fixtures.R": "1599e96a85be78afec4fe05fc23cc02f9c0f5ac99e877bb31ff87a358e20a0b1",
+    "tests/testthat/test-mi-provenance.R": "585299f93cb4c83013337d1043035bf0dbe7af40389c1dc3075507391591f67a"
+  },
+  "dependency_template": {
+    "template_root": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/mi-matrix",
+    "template_manifest_sha256": "b9df2c6aab9c611af36020190c189cc893687d8554db695a982373795ab529b8",
+    "template_status": "PASS",
+    "template_cells": 4,
+    "template_step_count": 12,
+    "template_archive_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+    "cells": {
+      "neither": {
+        "predecessor_package_omitted_from_clone": true,
+        "dependency_symlink_count": 485,
+        "dependency_symlink_manifest_sha256": "3c44c0b6827e83e8eaae0ee6bfdc8b7c67d3f27b5f21b2150858ee77cf0ccf70"
+      },
+      "drm-only": {
+        "predecessor_package_omitted_from_clone": true,
+        "dependency_symlink_count": 486,
+        "dependency_symlink_manifest_sha256": "c2f9e476cb3efdfb4d2308f871457a06a561c6d04ece89e9367e6c5979b1b159"
+      },
+      "gllvm-only": {
+        "predecessor_package_omitted_from_clone": true,
+        "dependency_symlink_count": 486,
+        "dependency_symlink_manifest_sha256": "6948ccb7ebcecf5fa673e0fe002af5e65b5092b166c422362d5a088d218961d9"
+      },
+      "both": {
+        "predecessor_package_omitted_from_clone": true,
+        "dependency_symlink_count": 487,
+        "dependency_symlink_manifest_sha256": "6bffcc7ea7947e8b1184d477b1dac53cf861a9a80cfebda913bc5e65b42ef5a7"
+      }
+    }
+  },
+  "output_root": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix",
+  "exit_code": 0,
+  "timed_out": false,
+  "elapsed_seconds": 99.419,
+  "ended_utc": "2026-10-18T02:55:26.770431+00:00",
+  "archive_sha256_after": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "archive_size_bytes_after": 5137837,
+  "archive_unchanged": true,
+  "producer_head_after": "ebade832ac1cb2dcf9e5d8d351ff36d708d49767",
+  "producer_identity_unchanged": true,
+  "producer_dirty_status_after": "M docs/dev-log/cran-0.11-audit/release-ledger.json",
+  "producer_status_unchanged": true,
+  "executed_sources_sha256_after": {
+    "script/cran-0.11-integration/check-adapters.R": "d2b0b5f01e3470ce1f0f0d2116cadbd1a9a2beffcd864a5644e71c0b7d53fb7d",
+    "script/cran-0.11-integration/test-real-backends.R": "7edb499a09820ecd9c8efc6799f2adf4233c824f064bc88462b9f1720098b6be",
+    "script/cran-0.11-integration/reload-fit.R": "8db40649b97f074eefb71cfd591453d9540f8b4518b464ac4a6d13472f68401d",
+    "tests/testthat/test-pool-mi-adapter-fixtures.R": "1599e96a85be78afec4fe05fc23cc02f9c0f5ac99e877bb31ff87a358e20a0b1",
+    "tests/testthat/test-mi-provenance.R": "585299f93cb4c83013337d1043035bf0dbe7af40389c1dc3075507391591f67a"
+  },
+  "executed_sources_unchanged": true,
+  "supervisor_log": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix-supervisor.log",
+  "supervisor_log_sha256": "d780390258877d2346923e065bb080885cebfd0aa8b0248ebb464cdcfe61167f",
+  "matrix_manifest": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/manifest.json",
+  "matrix_manifest_sha256": "15e134f6fd4202a08a28a43bfab243b9b6973cfb1f9a2c426c2140cd516e78ed"
+}

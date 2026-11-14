@@ -1,0 +1,23 @@
+name: Historical CRAN evidence
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/historical-evidence.yaml'
+      - 'script/cran-0.11-platform/verify_historical_receipts.py'
+      - 'script/cran-0.11-platform/test_historical_receipts.py'
+      - 'docs/dev-log/cran-0.11-audit/provenance/final-a93fece7-2026-10-18/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-receipts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Verify historical identities and retained check logs
+        run: python3 script/cran-0.11-platform/verify_historical_receipts.py
+      - name: Test receipt verification
+        run: python3 -m unittest discover -s script/cran-0.11-platform -p 'test_historical_receipts.py' -v

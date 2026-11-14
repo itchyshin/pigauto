@@ -1,0 +1,22 @@
+{
+  "package": "0.11.0",
+  "package_path": "D:\\a\\pigauto\\pigauto\\frozen-check\\pigauto.Rcheck\\pigauto",
+  "testthat": "3.3.2",
+  "not_cran": "UNSET",
+  "force_suggests": "true",
+  "native_counts": {
+    "fail": 0,
+    "warnings": 161,
+    "skips": 86,
+    "pass": 3195
+  },
+  "replay_counts": {
+    "fail": 0,
+    "warnings": 161,
+    "skips": 86,
+    "pass": 3195
+  },
+  "diagnostic_elapsed_seconds": 423.25,
+  "scope": "Separate native-layout replay; not part of R CMD check timing",
+  "error": {}
+}

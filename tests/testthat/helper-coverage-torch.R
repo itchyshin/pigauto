@@ -9,7 +9,7 @@ if (identical(tolower(Sys.getenv("R_COVR")), "true")) {
     ns <- asNamespace("pigauto")
     replacements <- list()
     for (factory in c("GraphTransformerBlock", "ResidualPhyloDAE")) {
-      generator <- attr(get(factory, envir = ns), "module")
+      generator <- attr(get(paste0(factory, "_module"), envir = ns)(), "module")
       stopifnot(inherits(generator, "R6ClassGenerator"))
       for (method in c("initialize", "forward")) {
         fun <- generator$public_methods[[method]]

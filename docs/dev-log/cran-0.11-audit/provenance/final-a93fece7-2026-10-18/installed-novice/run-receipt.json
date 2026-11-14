@@ -1,0 +1,83 @@
+{
+  "status": "FAIL",
+  "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "final_receipt": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/FINAL.json",
+  "final_receipt_sha256": "781c6cf956656399abc1dc6363e6f64afe57672b11a73027dea982ed31576a8f",
+  "archive": "/private/tmp/pigauto-release-candidate/sha256-a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb/pigauto_0.11.0.tar.gz",
+  "archive_sha256_before": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "archive_size_bytes_before": 5137837,
+  "installed_library": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/neither",
+  "installed_package_path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/neither/pigauto",
+  "installed_description_sha256": "48b84a000f52cd86f3218aeaae9955c42df5665f68efb4a31dab8aa38ddf0031",
+  "check_script": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/check-installed.R",
+  "check_script_sha256": "404197b89502559815265b5eaec64831649eecfafaa73c31b30f4c43c6d9cad1",
+  "supervisor_script": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/supervise.py",
+  "supervisor_script_sha256": "0a42323a465d3c51d8c790a58bb335db06885489c2d2c679d70396917d676314",
+  "command": [
+    "Rscript",
+    "--vanilla",
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/check-installed.R"
+  ],
+  "environment_controls": {
+    "OPENBLAS_NUM_THREADS": "1",
+    "OMP_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "R_NUM_THREADS": "1",
+    "VECLIB_MAXIMUM_THREADS": "1",
+    "BLIS_NUM_THREADS": "1",
+    "NUMEXPR_NUM_THREADS": "1",
+    "JULIA_NUM_THREADS": "1",
+    "TORCH_NUM_THREADS": "1",
+    "NOT_CRAN": "unset",
+    "R_LIBS_USER": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/neither",
+    "R_LIBS_SITE": "/nonexistent",
+    "browser_suppression": "R options only, inside check-installed.R"
+  },
+  "hard_cap_seconds": 300,
+  "started_utc": "2026-10-18T02:59:42.625409+00:00",
+  "exit_code": 1,
+  "timed_out": false,
+  "elapsed_seconds": 2.328,
+  "ended_utc": "2026-10-18T02:59:44.960617+00:00",
+  "archive_sha256_after": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "archive_size_bytes_after": 5137837,
+  "archive_unchanged": true,
+  "installed_description_sha256_after": "48b84a000f52cd86f3218aeaae9955c42df5665f68efb4a31dab8aa38ddf0031",
+  "installed_description_unchanged": true,
+  "log": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/run.log",
+  "log_sha256": "7f676cdb54d12ed880cc4adc2861908c0c2dc9a05fae7efd17bc7ff2041ef83d",
+  "outputs": {
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/installed-impute-help.txt": {
+      "exists": true,
+      "sha256": "0f1e642c2b9203c9fcda82517563795816411d3090361e24c40afae5b2ac6fe0",
+      "bytes": 21501
+    },
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/installed-pigauto_report-help.txt": {
+      "exists": true,
+      "sha256": "a892cf84d951c0c276b4fd38c9f0eedf8f3f7bda15d7392f28238f9df31a51d5",
+      "bytes": 1567
+    },
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/installed-workflow-receipt.json": {
+      "exists": false,
+      "sha256": null,
+      "bytes": null
+    },
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/installed-session.txt": {
+      "exists": false,
+      "sha256": null,
+      "bytes": null
+    },
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/novice-run/pigauto_report.html": {
+      "exists": false,
+      "sha256": null,
+      "bytes": null
+    }
+  },
+  "output_checks": {
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/installed-impute-help.txt": true,
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/installed-pigauto_report-help.txt": true,
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/installed-workflow-receipt.json": false,
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/installed-session.txt": false,
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/installed-novice/novice-run/pigauto_report.html": false
+  }
+}

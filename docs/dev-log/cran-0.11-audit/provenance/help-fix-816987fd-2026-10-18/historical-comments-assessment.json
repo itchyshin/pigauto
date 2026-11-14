@@ -1,0 +1,36 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "d41fcc1feeadda33ca0d9271d5ee36e49ebb760a98feaa63cdca64e4b34748b6",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex audit lead",
+  "method": "Separate post-draft read of the saved text against the exact archive receipts, actual audit, original panel votes and proposed source withdrawal record.",
+  "genre": "Historical CRAN comments draft",
+  "coverage": "Whole exact saved draft",
+  "score": 3,
+  "style_status": "assessed",
+  "score_reason": "Measured facts and clear scope; formal artifact terminology and repeated boundaries are appropriate but somewhat mechanical.",
+  "confidence": "moderate",
+  "confidence_reason": "Editorial self-assessment, not an authorship or detector claim.",
+  "examples": [
+    {
+      "location": "Opening scope",
+      "cue": "Disposition precedes historical check results",
+      "impact": "Reader sees that this archive or draft cannot be submitted.",
+      "repair": "no change needed",
+      "line": 3,
+      "quote": "Do not submit this draft. Final installed-help review found a baseline/GNN description mismatch. Source PR #238 is proposed; a successor archive and fresh affected checks must replace the identity and results below before submission text can be finalized. No CRAN upload or maintainer confirmation is authorized. The following check results describe only the preserved predecessor archive."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "No new scientific result; proper-imputation and fixed-effect pooling bounds remain explicit.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Archive identity, native counts/timings and original panel state match retained receipts; withdrawn state prevents readiness inference.",
+  "references_gate": "pass",
+  "references_gate_reason": "The DOI/Crossref claim is bound to retained primary metadata and the unresolved resolver403; no new licence or acceptance assertion.",
+  "date": "2026-10-18T01:52:03.397320+00:00",
+  "calibration_status": "Protocol and template examples read; no held-out style evaluation.",
+  "interpretation": "perceived_style_not_authorship"
+}

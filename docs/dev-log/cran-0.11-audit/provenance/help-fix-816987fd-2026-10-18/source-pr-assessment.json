@@ -1,0 +1,36 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "e9f48cc88c870caabe920ce7ed796f8a88bf307ff99e06b4a973f802b08beb5a",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex audit lead",
+  "method": "Separate saved-draft read against source816987fd, actual CI39087559368, provisional installed receipt, bounded independent source/site reviews and the documented approval boundary.",
+  "genre": "Source correction PR description",
+  "coverage": "Whole exact saved draft",
+  "score": 3,
+  "style_status": "assessed",
+  "score_reason": "Concrete actions and measured scope; repeated artifact identifiers and gate terminology are formal but useful for resuming this release.",
+  "confidence": "moderate",
+  "confidence_reason": "Self-assessment of perceived style, not authorship verification.",
+  "examples": [
+    {
+      "location": "Opening state",
+      "cue": "Specific scope and pending decision",
+      "impact": "The reader can distinguish source preparation from a released artifact.",
+      "repair": "no change needed",
+      "line": 1,
+      "quote": "The installed `impute()` help promises GNN training even though the default is `gnn = FALSE`; the report help similarly promises GNN comparisons and training history for every fit. Both descriptions now explain baseline-only behavior and the explicit `gnn = TRUE` option. The report title now describes an imputation report."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "No scientific change or broad validity claim; prior recovery and fixed-effect pooling scope preserved.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Source, CI, provisional install, local site and approval facts checked against retained primary receipts.",
+  "references_gate": "pass",
+  "references_gate_reason": "PR and CI identifiers resolve to the verified source head; no new external scientific claim or legal guarantee.",
+  "date": "2026-10-18T02:02:46.892687+00:00",
+  "calibration_status": "Protocol/template reviewed; no held-out calibration run.",
+  "interpretation": "perceived_style_not_authorship"
+}

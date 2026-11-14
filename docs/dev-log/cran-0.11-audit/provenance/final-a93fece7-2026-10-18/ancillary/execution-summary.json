@@ -1,0 +1,104 @@
+{
+  "spelling": {
+    "command": [
+      "Rscript",
+      "--vanilla",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/ancillary/spelling.R",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/ancillary"
+    ],
+    "script_sha256": "41c934ae1ea7248e60004545424dd08a44c8d3ade238fe6b7c875c6407821300",
+    "started_utc": "2026-10-18T07:10:14.404616+00:00",
+    "archive_sha256_before": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+    "hard_cap_seconds": 180,
+    "environment": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "VECLIB_MAXIMUM_THREADS": "1",
+      "R_NUM_THREADS": "1",
+      "JULIA_NUM_THREADS": "1",
+      "TORCH_NUM_THREADS": "1",
+      "R_LIBS": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/neither",
+      "R_LIBS_USER": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/neither",
+      "R_LIBS_SITE": "/nonexistent",
+      "_R_CHECK_FORCE_SUGGESTS_": "true"
+    },
+    "NOT_CRAN": "UNSET",
+    "owned_process_group": 88272,
+    "exit_code": 0,
+    "timed_out": false,
+    "elapsed_seconds": 4.579,
+    "archive_sha256_after": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+    "archive_size_bytes_after": 5137837,
+    "script_sha256_after": "41c934ae1ea7248e60004545424dd08a44c8d3ade238fe6b7c875c6407821300",
+    "archive_unchanged": true
+  },
+  "urls": {
+    "command": [
+      "Rscript",
+      "--vanilla",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/ancillary/urls.R",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/ancillary"
+    ],
+    "script_sha256": "fa832d6c6e0afbcc86761a2d7826ca5914fbb67006f017127e6e08a10abcb1f5",
+    "started_utc": "2026-10-18T07:10:18.992422+00:00",
+    "archive_sha256_before": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+    "hard_cap_seconds": 180,
+    "environment": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "VECLIB_MAXIMUM_THREADS": "1",
+      "R_NUM_THREADS": "1",
+      "JULIA_NUM_THREADS": "1",
+      "TORCH_NUM_THREADS": "1",
+      "R_LIBS": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/neither",
+      "R_LIBS_USER": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/neither",
+      "R_LIBS_SITE": "/nonexistent",
+      "_R_CHECK_FORCE_SUGGESTS_": "true"
+    },
+    "NOT_CRAN": "UNSET",
+    "owned_process_group": 88381,
+    "exit_code": 0,
+    "timed_out": false,
+    "elapsed_seconds": 3.322,
+    "archive_sha256_after": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+    "archive_size_bytes_after": 5137837,
+    "script_sha256_after": "fa832d6c6e0afbcc86761a2d7826ca5914fbb67006f017127e6e08a10abcb1f5",
+    "archive_unchanged": true
+  },
+  "absence": {
+    "command": [
+      "Rscript",
+      "--vanilla",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/ancillary/absence.R",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/ancillary"
+    ],
+    "script_sha256": "e0b340c92335ec5675dd62f7a48bd3fef6496951869d7daaf4c35100071a5de0",
+    "started_utc": "2026-10-18T07:10:22.325628+00:00",
+    "archive_sha256_before": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+    "hard_cap_seconds": 180,
+    "environment": {
+      "OPENBLAS_NUM_THREADS": "1",
+      "OMP_NUM_THREADS": "1",
+      "MKL_NUM_THREADS": "1",
+      "VECLIB_MAXIMUM_THREADS": "1",
+      "R_NUM_THREADS": "1",
+      "JULIA_NUM_THREADS": "1",
+      "TORCH_NUM_THREADS": "1",
+      "R_LIBS": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/ancillary/absence-library",
+      "R_LIBS_USER": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/ancillary/absence-library",
+      "R_LIBS_SITE": "/nonexistent",
+      "_R_CHECK_FORCE_SUGGESTS_": "true"
+    },
+    "NOT_CRAN": "UNSET",
+    "owned_process_group": 88582,
+    "exit_code": 0,
+    "timed_out": false,
+    "elapsed_seconds": 4.701,
+    "archive_sha256_after": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+    "archive_size_bytes_after": 5137837,
+    "script_sha256_after": "e0b340c92335ec5675dd62f7a48bd3fef6496951869d7daaf4c35100071a5de0",
+    "archive_unchanged": true
+  }
+}

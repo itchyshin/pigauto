@@ -82,3 +82,16 @@ cell had the expected two skips. Source-mode checks passed separately. This
 checks installation independence and adapter routing on a small analysis-aware
 fixture. It is separate from the n=300,
 M=20 posterior recovery and interval-coverage campaign.
+
+To repeat the matrix against one exact frozen tarball, use
+`run-exact-artifact-matrix.py <tarball> <required-sha256> <new-output-dir>
+<four-cell-template-root>`. The output directory must not already exist. The
+template supplies only the dependency-library symlinks for `neither`,
+`drm-only`, `gllvm-only`, and `both`; the runner omits each template's old
+pigauto installation, installs the supplied tarball into a fresh cell, runs
+the installed fixtures and real adapter checks in fresh R processes, and
+checks the archive digest before and after every step. It retains per-step
+logs and a manifest with their hashes, records the explicit working directory,
+hashes every R source loaded by the harness, and records each cell's expected
+optional packages and dependency-symlink targets. The template does not
+contribute any pigauto code to the test.

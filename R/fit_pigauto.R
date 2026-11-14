@@ -340,9 +340,6 @@
 #' treating an interval target as certified.
 #'
 #' @return An object of class \code{"pigauto_fit"}.
-#' @importFrom torch torch_tensor torch_float torch_bool torch_long
-#' @importFrom torch optim_adam with_no_grad nn_utils_clip_grad_norm_
-#' @importFrom torch nnf_mse_loss torch_rand_like torch_where torch_zeros_like
 #' @examples
 #' \donttest{
 #' data(avonet300, tree300)
@@ -722,11 +719,8 @@ fit_pigauto <- function(
         bootstrap_B      = conformal_bootstrap_B,
         verbose          = verbose
       )
-      conformal_mondrian <- if (identical(conformal_method, "mondrian")) {
-        attr(conformal_scores, "mondrian")
-      } else {
-        NULL
-      }
+      # GNN-off Mondrian requests are rejected before this branch.
+      conformal_mondrian <- NULL
 
       # ---- val / test RMSE: plain-R blend, r_gnn is always 0 ------------
       mean_vec <- if (!is.null(mean_baseline_per_col)) {
@@ -858,26 +852,10 @@ fit_pigauto <- function(
       val_rmse       = val_rmse,
       test_rmse      = test_rmse,
       calibrated_gates = calibrated_gates,
-      r_cal      = if (!is.null(calibrated_gates_list)) {
-        calibrated_gates_list$r_cal_gnn
-      } else {
-        NULL
-      },
-      r_cal_bm   = if (!is.null(calibrated_gates_list)) {
-        calibrated_gates_list$r_cal_bm
-      } else {
-        NULL
-      },
-      r_cal_gnn  = if (!is.null(calibrated_gates_list)) {
-        calibrated_gates_list$r_cal_gnn
-      } else {
-        NULL
-      },
-      r_cal_mean = if (!is.null(calibrated_gates_list)) {
-        calibrated_gates_list$r_cal_mean
-      } else {
-        NULL
-      },
+      r_cal      = calibrated_gates_list$r_cal_gnn,
+      r_cal_bm   = calibrated_gates_list$r_cal_bm,
+      r_cal_gnn  = calibrated_gates_list$r_cal_gnn,
+      r_cal_mean = calibrated_gates_list$r_cal_mean,
       mean_baseline_per_col  = mean_baseline_per_col,
       safety_floor           = safety_floor,
       phylo_signal_per_trait = phylo_signal_per_trait,
@@ -1268,7 +1246,8 @@ fit_pigauto <- function(
       if (!is.na(val_loss_val)) {
         if (val_loss_val + 1e-6 < best_val) {
           best_val      <- val_loss_val
-          best_state    <- model$state_dict()
+          # Snapshot tensors: state_dict() references change on later optimizer steps.
+          best_state    <- lapply(model$state_dict(), function(x) x$detach()$clone())
           patience_left <- patience
         } else {
           patience_left <- patience_left - 1L
@@ -1284,6 +1263,19 @@ fit_pigauto <- function(
   gpu_mem_checkpoint("end of training loop (before restoring best state)")
   if (!is.null(best_state)) model$load_state_dict(best_state)
   gpu_mem_checkpoint("after model$load_state_dict(best_state)")
+
+  # Validation fits already run this refinement during calibration. Fits
+  # without validation still need to check their configured prediction path.
+  if (!has_val || !has_trait_map) {
+    model$eval()
+    checked_refinement <- pigauto_refine_forward(
+      model = model, X_init = t_X_eval, t_coords = t_coords, t_adj = t_adj,
+      t_obs_to_sp = t_obs_to_sp, t_D_sq = t_D_sq, t_MU = t_MU,
+      t_covariates = t_covariates, pin_mask = t_M_obs,
+      refine_steps = refine_steps, device = device, blend = "learned_rs"
+    )
+    rm(checked_refinement)
+  }
 
   # ---- Post-training gate calibration (validation set) --------------------
   calibrated_gates <- NULL

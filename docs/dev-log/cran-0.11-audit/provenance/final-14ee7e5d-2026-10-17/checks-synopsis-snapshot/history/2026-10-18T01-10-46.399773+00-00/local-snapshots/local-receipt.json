@@ -1,0 +1,21 @@
+{
+  "artifact_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+  "source_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636",
+  "records": [
+    {
+      "step": "native-check",
+      "command": [
+        "Rscript",
+        "--vanilla",
+        "/private/tmp/pigauto-pr236-validator-20261017/script/cran-0.11-platform/check.R"
+      ],
+      "script_sha256": "1e641c87e699fba2846aaa9c8958fa77348ecd22221b5ed08e1ccf31c2de9fb0",
+      "started_utc": "2026-10-18T00:04:27.278390+00:00",
+      "elapsed_seconds": 3687.675,
+      "exit_code": 1,
+      "archive_before": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+      "archive_after": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+      "log": "native-check.log"
+    }
+  ]
+}

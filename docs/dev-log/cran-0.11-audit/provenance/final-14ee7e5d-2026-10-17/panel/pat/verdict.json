@@ -1,0 +1,40 @@
+{
+  "reviewer": "pat",
+  "verdict": "NOT_READY",
+  "artifact_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+  "source_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636",
+  "scope": "Independent review of the exact-artifact installed novice workflow, installed help and vignettes, and a sample of live novice and multiple-imputation pages.",
+  "blockers": [
+    {
+      "id": "help-descriptions-contradict-default",
+      "severity": "P2",
+      "finding": "Installed ?impute describes GNN training as part of the one-call pipeline even though gnn defaults to FALSE. Installed ?pigauto_report promises a GNN-versus-baseline comparison, while the default novice workflow produces a baseline-only report.",
+      "evidence": [
+        "Exact archive source R/impute.R:3-4 and R/impute.R:461",
+        "Exact archive source R/report.R:1-6",
+        "Executed installed inst/examples/novice-workflow.R produced report text identifying GNN off and baseline-only predictions"
+      ],
+      "required_resolution": "Clarify both help descriptions that GNN training and comparison occur only when gnn=TRUE, regenerate the manual, and verify the installed help against the frozen candidate."
+    }
+  ],
+  "conditions": [
+    "The native macOS Status NOTE for compare_methods remains UNADJUDICATED in the supplied evidence; this review leaves its separate human timing disposition pending.",
+    "No CRAN upload, maintainer confirmation, tag, announcement, or PR236 merge is authorized or established."
+  ],
+  "checked_evidence": [
+    "Archive SHA-256 re-read as 14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb; installed find.package() resolved under mi-matrix/neither/pigauto and packageVersion() returned 0.11.0.",
+    "Installed novice workflow executed. It reported 8 rows, 3 columns, 2 missing cells before fit, 0 after; observed values and column classes were preserved.",
+    "check_pigauto() surfaced the integer-as-count declaration ambiguity; the tiny fixture also surfaced the expected n=1 validation warning and finite-sample coverage limitation.",
+    "Generated report explicitly said GNN off / baseline only and presented uncertainty as diagnostic.",
+    "Live Getting Started page reviewed as text; live multiple-imputation article reviewed as text and pixels in Chrome. CRAN-versus-GitHub install guidance, baseline default, output roles, MI eligibility, pooling limits, and optional drmTMB/gllvmTMB installation instructions were consistent.",
+    "Installed reference help for impute, check_pigauto, multi_impute, multi_impute_analysis, with_imputations, and pool_mi was inspected for defaults, fit-free preflight behavior, MI eligibility, provenance limits, and pooling scope.",
+    "Exact installed matrix lacked drmTMB, gllvmTMB, and luz. torch R package was present, consistent with DESCRIPTION Imports; GNN stayed off in the tested default workflow."
+  ],
+  "limits": [
+    "No clean-room recompilation or test with the torch R package absent; torch is an Imports dependency.",
+    "No optional model backend installation or backend fit was attempted.",
+    "The small novice fixture checks workflow behavior, not scientific accuracy, inferential validity, or general coverage.",
+    "The site review sampled the Getting Started landing page and multiple-imputation article; it is not a full-site visual audit.",
+    "Native platform timing and submission authorization are outside this reviewer's judgment."
+  ]
+}

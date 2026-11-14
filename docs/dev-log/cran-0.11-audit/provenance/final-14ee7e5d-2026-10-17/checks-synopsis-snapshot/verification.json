@@ -1,0 +1,20 @@
+{
+  "draft_sha256": "7f017756385ef04eb54405c4236a0182cd0ead3eaa990dfc0909d23c76a79687",
+  "input_receipts_verified": 140,
+  "local_replay": "CAPTURE_COMPLETE_CONSEQUENCES_PENDING",
+  "local_state": "COMPLETED_UNADJUDICATED",
+  "negative_controls": [
+    "refused malformed native timing",
+    "refused malformed native timing",
+    "refused malformed native timing",
+    "refused malformed native timing",
+    "refused artifact",
+    "refused linux_pair",
+    "refused process_sum",
+    "refused local_note",
+    "refused release_claim"
+  ],
+  "no_release_promotion": true,
+  "positive_timing_controls": 5,
+  "result": "PASS_BOUNDED_SYNOPSIS_FIGURES_AND_INPUT_BINDINGS"
+}

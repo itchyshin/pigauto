@@ -1,0 +1,164 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!-- Created by GNU Texinfo 6.8, https://www.gnu.org/software/texinfo/ -->
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Checklist for CRAN submissions</title>
+
+<meta name="description" content="Checklist for CRAN submissions">
+<meta name="keywords" content="Checklist for CRAN submissions">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="texi2any">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<style type="text/css">
+<!--
+a.copiable-anchor {visibility: hidden; text-decoration: none; line-height: 0em}
+a.summary-letter {text-decoration: none}
+blockquote.indentedblock {margin-right: 0em}
+div.display {margin-left: 3.2em}
+div.example {margin-left: 3.2em}
+kbd {font-style: oblique}
+pre.display {font-family: inherit}
+pre.format {font-family: inherit}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+span.nolinebreak {white-space: nowrap}
+span.roman {font-family: initial; font-weight: normal}
+span.sansserif {font-family: sans-serif; font-weight: normal}
+span:hover a.copiable-anchor {visibility: visible}
+ul.no-bullet {list-style: none}
+body {margin-left: 5%; margin-right: 5%;}
+
+H1 {             
+    background: white;
+    color: rgb(25%, 25%, 25%);
+    font-family: monospace;
+    font-size: xx-large;
+    text-align: center
+}
+
+H2 {
+    background: white;
+    color: rgb(40%, 40%, 40%);
+    font-family: monospace;
+    font-size: x-large;
+}
+
+ul {
+    margin-top: 0.25ex;
+    margin-bottom: 0.25ex;
+    padding-left: 1em;
+}
+li {
+    margin-top: 0.6ex;
+    margin-bottom: 0.25ex;
+}
+p {
+    margin-top: 0.6ex;
+    margin-bottom: 1.2ex;
+}
+
+-->
+</style>
+
+
+</head>
+
+<body lang="en">
+<h1 class="settitle" align="center">Checklist for CRAN submissions</h1>
+
+
+
+<p>Please always read the
+<a href="https://cran.r-project.org/web/packages/policies.html">CRAN
+policies</a> first. This document gives some <em>additional</em> hints for a
+useful CRAN submission, especially for new submissions.
+</p>
+<p>Unless there are good reasons, packages submitted to CRAN are expected
+to pass <code>R CMD check --as-cran</code>, and you will be asked to fix and
+resubmit your package if it gives warnings or significant notes. To
+avoid this, you should run <code>R CMD check --as-cran</code> yourself with a
+current development version of R before submitting to CRAN.
+</p>
+<p>You can use the following web services to supplement your own tests:
+</p>
+<ul>
+<li> <a href="https://win-builder.r-project.org/">Winbuilder</a> checks packages on 
+Windows using a current development version of R. The
+same infrastructure is used by the CRAN team for checking submitted
+packages.
+
+</li><li> <a href="https://r-hub.github.io/rhub/">R-hub</a> can be used to check packages
+on multiple platforms and versions of R using virtual machines. The
+service is not maintained by CRAN and hence different check settings may
+be in place.
+</li></ul>
+
+<p>In addition to the automated checks, we expect package authors to follow
+good practices that make their package more accessible and useful to the
+wider R community.
+</p>
+<p>The most important way to do this is to write an informative entry in
+the <code>Description</code> field in the <code>DESCRIPTION</code> file (see the
+relevant section of the
+<a href="https://cran.r-project.org/doc/manuals/r-devel/R-exts.html#The-DESCRIPTION-file">Writing
+R Extensions</a> manual). The <code>Title</code> and <code>Description</code> fields
+are shown at the top of the CRAN landing page for the package, and
+should therefore be written with care.
+</p>
+<ul>
+<li> Make the Description as informative as possible for potential new users
+of your package. If in doubt, make the Description longer rather than
+shorter, but try to avoid redundancies such as repetitions of the package name.
+
+</li><li> Write function names including parentheses as in <code>foo()</code> but without quotes.
+
+</li><li> Put non-English usage, including names of other packages and external
+software, in single quotes. Example: <code>'OpenSSL'</code>.
+
+</li><li> Relevant citations should be included in the description. These should
+be in author-year style, preferably followed by an identifier such as
+<abbr>DOI</abbr>, arXiv id, or <abbr>ISBN</abbr> for published materials.
+
+</li><li> <abbr>DOI</abbr>s should be enclosed in angle brackets, and formatted as
+<code>&lt;doi:10.prefix/suffix&gt;</code>. Example:
+<code>Sugihara (1994) &lt;doi:10.1098/rsta.1994.0106&gt;</code>.
+
+</li><li> arXiv preprints should be referred to via their arXiv
+<abbr>DOI</abbr>, <code>&lt;doi:10.48550/arXiv.<var>ID</var>&gt;</code>, where <var>ID</var> is the
+unversioned arXiv identifier.  
+Example:
+<code>Srivastava et al. (2011) &lt;doi:10.48550/arXiv.1103.3817&gt;</code>.
+
+</li><li> Similarly, relevant URLs should be included in the description, also
+enclosed in angle brackets (see the
+<a href="https://cran.r-project.org/doc/manuals/r-devel/R-exts.html#Specifying-URLs">Writing
+R Extensions</a> manual for details). Example:
+<code>&lt;https://cran.r-project.org/&gt;</code>.
+
+</li><li> Preferably, provide an <code>Authors@R</code> field in <samp>DESCRIPTION</samp>
+giving all the authors, including contributors and copyright holders,
+with appropriate roles.  
+
+<p>For persons with an <abbr>ORCID</abbr> identifier (see
+<a href="https://orcid.org/">https://orcid.org/</a> for more information, provide the identifier
+via an element named <code>&quot;ORCID&quot;</code> in the <code>comment</code> argument of
+<code>person()</code>.  Example:
+<code>person(&quot;Achim&quot;, &quot;Zeileis&quot;, comment = c(ORCID =
+&quot;0000-0003-0918-3766&quot;))</code>.
+</p>
+<p>For research organizations with a <abbr>ROR</abbr> (Research Organization Registry)
+ID (see <a href="https://ror.org/">https://ror.org/</a>), provide the ID via an element named
+<code>&quot;ROR&quot;</code> in the <code>comment</code> argument of <code>person()</code>.
+Example:
+<code>person(&quot;rOpenSci&quot;, comment = c(ROR = &quot;019jywm96&quot;))</code>.
+</p>
+</li></ul>
+
+
+
+
+</body>
+</html>

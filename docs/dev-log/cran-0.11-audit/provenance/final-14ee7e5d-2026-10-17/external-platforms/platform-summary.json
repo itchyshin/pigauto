@@ -1,0 +1,169 @@
+[
+  {
+    "Rout_process_timings": {
+      "examples_Rout_elapsed_seconds": 13.466,
+      "scope": "Rout-reported process times, distinct from check-stage elapsed brackets and separate warning replay.",
+      "tests_Rout_elapsed_seconds": 205.75
+    },
+    "all_declared_dependencies_available": true,
+    "check_log_sha256": "a835496d417cb72f416f5113153b02fa5022a0db1d1bdd8ea0b05112be2c9135",
+    "declared_dependency_count": 29,
+    "native_counts": {
+      "fail": 0,
+      "pass": 3195,
+      "skips": 86,
+      "warnings": 161
+    },
+    "native_status": "OK",
+    "platform": "ubuntu-latest-release",
+    "replay_counts": {
+      "fail": 0,
+      "pass": 3195,
+      "skips": 86,
+      "warnings": 161
+    },
+    "separate_warning_replay_seconds": 196.181,
+    "stage_timings": {
+      "HTML": {
+        "cpu_seconds": 2.0,
+        "elapsed_seconds": 2.0,
+        "raw_check_line": "* checking HTML version of manual ... [2s/2s] OK",
+        "timing_format": "cpu_elapsed_seconds"
+      },
+      "PDF": {
+        "cpu_seconds": 2.0,
+        "elapsed_seconds": 2.0,
+        "raw_check_line": "* checking PDF version of manual ... [2s/2s] OK",
+        "timing_format": "cpu_elapsed_seconds"
+      },
+      "examples": {
+        "cpu_seconds": 14.0,
+        "elapsed_seconds": 14.0,
+        "raw_check_line": "* checking examples ... [14s/14s] OK",
+        "timing_format": "cpu_elapsed_seconds"
+      },
+      "tests": {
+        "cpu_seconds": 206.0,
+        "elapsed_seconds": 206.0,
+        "raw_check_line": "* checking tests ... [206s/206s] OK",
+        "timing_format": "cpu_elapsed_seconds"
+      },
+      "total_seconds": 336.330481529236,
+      "vignettes": {
+        "cpu_seconds": 11.0,
+        "elapsed_seconds": 11.0,
+        "raw_check_line": "* checking re-building of vignette outputs ... [11s/11s] OK",
+        "timing_format": "cpu_elapsed_seconds"
+      }
+    },
+    "warning_consequences": "NOT_ADJUDICATED"
+  },
+  {
+    "Rout_process_timings": {
+      "examples_Rout_elapsed_seconds": 15.56,
+      "scope": "Rout-reported process times, distinct from check-stage elapsed brackets and separate warning replay.",
+      "tests_Rout_elapsed_seconds": 403.4
+    },
+    "all_declared_dependencies_available": true,
+    "check_log_sha256": "4e3b819ef8fc32ef76003006114973a6c533d1944f4bf9a321d8fc7247aa835c",
+    "declared_dependency_count": 29,
+    "native_counts": {
+      "fail": 0,
+      "pass": 3195,
+      "skips": 86,
+      "warnings": 161
+    },
+    "native_status": "OK",
+    "platform": "windows-latest-devel",
+    "replay_counts": {
+      "fail": 0,
+      "pass": 3195,
+      "skips": 86,
+      "warnings": 161
+    },
+    "separate_warning_replay_seconds": 409.41,
+    "stage_timings": {
+      "HTML": {
+        "raw_check_line": "* checking HTML version of manual ... [4s] OK",
+        "reported_seconds": 4.0,
+        "timing_format": "single_reported_seconds"
+      },
+      "PDF": {
+        "raw_check_line": "* checking PDF version of manual ... [4s] OK",
+        "reported_seconds": 4.0,
+        "timing_format": "single_reported_seconds"
+      },
+      "examples": {
+        "raw_check_line": "* checking examples ... [16s] OK",
+        "reported_seconds": 16.0,
+        "timing_format": "single_reported_seconds"
+      },
+      "tests": {
+        "raw_check_line": "* checking tests ... [404s] OK",
+        "reported_seconds": 404.0,
+        "timing_format": "single_reported_seconds"
+      },
+      "total_seconds": 622.432008981705,
+      "vignettes": {
+        "raw_check_line": "* checking re-building of vignette outputs ... [22s] OK",
+        "reported_seconds": 22.0,
+        "timing_format": "single_reported_seconds"
+      }
+    },
+    "warning_consequences": "NOT_ADJUDICATED"
+  },
+  {
+    "Rout_process_timings": {
+      "examples_Rout_elapsed_seconds": 16.31,
+      "scope": "Rout-reported process times, distinct from check-stage elapsed brackets and separate warning replay.",
+      "tests_Rout_elapsed_seconds": 414.62
+    },
+    "all_declared_dependencies_available": true,
+    "check_log_sha256": "2e0dd69a839964ff2bb2425f8343b685dee6b091ff70a2ac5e942bbfa2184a95",
+    "declared_dependency_count": 29,
+    "native_counts": {
+      "fail": 0,
+      "pass": 3195,
+      "skips": 86,
+      "warnings": 161
+    },
+    "native_status": "OK",
+    "platform": "windows-latest-release",
+    "replay_counts": {
+      "fail": 0,
+      "pass": 3195,
+      "skips": 86,
+      "warnings": 161
+    },
+    "separate_warning_replay_seconds": 423.25,
+    "stage_timings": {
+      "HTML": {
+        "raw_check_line": "* checking HTML version of manual ... [13s] OK",
+        "reported_seconds": 13.0,
+        "timing_format": "single_reported_seconds"
+      },
+      "PDF": {
+        "raw_check_line": "* checking PDF version of manual ... [4s] OK",
+        "reported_seconds": 4.0,
+        "timing_format": "single_reported_seconds"
+      },
+      "examples": {
+        "raw_check_line": "* checking examples ... [17s] OK",
+        "reported_seconds": 17.0,
+        "timing_format": "single_reported_seconds"
+      },
+      "tests": {
+        "raw_check_line": "* checking tests ... [415s] OK",
+        "reported_seconds": 415.0,
+        "timing_format": "single_reported_seconds"
+      },
+      "total_seconds": 645.812567949295,
+      "vignettes": {
+        "raw_check_line": "* checking re-building of vignette outputs ... [22s] OK",
+        "reported_seconds": 22.0,
+        "timing_format": "single_reported_seconds"
+      }
+    },
+    "warning_consequences": "NOT_ADJUDICATED"
+  }
+]

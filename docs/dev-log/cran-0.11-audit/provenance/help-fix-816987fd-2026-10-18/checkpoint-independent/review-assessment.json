@@ -1,0 +1,36 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "0aaa0421e33536345101f8750afd19af0476398ae7231cdf048797ab25a5cfef",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Grace Codex source-checkpoint reviewer",
+  "method": "Separate post-draft read after report writing and receipt verification.",
+  "genre": "Independent source-checkpoint review",
+  "coverage": "Whole saved README.md",
+  "score": 3,
+  "style_status": "assessed",
+  "score_reason": "Concrete engineering evidence with somewhat repetitive but necessary authorization boundaries.",
+  "confidence": "moderate",
+  "confidence_reason": "Self-assessed perceived style, not calibrated authorship detection.",
+  "examples": [
+    {
+      "location": "Next approval",
+      "cue": "Concrete next gate",
+      "impact": "Makes the exact pending human decision explicit.",
+      "repair": "no change needed",
+      "line": 15,
+      "quote": "Next approval: PR #238 merge and automatic deployment only. After explicit approval, recheck current head/base/checks, merge through the required gate, verify the actual deployment and reader routes, then freeze and check a successor. Keep PR #236 unmerged. CRAN upload/confirmation, tag and announcement remain separately gated. This review leaves the original 14ee archive vote untouched and supplies no archive READY vote."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "No new scientific result; source and artifact limits remain explicit.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Compared against source binding, CI/PR/site and preservation readbacks in this lane. Final packet helper/publication is explicitly pending parent consolidation.",
+  "references_gate": "not_applicable",
+  "references_gate_reason": "No new external bibliographic claims; internal evidence paths were opened.",
+  "date": "2026-10-18T02:04:56.612753+00:00",
+  "calibration_status": "Protocol and earlier review examples were seen.",
+  "interpretation": "perceived_style_not_authorship"
+}

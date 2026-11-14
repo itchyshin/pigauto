@@ -1,0 +1,58 @@
+{
+  "all_publication_files": 41,
+  "backup": "/private/tmp/pigauto-final-closure-20261017/final-proof-publication-instruction-correction/before",
+  "changed_files": {
+    "README.md": {
+      "after": {
+        "sha256": "6014e14b12841780754b74a01db21670ac6ac55907b329864d2b492b9792a549",
+        "size_bytes": 1932
+      },
+      "before": {
+        "sha256": "f73880ae7e57cc7a99ac3a829d6935f0e0260a5d0e1d3346fa2c7a2f32c33dd1",
+        "size_bytes": 1468
+      }
+    },
+    "packaging-helper.py": {
+      "after": {
+        "sha256": "6a8900e8e94196bab4818f898f6b1ec6c8ce1a199fcc7fb783e6a7f51e5e8bb9",
+        "size_bytes": 12306
+      },
+      "before": {
+        "sha256": "53b83106c612c8d5256e7ed33a92b71c4f8552fb3b4d7fbfa6fe6753b64b0a15",
+        "size_bytes": 11842
+      }
+    },
+    "publication-files.json": {
+      "after": {
+        "sha256": "8fd1699b9099b0a7db08d7ccc9826929ebc04117379446cdf62154be8b1f4a84",
+        "size_bytes": 6783
+      },
+      "before": {
+        "sha256": "2814e1817ac408d4396dbf8f6ff4866a2e69c375406e79ba945bf7be16909015",
+        "size_bytes": 6783
+      }
+    },
+    "publication-result.json": {
+      "after": {
+        "sha256": "a829f6c435a3d44353eb3abd70dbd0cac0ff08af6ea2fee7a812574ef6eb6bac",
+        "size_bytes": 3687
+      },
+      "before": {
+        "sha256": "e518a42dfa5d56c394c9df0425f163f05c420320ac4c6740db513d18e5ffcb1f",
+        "size_bytes": 3195
+      }
+    }
+  },
+  "executable_AST_unchanged_except_README_string": true,
+  "indexed_files_verified": 40,
+  "original_producer_source_sha256": "53b83106c612c8d5256e7ed33a92b71c4f8552fb3b4d7fbfa6fe6753b64b0a15",
+  "packager_or_R_executed": false,
+  "raw_bundle_count": 4,
+  "raw_bundles_views_manifests_and_evidence_unchanged": true,
+  "release_verdict": "NOT_ADJUDICATED",
+  "repository_edited": false,
+  "retained_helper_sha256": "6a8900e8e94196bab4818f898f6b1ec6c8ce1a199fcc7fb783e6a7f51e5e8bb9",
+  "scope": "Scratch-only four-file descriptive/derived metadata correction. Original helper_sha256 intentionally preserves executed producer identity; separate retained_helper_sha256 binds edited copy.",
+  "status": "PASS_NARROW_REPRODUCTION_INSTRUCTION_CORRECTION",
+  "unchanged_file_count": 37
+}

@@ -1,0 +1,123 @@
+---
+title: "Posterior-Tree Prediction Sensitivity"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Posterior-Tree Prediction Sensitivity}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = requireNamespace("torch", quietly = TRUE) &&
+         isTRUE(try(torch::torch_is_installed(), silent = TRUE))
+)
+```
+
+## Scope
+
+This article is for **descriptive prediction sensitivity only**. Tree
+uncertainty was not part of the analysis-aware MI validation campaign.
+`multi_impute_trees()` does not produce datasets supported for downstream
+inference, and it cannot currently be combined with
+`multi_impute_analysis()`.
+
+Use this article only when you have a posterior sample of trees (from BEAST,
+MrBayes, BirdTree.org, etc.) and want to see how point imputations change across
+that sample.
+
+The bundled `trees300` object contains 50 trees sampled from the 100-tree
+BirdTree collection retrieved by `megatrees::get_tree_bird_n100()` and pruned
+to the 300 AVONET species. That collection includes trees built with either
+the Ericson or Hackett backbone; the original studies are Ericson et al. (2006)
+and Hackett et al. (2008). Jetz et al. (2012) describes the BirdTree
+distributions. These are posterior-sample trees, not a maximum-clade-credibility
+tree.
+
+### Supplying posterior trees
+
+pigauto uses the tree or trees you provide. It does not download tree data
+while imputing. For the 100-tree BirdTree sample available through the optional
+`megatrees` package, install the package and request the sample explicitly:
+
+```{r birdtree-download, eval = FALSE}
+install.packages("megatrees")
+bird_trees <- megatrees::get_tree_bird_n100()
+```
+
+An uncached request downloads the release asset through `megatrees` and needs
+internet access. For a species-specific sample, use the
+[BirdTree subset tool](https://birdtree.org/subsets/), then read the downloaded
+Newick file with `read_tree()`. The subset tool asks for an email address and
+job ID to check when the request is ready. Cite Jetz et al. (2012) for the tree
+and BirdTree.org when you use its website. Record the `megatrees` version and
+preserve the tree object with your analysis. For a single tree, pass the object
+to `impute()`; pass a posterior sample to `multi_impute_trees()` for the
+prediction-sensitivity workflow described below.
+
+## Prediction-sensitivity workflow
+
+The default `gnn = FALSE` fits no network and recomputes the baseline
+across posterior trees. If you explicitly set `gnn = TRUE`,
+`share_gnn = TRUE` (the default) trains one GNN on a reference tree and
+shares it across trees. The returned datasets can be compared
+descriptively; do not pass them to `pool_mi()`.
+
+```{r canonical, eval = FALSE}
+library(pigauto)
+data(avonet300, trees300)
+df <- avonet300
+rownames(df) <- df$Species_Key
+df$Species_Key <- NULL
+
+mi <- multi_impute_trees(df, trees = trees300, m_per_tree = 1L)
+# gnn = FALSE by default; the baseline responds to each tree
+
+mass_by_tree <- vapply(mi$datasets, function(dat) dat$Mass, numeric(nrow(df)))
+apply(mass_by_tree, 1L, stats::sd)  # descriptive sensitivity, not an MI SE
+```
+
+The code above is illustrative and left unevaluated because the tree loop is
+computationally expensive.
+
+## When the optional GNN is shared
+
+With `gnn = TRUE, share_gnn = TRUE`, the calibrated gate `r_cal`
+controls how much of each prediction comes
+from the baseline vs the GNN. In high-phylogenetic-signal regimes the
+gate often closes or nearly closes, so `pred = baseline(tree_t)` and the
+per-tree baseline carries the tree-uncertainty signal. When the gate is
+partly open, the GNN component is shared across trees and the per-tree
+baseline still varies with `tree_t`. See `?multi_impute_trees` under
+"Share-GNN (tree-sharing) mode" for the fully-open and partially-open
+cases.
+
+If you need exact per-tree model independence (e.g. for methodological
+comparison), set `share_gnn = FALSE`:
+
+```{r opt_out, eval = FALSE}
+mi_slow <- multi_impute_trees(df, trees300, m_per_tree = 1L,
+                               gnn = TRUE, share_gnn = FALSE)
+# Fits a separate GNN on each tree; runtime depends on tree size and hardware.
+```
+
+## What this does not establish
+
+Variation across these datasets is not a calibrated standard error, confidence
+interval, or fraction of missing information. It does not validate Rubin
+pooling, variance components, correlations, BLUPs, conditional modes, or latent
+loadings. A future tree-aware analysis backend requires a separate known-DGP
+campaign.
+
+## References
+
+- Ericson PG et al. (2006). Diversification of Neoaves: integration of
+  molecular sequence data and fossils. *Biology Letters* 2(4):543-547.
+  doi:10.1098/rsbl.2006.0523.
+- Hackett SJ et al. (2008). A phylogenomic study of birds reveals their
+  evolutionary history. *Science* 320(5884):1763-1768.
+  doi:10.1126/science.1157704.
+- Jetz W et al. (2012). The global diversity of birds in space and
+  time. *Nature* 491:444-448. doi:10.1038/nature11631.

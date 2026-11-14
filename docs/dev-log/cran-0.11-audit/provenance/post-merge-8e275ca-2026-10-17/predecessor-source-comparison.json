@@ -1,0 +1,17 @@
+{
+  "old_sha256": "c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2",
+  "new_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+  "changed_files": [
+    "pigauto/DESCRIPTION",
+    "pigauto/README.md",
+    "pigauto/inst/doc/getting-started.R",
+    "pigauto/inst/doc/getting-started.Rmd",
+    "pigauto/inst/doc/getting-started.html",
+    "pigauto/vignettes/getting-started.Rmd"
+  ],
+  "new_only": [],
+  "old_only": [],
+  "all_package_R_source_bytes_unchanged": true,
+  "package_R_source_files": 49,
+  "scope": "Supports reuse of prior scientific-source evidence within its original regimes; does not replace final artifact checks."
+}

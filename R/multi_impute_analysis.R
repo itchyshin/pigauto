@@ -250,10 +250,7 @@ multi_impute_analysis <- function(data, formula, missing,
     stop("Formula variables not found in `data`: ", paste(absent, collapse = ", "),
          ".", call. = FALSE)
   }
-  if (any(vapply(data[involved], anyNA, logical(1)) & involved != missing)) {
-    stop("Outcome, other predictors, auxiliaries, and group must be fully observed.",
-         call. = FALSE)
-  }
+  # All non-target columns were required complete before formula validation.
   nonfinite <- vapply(data[involved], function(x) {
     is.numeric(x) && any(!is.finite(x[!is.na(x)]))
   }, logical(1))

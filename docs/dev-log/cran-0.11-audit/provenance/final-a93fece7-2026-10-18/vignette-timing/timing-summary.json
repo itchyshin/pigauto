@@ -1,0 +1,208 @@
+{
+  "reviewer": "pat",
+  "verdict": "PASS",
+  "scope": "Bounded six-vignette diagnostic against the frozen successor archive",
+  "separate_diagnostic": true,
+  "artifact": {
+    "path": "/private/tmp/pigauto-release-candidate/sha256-a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb/pigauto_0.11.0.tar.gz",
+    "sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+    "size_bytes": 5137837,
+    "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18"
+  },
+  "all_six_success": true,
+  "rows": [
+    {
+      "file": "common-pitfalls.Rmd",
+      "render_elapsed_seconds": 0.7715,
+      "process_elapsed_seconds": 4.065,
+      "exit": 0,
+      "start_utc": "2026-10-18T07:10:11.764321+00:00",
+      "render_start_utc": "2026-10-18 07:10:14 UTC",
+      "source_rmd_sha256": "a545207dac3d063e124b8612e1a39ae0ab2ed08a55e5ba48a6b881ffb8876a19",
+      "render_script_sha256": "aa18ac3f067c35b0aacbdf183201507ed6b3ad36b29e7f6aafcb2b8b50f27ef7",
+      "enabled_chunks": 1,
+      "disabled_chunks": 8,
+      "chunk_trace": "rendered/common-pitfalls/chunk-options.jsonl",
+      "rendered_html": "rendered/common-pitfalls/common-pitfalls.html",
+      "log": "common-pitfalls.Rmd.log",
+      "log_sha256": "bf1d2527763dd0a8be8ff411c07ffd8a0e0a28ad46cad36f7720e1cf57950e6d",
+      "command": [
+        "Rscript",
+        "--vanilla",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/render-one.R",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+        "common-pitfalls.Rmd"
+      ]
+    },
+    {
+      "file": "getting-started.Rmd",
+      "render_elapsed_seconds": 2.719,
+      "process_elapsed_seconds": 5.502,
+      "exit": 0,
+      "start_utc": "2026-10-18T07:10:15.832634+00:00",
+      "render_start_utc": "2026-10-18 07:10:18 UTC",
+      "source_rmd_sha256": "2e18561af8173140e82cde783bd7ee2fcdf0a060ab19627caeb13ba51b880bd8",
+      "render_script_sha256": "aa18ac3f067c35b0aacbdf183201507ed6b3ad36b29e7f6aafcb2b8b50f27ef7",
+      "enabled_chunks": 7,
+      "disabled_chunks": 20,
+      "chunk_trace": "rendered/getting-started/chunk-options.jsonl",
+      "rendered_html": "rendered/getting-started/getting-started.html",
+      "log": "getting-started.Rmd.log",
+      "log_sha256": "838a59e26d94d0cd4f896f3489d6a30286ec64c152b9bafc98ef2f3dc82f66c3",
+      "command": [
+        "Rscript",
+        "--vanilla",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/render-one.R",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+        "getting-started.Rmd"
+      ]
+    },
+    {
+      "file": "gnn-architecture.Rmd",
+      "render_elapsed_seconds": 0.5053,
+      "process_elapsed_seconds": 3.353,
+      "exit": 0,
+      "start_utc": "2026-10-18T07:10:21.336904+00:00",
+      "render_start_utc": "2026-10-18 07:10:24 UTC",
+      "source_rmd_sha256": "e152c1f08b7f91c79c0506f2806b6e907d753a81d63e5dc663b6de450f5f9ec0",
+      "render_script_sha256": "aa18ac3f067c35b0aacbdf183201507ed6b3ad36b29e7f6aafcb2b8b50f27ef7",
+      "enabled_chunks": 1,
+      "disabled_chunks": 0,
+      "chunk_trace": "rendered/gnn-architecture/chunk-options.jsonl",
+      "rendered_html": "rendered/gnn-architecture/gnn-architecture.html",
+      "log": "gnn-architecture.Rmd.log",
+      "log_sha256": "57948d1245a68078f5c4127fab0e3c187cdd8f7e9900647e18636c99e9225131",
+      "command": [
+        "Rscript",
+        "--vanilla",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/render-one.R",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+        "gnn-architecture.Rmd"
+      ]
+    },
+    {
+      "file": "mixed-types.Rmd",
+      "render_elapsed_seconds": 1.6557,
+      "process_elapsed_seconds": 4.992,
+      "exit": 0,
+      "start_utc": "2026-10-18T07:10:24.693101+00:00",
+      "render_start_utc": "2026-10-18 07:10:27 UTC",
+      "source_rmd_sha256": "c1b7585bd5ad44a6ff252ee081461c7fa6e3224fca3901baab8ea32983cb5615",
+      "render_script_sha256": "aa18ac3f067c35b0aacbdf183201507ed6b3ad36b29e7f6aafcb2b8b50f27ef7",
+      "enabled_chunks": 11,
+      "disabled_chunks": 1,
+      "chunk_trace": "rendered/mixed-types/chunk-options.jsonl",
+      "rendered_html": "rendered/mixed-types/mixed-types.html",
+      "log": "mixed-types.Rmd.log",
+      "log_sha256": "648f0abeb77f0888c5589fa797942d3f9df9e962f7a7d8fdc1c491373a06c93b",
+      "command": [
+        "Rscript",
+        "--vanilla",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/render-one.R",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+        "mixed-types.Rmd"
+      ]
+    },
+    {
+      "file": "multiple-imputation.Rmd",
+      "render_elapsed_seconds": 0.8086,
+      "process_elapsed_seconds": 3.966,
+      "exit": 0,
+      "start_utc": "2026-10-18T07:10:29.687179+00:00",
+      "render_start_utc": "2026-10-18 07:10:32 UTC",
+      "source_rmd_sha256": "549dc43ad8e382b81ced1badb18491186ecdd464c53d24e47e539403e957286d",
+      "render_script_sha256": "aa18ac3f067c35b0aacbdf183201507ed6b3ad36b29e7f6aafcb2b8b50f27ef7",
+      "enabled_chunks": 1,
+      "disabled_chunks": 8,
+      "chunk_trace": "rendered/multiple-imputation/chunk-options.jsonl",
+      "rendered_html": "rendered/multiple-imputation/multiple-imputation.html",
+      "log": "multiple-imputation.Rmd.log",
+      "log_sha256": "41da51afbbc616fb0967762160f7c963f26701ffdde0583b12ff401d4590e017",
+      "command": [
+        "Rscript",
+        "--vanilla",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/render-one.R",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+        "multiple-imputation.Rmd"
+      ]
+    },
+    {
+      "file": "tree-uncertainty.Rmd",
+      "render_elapsed_seconds": 0.6678,
+      "process_elapsed_seconds": 3.434,
+      "exit": 0,
+      "start_utc": "2026-10-18T07:10:33.655300+00:00",
+      "render_start_utc": "2026-10-18 07:10:36 UTC",
+      "source_rmd_sha256": "c42a05ab7cb75a3a489496da8fefbf0642afa300fd8ec2d17a278ff3eb794f39",
+      "render_script_sha256": "aa18ac3f067c35b0aacbdf183201507ed6b3ad36b29e7f6aafcb2b8b50f27ef7",
+      "enabled_chunks": 1,
+      "disabled_chunks": 3,
+      "chunk_trace": "rendered/tree-uncertainty/chunk-options.jsonl",
+      "rendered_html": "rendered/tree-uncertainty/tree-uncertainty.html",
+      "log": "tree-uncertainty.Rmd.log",
+      "log_sha256": "b1a73c6c4870ea46818560193e8e5f986dbc3d0c381182597e8de6647a9202a5",
+      "command": [
+        "Rscript",
+        "--vanilla",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing/render-one.R",
+        "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/vignette-timing",
+        "tree-uncertainty.Rmd"
+      ]
+    }
+  ],
+  "archive_sha256_after": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "archive_unchanged": true,
+  "source_rmds_unchanged": true,
+  "source_rmd_sha256_before": {
+    "common-pitfalls.Rmd": "a545207dac3d063e124b8612e1a39ae0ab2ed08a55e5ba48a6b881ffb8876a19",
+    "getting-started.Rmd": "2e18561af8173140e82cde783bd7ee2fcdf0a060ab19627caeb13ba51b880bd8",
+    "gnn-architecture.Rmd": "e152c1f08b7f91c79c0506f2806b6e907d753a81d63e5dc663b6de450f5f9ec0",
+    "mixed-types.Rmd": "c1b7585bd5ad44a6ff252ee081461c7fa6e3224fca3901baab8ea32983cb5615",
+    "multiple-imputation.Rmd": "549dc43ad8e382b81ced1badb18491186ecdd464c53d24e47e539403e957286d",
+    "tree-uncertainty.Rmd": "c42a05ab7cb75a3a489496da8fefbf0642afa300fd8ec2d17a278ff3eb794f39"
+  },
+  "source_rmd_sha256_after": {
+    "common-pitfalls.Rmd": "a545207dac3d063e124b8612e1a39ae0ab2ed08a55e5ba48a6b881ffb8876a19",
+    "getting-started.Rmd": "2e18561af8173140e82cde783bd7ee2fcdf0a060ab19627caeb13ba51b880bd8",
+    "gnn-architecture.Rmd": "e152c1f08b7f91c79c0506f2806b6e907d753a81d63e5dc663b6de450f5f9ec0",
+    "mixed-types.Rmd": "c1b7585bd5ad44a6ff252ee081461c7fa6e3224fca3901baab8ea32983cb5615",
+    "multiple-imputation.Rmd": "549dc43ad8e382b81ced1badb18491186ecdd464c53d24e47e539403e957286d",
+    "tree-uncertainty.Rmd": "c42a05ab7cb75a3a489496da8fefbf0642afa300fd8ec2d17a278ff3eb794f39"
+  },
+  "library": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/neither",
+  "installed_library_evidence": {
+    "manifest_path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/manifest.json",
+    "manifest_sha256": "15e134f6fd4202a08a28a43bfab243b9b6973cfb1f9a2c426c2140cd516e78ed",
+    "install_command": [
+      "R",
+      "CMD",
+      "INSTALL",
+      "--no-multiarch",
+      "-l",
+      "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/neither",
+      "/private/tmp/pigauto-release-candidate/sha256-a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb/pigauto_0.11.0.tar.gz"
+    ],
+    "install_exit_code": 0,
+    "install_log_sha256": "7f8a73b86b7d03565ff3003762e097a22aabf7fce7f9737a57df3161adc95993",
+    "archive_sha256_after_install": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+    "library": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/neither",
+    "optional_packages_absent": true
+  },
+  "runtime": {
+    "R": "4.6.0 (2026-04-24)",
+    "platform": "aarch64-apple-darwin23",
+    "torch_installed": true,
+    "pandoc": "3.12",
+    "NOT_CRAN": "UNSET",
+    "thread_caps": 1,
+    "per_vignette_timeout_seconds": 120,
+    "total_hard_cap_seconds": 600
+  },
+  "estimate_minutes": "5-8",
+  "actual_total_process_seconds": 25.34,
+  "limits": [
+    "Not a native R CMD check or Windows check.",
+    "Only authored enabled chunks ran; teaching examples marked eval=FALSE remained disabled.",
+    "No global eval override, no retries, no warning replay, and no backend packages installed."
+  ]
+}

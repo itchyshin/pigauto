@@ -1,0 +1,27 @@
+Browser tab: 8, Title: "CRAN package Submission", URL: "https://xmpalantir.wu.ac.at/cransubmit/index.php?strErr=0&submit=1".
+1 AXWebArea CRAN package Submission, URL: xmpalantir.wu.ac.at/cransubmit/index.php?strErr=0&submit=1
+	2 container
+		3 container Submit a package to CRAN Step 1 (Upload) Step 2 (Submission) Step 3 (Confirmation)
+			4 container
+				5 container Submit a package to CRAN
+					6 heading Submit a package to CRAN, Value: 1
+						7 text Submit a package to CRAN
+				8 container Step 1 (Upload)
+					9 text Step 1
+					10 text (Upload)
+				11 container Step 2 (Submission)
+					12 text Step 2
+					13 text (Submission)
+				14 container Step 3 (Confirmation)
+					15 text Step 3
+					16 text (Confirmation)
+		17 container
+			18 text The  maintainer of this package  has been sent an email to confirm the submission. After their confirmation the package will be passed to CRAN for review. Please note that  the submission is not completed until it is confirmed by the maintainer  (via the link in the e-mail).
+			19 text In case of technical problems regarding the website or the submission interface, contact the 
+			20 link Description: CRAN sysadmin team, Value: mailto:cran-sysadmin@r-project.org
+			21 text .
+			22 text In case of problems related to the package, its check results or the partly automated check system, contact the 
+			23 link Description: CRAN team, Value: mailto:cran-submissions@r-project.org
+			24 text .
+
+The focused UI element is 1 AXWebArea CRAN package Submission, URL: xmpalantir.wu.ac.at/cransubmit/index.php?strErr=0&submit=1

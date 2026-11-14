@@ -1,0 +1,135 @@
+{
+  "package": "pigauto",
+  "version": "0.11.0",
+  "release_type": "update",
+  "status_claim": "source-clean",
+  "next_unproven_rung": "tarball-clean",
+  "audit_verdict": "NOT_READY_PENDING_FINAL_REVIEW_AND_MAINTAINER_DECISION",
+  "artifact": {
+    "path": "/Users/z3437171/.codex/artifacts/pigauto-cran-0.11.0/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/pigauto_0.11.0.tar.gz",
+    "sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+    "size_bytes": 5137648,
+    "source_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636",
+    "clean_worktree": true,
+    "inventory_evidence": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/post-merge-8e275ca-2026-10-17/inventory.txt"
+    },
+    "inventory_sha256": "d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d",
+    "archive_entries": 250,
+    "forbidden_entries": [],
+    "current_candidate": true,
+    "state": "All native and installed checks complete; one recorded Mac timing NOTE awaits final disposition",
+    "original_checked_path": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/pigauto_0.11.0.tar.gz",
+    "identical_retained_copy_evidence": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/persistent-archive-retention.json"
+    }
+  },
+  "profile": {
+    "compiled_code": false,
+    "reverse_dependencies": false,
+    "system_or_external_services": true,
+    "large_data_or_vignettes": true
+  },
+  "evidence": {
+    "product_contract": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/post-merge-8e275ca-2026-10-17/README.md"
+    },
+    "rights_and_consent": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/post-merge-8e275ca-2026-10-17/README.md"
+    },
+    "current_cran_policy": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/submission-preparation-2026-10-17/README.md"
+    },
+    "rendered_site": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/post-merge-8e275ca-2026-10-17/live-main-8e275ca-receipt.json"
+    },
+    "reverse_dependencies": {
+      "kind": "rationale",
+      "value": "NOT_APPLICABLE: authoritative primary CRAN index refreshed2026-10-17 measured zero reverse dependencies across Depends, Imports, LinkingTo, Suggests and Enhances; timestamped result is in provenance/submission-preparation-2026-10-17/cran-publication-and-revdeps.json. No reverse package set exists to check."
+    },
+    "compiled_diagnostics": {
+      "kind": "rationale",
+      "value": "NOT_APPLICABLE: final archive has no package-owned src files or native binaries and DESCRIPTION NeedsCompilation:no; see freeze-receipt.json and inventory.txt. Compiled optional runtimes remain dependency/runtime checks."
+    },
+    "local_as_cran": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/local-capture-snapshot/publication-index.json"
+    },
+    "incoming_feasibility": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/closure-summary.json"
+    },
+    "installed_package": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/checks-and-integration/views/final-mi/final-mi-verification.json"
+    },
+    "timing": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/checks-synopsis-snapshot/synopsis.json"
+    },
+    "platform_matrix": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/external-platforms/platform-summary.json"
+    },
+    "external_logs": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/external-platforms/README.md"
+    },
+    "external_service_behaviour": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/checks-and-integration/views/service-url-spelling-absence/adjudication.json"
+    },
+    "size_and_vignette_budget": {
+      "kind": "file",
+      "value": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/checks-synopsis-snapshot/synopsis.json"
+    }
+  },
+  "panel": {
+    "grace": "NOT_READY",
+    "rose": "NOT_READY",
+    "pat": "NOT_READY"
+  },
+  "submission": {
+    "state": "not_submitted",
+    "cran_upload_authorized": false,
+    "maintainer_confirmation_authorized": false
+  },
+  "evidence_pr": {
+    "number": 236,
+    "url": "https://github.com/itchyshin/pigauto/pull/236",
+    "state": "open_draft",
+    "merged": false,
+    "publication_head_policy": "Actual published head and final CI readback recorded in PR body to avoid self-reference"
+  },
+  "source_candidate": {
+    "source_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636",
+    "source_pr": 237,
+    "source_pr_merged": true,
+    "main_source_ci": 39080327341,
+    "pages_run": 39080327369,
+    "deployed_site_gate": "PASS"
+  },
+  "approvals": {
+    "source_merge_and_automatic_deployment": "Explicit user approval received and exercised for PR237",
+    "public_builder_upload": "Previously explicitly authorized for this0.11 audit; existing validated account used, no new token request",
+    "cran_upload": "Separate exact-archive approval still required",
+    "evidence_pr236_merge": "Not authorized; remains unmerged"
+  },
+  "historical_ledger": "docs/dev-log/cran-0.11-audit/historical-release-ledger-pre-14ee7e5d-2026-10-17.json",
+  "updated_utc": "2026-10-18T01:29:17.522969+00:00",
+  "final_proof_summary": "docs/dev-log/cran-0.11-audit/provenance/final-14ee7e5d-2026-10-17/closure-summary.json",
+  "timing_decision": {
+    "state": "pending_maintainer_decision",
+    "native_mac_note_retained": true,
+    "windows_native_seconds": [
+      645.812567949295,
+      622.432008981705
+    ]
+  }
+}

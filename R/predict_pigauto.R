@@ -319,8 +319,6 @@
 #' pred2 <- predict(fit, n_imputations = 2L)
 #' pred2$imputed_datasets
 #' }
-#' @importFrom torch torch_tensor torch_float with_no_grad torch_zeros
-#' @importFrom torch torch_cat
 #' @export
 predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
                                 n_imputations = 1L, baseline_override = NULL,
@@ -368,6 +366,7 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
     }
     mask_observed_idx <- unique(c(held, mask_observed_idx))
   }
+  n_imp <- .check_positive_integer(n_imputations, "n_imputations")
   cfg       <- object$model_config
   # gnn = FALSE fits (gnn-off contract, S2): the GNN was never constructed or
   # trained, so this function must make ZERO torch:: calls in that path --
@@ -376,6 +375,9 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
   # `isFALSE()` (not `!isTRUE()`) so old saves without a `gnn` field
   # (implicitly GNN-on) fall through to the unchanged torch path.
   gnn_off   <- isFALSE(cfg$gnn)
+  if (!gnn_off) {
+    cfg$refine_steps <- .check_positive_integer(cfg$refine_steps, "refine_steps")
+  }
   device    <- if (!gnn_off) get_device() else NULL
   trait_map <- object$trait_map
   has_trait_map <- !is.null(trait_map)
@@ -541,7 +543,6 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
 
   n <- n_obs   # rows in output
   p <- ncol(MU)
-  n_imp <- as.integer(n_imputations)
   if (is.null(p) || is.na(p) || p != expected_p) {
     stop("`", baseline_label, "$mu` has ", p,
          " latent column(s), but the model expects ", expected_p, ".",
@@ -809,15 +810,19 @@ predict.pigauto_fit <- function(object, newdata = NULL, return_se = TRUE,
           # Use this run's perturbed baseline value in the blend. The baseline
           # perturbation can contribute variation even when the GNN weight is 0.
           if (use_calibrated) {
-            pred <- t_w_bm * t_BM_draw + t_w_gnn * out$delta +
+            pred <- t_w_bm * t_BM_draw + weighted_gnn_delta(t_w_gnn, out$delta) +
                     t_w_mean * t_mean_baseline
           } else {
-            pred <- (1 - out$rs) * t_BM_draw + out$rs * out$delta
+            pred <- (1 - out$rs) * t_BM_draw + weighted_gnn_delta(out$rs, out$delta)
           }
           if (!is.null(t_mps_cov_fixed_effects)) {
             pred <- pred + t_mps_cov_fixed_effects
           } else if (!is.null(out$fixed_effects)) {
             pred <- pred + out$fixed_effects
+          }
+          if (!isTRUE(as.logical(torch::torch_isfinite(pred)$all()$item()))) {
+            stop("GNN refinement produced non-finite output; refit with a lower learning rate (`lr`).",
+                 call. = FALSE)
           }
           last_pred <- pred
           # Drop the previous X_iter before binding the new one so that the

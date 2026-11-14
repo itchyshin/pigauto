@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "read_utc": "2026-10-18T01:08:38.450661+00:00",
+  "public_endpoint": "https://api.github.com/repos/itchyshin/pigauto/git/commits/e94e40a2f66a7f27dcc69b515d762d69c6eadf66",
+  "primary_file_sha256": "2bdcfce8d0f76182781f617c1902fd26a67c71cfe8b36d5621227e14a1146218",
+  "workflow_merge_sha": "e94e40a2f66a7f27dcc69b515d762d69c6eadf66",
+  "checker_head": "6cd5f65b06d0c3ee32ce4b2d5a67a22c06028116",
+  "archive_source": "8e275ca738129c8d608f06ffc407b8141c1a2636",
+  "synthetic_tree": "f10989373c12981c0be52c7a33a665b73e0c6fce",
+  "checker_tree": "f10989373c12981c0be52c7a33a665b73e0c6fce",
+  "parents": [
+    "8e275ca738129c8d608f06ffc407b8141c1a2636",
+    "6cd5f65b06d0c3ee32ce4b2d5a67a22c06028116"
+  ],
+  "scope": "Synthetic workflow tree byte-identical to checker head tree; package archive source is separate. No refs or source files changed."
+}

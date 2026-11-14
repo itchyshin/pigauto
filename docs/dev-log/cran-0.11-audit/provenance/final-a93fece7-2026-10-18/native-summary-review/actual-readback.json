@@ -1,0 +1,350 @@
+{
+  "reviewer": "pat",
+  "verdict": "PASS",
+  "scope": "Independent raw readback of four native checks and summary parser controls; no native check rerun.",
+  "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "source_worktree_clean": true,
+  "archive_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "archive_size_bytes": 5137837,
+  "native_checker_script_path": "/private/tmp/pigauto-pr236-validator-20261017/script/cran-0.11-platform/check.R",
+  "native_checker_script_sha256": "1e641c87e699fba2846aaa9c8958fa77348ecd22221b5ed08e1ccf31c2de9fb0",
+  "workflow_source_sha": "999645fae22107d838e73e90e33996c025f2575a",
+  "platform_artifact_head_sha": "5e1014afadbae91dd2883d3a074e3e9d253b33cd",
+  "direct_platform_run_id": 39091958419,
+  "identity_layers": {
+    "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+    "archive_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+    "native_checker_script_sha256": "1e641c87e699fba2846aaa9c8958fa77348ecd22221b5ed08e1ccf31c2de9fb0",
+    "workflow_source_sha": "999645fae22107d838e73e90e33996c025f2575a",
+    "platform_artifact_head_sha": "5e1014afadbae91dd2883d3a074e3e9d253b33cd",
+    "check_run_id": 39091958419,
+    "ci_artifact_container_sha256s": [
+      "f0775c24838f354966e234282c79d6a9b4241e5631dec5bc09f4309dd5e39359",
+      "16189189151868861a661fba754b20262f85df3c8ac755c1b0da273562f63d3f",
+      "e8d024ad42c56a90174df8c293512a174c0e6dc5de9b14d34c03626d5efde3a8"
+    ],
+    "synthetic_control_record_sha256": "16143d715cc689e0b4bf5a1611a5f763b78e60b5601b0df66ced210b1912410c"
+  },
+  "root_summary_sha256": "93587d646275fcec037e9941dec451f5a10ca177d4738939b2bb4ec51a7050fb",
+  "root_summarizer_sha256": "40c632280497c2b16b727b4da51fd8d090add0fd29e22a2c54be2d3d7ad67703",
+  "prior_summarizer_sha256": "c163969b5e4eab913d1afb632d7351458c8e37ee4e27333b5c1e68aec0b359e5",
+  "parser_functions_ast_identical_to_prior_reviewed_file": true,
+  "synthetic_controls": [
+    {
+      "kind": "timing_positive",
+      "input": "* checking examples ... [14s/18s] OK",
+      "result": "ACCEPT_EXPECTED"
+    },
+    {
+      "kind": "timing_positive",
+      "input": "* checking examples ... [16s] OK",
+      "result": "ACCEPT_EXPECTED"
+    },
+    {
+      "kind": "timing_positive",
+      "input": "* checking examples ... OK",
+      "result": "ACCEPT_EXPECTED"
+    },
+    {
+      "kind": "timing_negative",
+      "input": "* checking examples ... [14s/14s/1s] OK",
+      "result": "REFUSE_EXPECTED"
+    },
+    {
+      "kind": "timing_negative",
+      "input": "* checking examples ... [14/14s] OK",
+      "result": "REFUSE_EXPECTED"
+    },
+    {
+      "kind": "timing_negative",
+      "input": "* checking examples ... [14ms] OK",
+      "result": "REFUSE_EXPECTED"
+    },
+    {
+      "kind": "timing_negative",
+      "input": "* checking examples ... [NaNs] OK",
+      "result": "REFUSE_EXPECTED"
+    },
+    {
+      "kind": "timing_negative",
+      "input": "* checking examples ... [14s elapsed] OK",
+      "result": "REFUSE_EXPECTED"
+    },
+    {
+      "kind": "timing_negative",
+      "input": "* checking examples ... [14s / 14s] OK",
+      "result": "REFUSE_EXPECTED"
+    },
+    {
+      "kind": "timing_negative",
+      "input": "* checking examples ... [14s] NOTE",
+      "result": "REFUSE_EXPECTED"
+    },
+    {
+      "kind": "duplicate_counts_same",
+      "input_count": 2,
+      "result": "ACCEPT_EXPECTED",
+      "counts": [
+        "0",
+        "0",
+        "0",
+        "2"
+      ]
+    },
+    {
+      "kind": "duplicate_counts_conflict",
+      "result": "REFUSE_EXPECTED"
+    },
+    {
+      "kind": "counts_absent",
+      "result": "REFUSE_EXPECTED"
+    }
+  ],
+  "platforms": [
+    {
+      "platform": "macos-arm64",
+      "check_log_sha256": "a031c1eea52c73ebb6c24289c4fc250a831979b35d3c8d143bb41e3f4316bba4",
+      "testthat_rout_sha256": "f28f4671ec2cb4dc9f6ef10a6a4005fa1a87017a289e62f895d0ab77314635df",
+      "check_elapsed_seconds": 452.674129962921,
+      "native_stage_timings": {
+        "examples": {
+          "raw_check_line": "* checking examples ... [9s/10s] OK",
+          "timing_format": "cpu_elapsed_seconds",
+          "cpu_seconds": 9.0,
+          "elapsed_seconds": 10.0
+        },
+        "tests": {
+          "raw_check_line": "* checking tests ... [204s/256s] OK",
+          "timing_format": "cpu_elapsed_seconds",
+          "cpu_seconds": 204.0,
+          "elapsed_seconds": 256.0
+        },
+        "vignettes": {
+          "raw_check_line": "* checking re-building of vignette outputs ... [12s/15s] OK",
+          "timing_format": "cpu_elapsed_seconds",
+          "cpu_seconds": 12.0,
+          "elapsed_seconds": 15.0
+        },
+        "PDF": {
+          "raw_check_line": "* checking PDF version of manual ... [6s/7s] OK",
+          "timing_format": "cpu_elapsed_seconds",
+          "cpu_seconds": 6.0,
+          "elapsed_seconds": 7.0
+        },
+        "HTML": {
+          "raw_check_line": "* checking HTML version of manual ... [3s/4s] OK",
+          "timing_format": "cpu_elapsed_seconds",
+          "cpu_seconds": 3.0,
+          "elapsed_seconds": 4.0
+        }
+      },
+      "dependency_count": 29,
+      "dependency_names_sha256": "6d07e55ba3584591cf792d4b4723bd277005a97a8822a7ea8da988f4360ee279",
+      "test_summary_matches": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "test_summary_occurrences": 2,
+      "identical_count_records": true,
+      "check_environment_not_cran_unset": true,
+      "whole_runner_elapsed_seconds": 459.703,
+      "native_check_script_sha256": "1e641c87e699fba2846aaa9c8958fa77348ecd22221b5ed08e1ccf31c2de9fb0",
+      "whole_runner_receipt_sha256": "03c4b101ceb7fa1926df5350262332343a44bc907b581656fdb32ad9eeb40928"
+    },
+    {
+      "platform": "ubuntu-latest-release",
+      "check_log_sha256": "468a652fe6124cf56a4c6cceac8c01f22ba845da76dd2ed2948c4fbf649231af",
+      "testthat_rout_sha256": "eb04aa0e2b885a44da064060d6635795a969fad8b425ce4138aee75a88d9a45a",
+      "check_elapsed_seconds": 534.689439296722,
+      "native_stage_timings": {
+        "examples": {
+          "raw_check_line": "* checking examples ... [17s/17s] OK",
+          "timing_format": "cpu_elapsed_seconds",
+          "cpu_seconds": 17.0,
+          "elapsed_seconds": 17.0
+        },
+        "tests": {
+          "raw_check_line": "* checking tests ... [333s/333s] OK",
+          "timing_format": "cpu_elapsed_seconds",
+          "cpu_seconds": 333.0,
+          "elapsed_seconds": 333.0
+        },
+        "vignettes": {
+          "raw_check_line": "* checking re-building of vignette outputs ... [19s/19s] OK",
+          "timing_format": "cpu_elapsed_seconds",
+          "cpu_seconds": 19.0,
+          "elapsed_seconds": 19.0
+        },
+        "PDF": {
+          "raw_check_line": "* checking PDF version of manual ... [3s/3s] OK",
+          "timing_format": "cpu_elapsed_seconds",
+          "cpu_seconds": 3.0,
+          "elapsed_seconds": 3.0
+        },
+        "HTML": {
+          "raw_check_line": "* checking HTML version of manual ... [4s/4s] OK",
+          "timing_format": "cpu_elapsed_seconds",
+          "cpu_seconds": 4.0,
+          "elapsed_seconds": 4.0
+        }
+      },
+      "dependency_count": 29,
+      "dependency_names_sha256": "6d07e55ba3584591cf792d4b4723bd277005a97a8822a7ea8da988f4360ee279",
+      "test_summary_matches": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "test_summary_occurrences": 2,
+      "identical_count_records": true,
+      "check_environment_not_cran_unset": true,
+      "archive_pre_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+      "archive_post_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+      "workflow_source_sha": "999645fae22107d838e73e90e33996c025f2575a",
+      "run_id": "39091958419",
+      "artifact_pre_receipt_sha256": "13f278901cadafa837417cb687e5fb19645a71e8c936c96809f683f13f0c6798",
+      "artifact_post_receipt_sha256": "9e59394e9dfea79ef137f76102a171726e68697e5541103146ca9e14c8be81a2"
+    },
+    {
+      "platform": "windows-latest-devel",
+      "check_log_sha256": "4467940f612baaaf1d7e192bfa79376c018b64577157f80ef138e788925235e1",
+      "testthat_rout_sha256": "4175390b1a37ea09e3da27b1160fe3bdcc316da7062fe812b2c43cc49a979617",
+      "check_elapsed_seconds": 516.487149000168,
+      "native_stage_timings": {
+        "examples": {
+          "raw_check_line": "* checking examples ... [16s] OK",
+          "timing_format": "single_reported_seconds",
+          "reported_seconds": 16.0
+        },
+        "tests": {
+          "raw_check_line": "* checking tests ... [324s] OK",
+          "timing_format": "single_reported_seconds",
+          "reported_seconds": 324.0
+        },
+        "vignettes": {
+          "raw_check_line": "* checking re-building of vignette outputs ... [17s] OK",
+          "timing_format": "single_reported_seconds",
+          "reported_seconds": 17.0
+        },
+        "PDF": {
+          "raw_check_line": "* checking PDF version of manual ... [3s] OK",
+          "timing_format": "single_reported_seconds",
+          "reported_seconds": 3.0
+        },
+        "HTML": {
+          "raw_check_line": "* checking HTML version of manual ... [3s] OK",
+          "timing_format": "single_reported_seconds",
+          "reported_seconds": 3.0
+        }
+      },
+      "dependency_count": 29,
+      "dependency_names_sha256": "6d07e55ba3584591cf792d4b4723bd277005a97a8822a7ea8da988f4360ee279",
+      "test_summary_matches": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "test_summary_occurrences": 2,
+      "identical_count_records": true,
+      "check_environment_not_cran_unset": true,
+      "archive_pre_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+      "archive_post_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+      "workflow_source_sha": "999645fae22107d838e73e90e33996c025f2575a",
+      "run_id": "39091958419",
+      "artifact_pre_receipt_sha256": "e243cc443441f05f74e07bad38dac6e38e037850012411e69a76572b06c3bad9",
+      "artifact_post_receipt_sha256": "727fd530251e5fda981f6deb66c619891b0429b2b96d30c9cdf4b96d4095848c"
+    },
+    {
+      "platform": "windows-latest-release",
+      "check_log_sha256": "96b6dd43245abb3149f7c83e6862f396c076ae8d0e01f1a4cc9f096a840b74fb",
+      "testthat_rout_sha256": "eb28252632f338b2bc8b4ba043c595bdf4c1490aca3f64004b63b5c8e303a92c",
+      "check_elapsed_seconds": 627.140662193298,
+      "native_stage_timings": {
+        "examples": {
+          "raw_check_line": "* checking examples ... [16s] OK",
+          "timing_format": "single_reported_seconds",
+          "reported_seconds": 16.0
+        },
+        "tests": {
+          "raw_check_line": "* checking tests ... [406s] OK",
+          "timing_format": "single_reported_seconds",
+          "reported_seconds": 406.0
+        },
+        "vignettes": {
+          "raw_check_line": "* checking re-building of vignette outputs ... [20s] OK",
+          "timing_format": "single_reported_seconds",
+          "reported_seconds": 20.0
+        },
+        "PDF": {
+          "raw_check_line": "* checking PDF version of manual ... [4s] OK",
+          "timing_format": "single_reported_seconds",
+          "reported_seconds": 4.0
+        },
+        "HTML": {
+          "raw_check_line": "* checking HTML version of manual ... [12s] OK",
+          "timing_format": "single_reported_seconds",
+          "reported_seconds": 12.0
+        }
+      },
+      "dependency_count": 29,
+      "dependency_names_sha256": "6d07e55ba3584591cf792d4b4723bd277005a97a8822a7ea8da988f4360ee279",
+      "test_summary_matches": {
+        "fail": 0,
+        "warnings": 161,
+        "skips": 86,
+        "pass": 3195
+      },
+      "test_summary_occurrences": 2,
+      "identical_count_records": true,
+      "check_environment_not_cran_unset": true,
+      "archive_pre_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+      "archive_post_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+      "workflow_source_sha": "999645fae22107d838e73e90e33996c025f2575a",
+      "run_id": "39091958419",
+      "artifact_pre_receipt_sha256": "e243cc443441f05f74e07bad38dac6e38e037850012411e69a76572b06c3bad9",
+      "artifact_post_receipt_sha256": "727fd530251e5fda981f6deb66c619891b0429b2b96d30c9cdf4b96d4095848c"
+    }
+  ],
+  "downloaded_ci_artifact_containers": [
+    {
+      "name": "frozen-a93fece7-ubuntu-latest-release",
+      "zip_sha256": "f0775c24838f354966e234282c79d6a9b4241e5631dec5bc09f4309dd5e39359",
+      "size_bytes": 13410742,
+      "run_id": 39091958419,
+      "artifact_head_sha": "5e1014afadbae91dd2883d3a074e3e9d253b33cd"
+    },
+    {
+      "name": "frozen-a93fece7-windows-latest-release",
+      "zip_sha256": "16189189151868861a661fba754b20262f85df3c8ac755c1b0da273562f63d3f",
+      "size_bytes": 13403675,
+      "run_id": 39091958419,
+      "artifact_head_sha": "5e1014afadbae91dd2883d3a074e3e9d253b33cd"
+    },
+    {
+      "name": "frozen-a93fece7-windows-latest-devel",
+      "zip_sha256": "e8d024ad42c56a90174df8c293512a174c0e6dc5de9b14d34c03626d5efde3a8",
+      "size_bytes": 13398893,
+      "run_id": 39091958419,
+      "artifact_head_sha": "5e1014afadbae91dd2883d3a074e3e9d253b33cd"
+    }
+  ],
+  "dependency_package_name_sets_identical_across_four": true,
+  "blockers": [],
+  "limits": [
+    "This readback confirms Status OK native outputs and their local counts/timings; it does not waive or adjudicate warnings.",
+    "It does not cover CRAN upload, external confirmation, acceptance, or final release approval."
+  ],
+  "reviewed_evidence": [
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-platform-summary.json",
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/summarise-native.py",
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/summarise-native-before-duplicate-summary-guard.py",
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/FINAL.json",
+    "/private/tmp/pigauto-pr236-validator-20261017/script/cran-0.11-platform/check.R",
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/native-receipt.json",
+    "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/direct-platform/download-binding.json"
+  ]
+}

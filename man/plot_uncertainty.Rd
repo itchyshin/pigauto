@@ -14,7 +14,10 @@ from \code{\link{impute}} (its \code{$prediction} is used).}
 \item{truth}{matrix or data.frame of true values (same scale as
 \code{pred_result$imputed}), or \code{NULL}.}
 
-\item{trait_name}{character. Which trait to plot (must match column name).}
+\item{trait_name}{character. Which trait to plot (must match column name).
+Binary and categorical traits are not supported by this interval plot:
+their uncertainty scores are not Gaussian standard errors. Use
+\code{plot(prediction, type = "probabilities")} for those traits.}
 }
 \value{
 A \code{ggplot} object.
@@ -24,14 +27,15 @@ For continuous, count, and ordinal traits, plots conformal prediction
 intervals when present; otherwise it shows an approximate
 \code{prediction +/- 1.96 * SE} ribbon, sorted by predicted value.
 If \code{truth} is supplied, observed values are overlaid as points.
-For binary traits, the centre line is the predicted probability when
-available. Binary predictions have no conformal bounds here. If bounds
-are absent, this function still draws a ribbon using
-\code{min(p, 1-p)}, a probability-of-error score, as if it were an SE.
-This binary ribbon is only a visual score display: it is not a calibrated
-interval and has no stated coverage. Interpret the centre line as the
-probability; do not interpret the ribbon as an uncertainty interval. See
-\code{\link{predict.pigauto_fit}} for type-specific uncertainty meanings.
+Binary and categorical predictions are refused because their uncertainty
+scores are not standard errors. Their probability plots are available
+through \code{plot(prediction, type = "probabilities")}.
+See \code{\link{predict.pigauto_fit}} for type-specific uncertainty meanings.
+}
+\details{
+Uses conformal bounds when supplied. Otherwise the displayed
+bands use an analytic standard error and a Normal approximation; these
+bands do not establish calibrated prediction coverage.
 }
 \examples{
 pred <- list(

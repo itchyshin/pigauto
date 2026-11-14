@@ -390,12 +390,8 @@ pool_mi <- function(fits,
   # ---- Rubin's rules ----
   theta_bar <- colMeans(coef_mat)
   W <- colMeans(vars_mat)                         # within-imputation
-  # Between-imputation variance: apply(var) uses (M-1) denominator.
-  if (M > 1L) {
-    B <- apply(coef_mat, 2, stats::var)
-  } else {
-    B <- rep(0, length(theta_bar))
-  }
+  # M >= 2 was required after removing failed fits. apply(var) uses M-1.
+  B <- apply(coef_mat, 2, stats::var)
   total_var <- W + (1 + 1 / M) * B                # total variance T
   se_pool   <- sqrt(total_var)
 

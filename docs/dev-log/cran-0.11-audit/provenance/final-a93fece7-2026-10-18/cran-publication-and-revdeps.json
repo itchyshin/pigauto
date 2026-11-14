@@ -1,0 +1,15 @@
+{
+  "url": "https://cran.r-project.org/src/contrib/PACKAGES.gz",
+  "fetched_utc": "2026-10-18T02:39:17.367274+00:00",
+  "index_sha256": "f799c37c6d3bd9a818ad1ebbcd55c024ff9dc33367546450a1a81f160665c083",
+  "version": "0.10.0",
+  "reverse_dependencies": [],
+  "records": 25421,
+  "fields": [
+    "Depends",
+    "Imports",
+    "LinkingTo",
+    "Suggests",
+    "Enhances"
+  ]
+}

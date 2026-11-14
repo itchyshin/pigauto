@@ -1,0 +1,101 @@
+{
+  "actual_replay_receipts": [
+    {
+      "error": {},
+      "native_counts": {
+        "fail": 0,
+        "pass": 3195,
+        "skips": 86,
+        "warnings": 161
+      },
+      "new_environment_guard": "PASS",
+      "old_environment_guard": "FAIL",
+      "path": "/private/tmp/pigauto-release-candidate/sha256-14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb/local-macos/platform-evidence/warning-replay.json",
+      "replay_counts": {
+        "fail": 0,
+        "pass": 3195,
+        "skips": 86,
+        "warnings": 161
+      },
+      "sha256": "9be702eb006b2f1c1b4a8fb348aed852b2818bdf9829f5641bbbf88ac56ae25c"
+    },
+    {
+      "error": {},
+      "native_counts": {
+        "fail": 0,
+        "pass": 3195,
+        "skips": 86,
+        "warnings": 161
+      },
+      "new_environment_guard": "PASS",
+      "old_environment_guard": "FAIL",
+      "path": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-release/platform-evidence/warning-replay.json",
+      "replay_counts": {
+        "fail": 0,
+        "pass": 3195,
+        "skips": 86,
+        "warnings": 161
+      },
+      "sha256": "0e3c4def8a10c333b3f974ea5b403bda6be29e4b5f7cef1f5af42106e3782b7d"
+    },
+    {
+      "error": {},
+      "native_counts": {
+        "fail": 0,
+        "pass": 3195,
+        "skips": 86,
+        "warnings": 161
+      },
+      "new_environment_guard": "PASS",
+      "old_environment_guard": "FAIL",
+      "path": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/warning-replay.json",
+      "replay_counts": {
+        "fail": 0,
+        "pass": 3195,
+        "skips": 86,
+        "warnings": 161
+      },
+      "sha256": "539fc780dfa846a8bebb80ee6c6f6120ef11baf322fc4d2eb59564ccc8c659fa"
+    },
+    {
+      "error": {},
+      "native_counts": {
+        "fail": 0,
+        "pass": 3195,
+        "skips": 86,
+        "warnings": 161
+      },
+      "new_environment_guard": "PASS",
+      "old_environment_guard": "FAIL",
+      "path": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-windows-latest-devel/platform-evidence/warning-replay.json",
+      "replay_counts": {
+        "fail": 0,
+        "pass": 3195,
+        "skips": 86,
+        "warnings": 161
+      },
+      "sha256": "ba348eeff7dadb7bac3a4014d7e0808788b8d43416ddadd7276126f23bac5740"
+    }
+  ],
+  "archive_bytes": 5137648,
+  "archive_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+  "ast_equivalence": "Entire old module preserved except one inline guard replaced by new function; only new top-level definition is validate_replay_environment.",
+  "audit_after_sha256": "be66a565bafe454a471b6216e69664af5a91fc24742d4217fb2abedd584f31a4",
+  "audit_before_sha256": "054b343e920c7517b8a3906ef80f8fa8519ec141fdb713f81000112c7ed316d7",
+  "contract_sha256": "597555df543a712e43ede71cf85abd1cf20910dcb22dd6ab588a8cea67bab123",
+  "existing_pure_python_selftest": "PASS; subprocess creation disabled during review",
+  "limits": [
+    "No actual four-cell audit or RDS reader was run.",
+    "Acceptance of null/empty-object encoding establishes the environment envelope only; raw problems/counts/provenance/identity checks must still pass.",
+    "Local timing NOTE stays UNADJUDICATED; this is not a final release panel or READY vote.",
+    "Standard json.loads value domain only; no general strict-JSON duplicate-key or arbitrary Python-subclass guarantees."
+  ],
+  "negative_controls_refused": 136,
+  "new_guard_controls": 142,
+  "positive_controls": 6,
+  "producer_sha256": "02ec8e2e5555a73e55982387633754b15a9b8af26dce919f7d475cbb92b28453",
+  "protected_file_count": 138,
+  "protected_inputs_unchanged": true,
+  "python": "3.13.2 | packaged by Anaconda, Inc. | (main, Feb  6 2025, 12:55:35) [Clang 14.0.6 ]",
+  "verdict": "PASS_NARROW_REPLAY_ENVIRONMENT_VALIDATOR_FIX"
+}

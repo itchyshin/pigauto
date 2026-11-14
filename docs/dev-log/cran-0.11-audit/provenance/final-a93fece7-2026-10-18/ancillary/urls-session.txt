@@ -1,0 +1,30 @@
+$paths
+[1] "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/neither"
+[2] "/Library/Frameworks/R.framework/Versions/4.6/Resources/library"                 
+
+$pigauto
+[1] "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/neither/pigauto"
+
+$session
+R version 4.6.0 (2026-04-24)
+Platform: aarch64-apple-darwin23
+Running under: macOS Tahoe 26.7.1
+
+Matrix products: default
+BLAS:   /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/vecLib.framework/Versions/A/libBLAS.dylib 
+LAPACK: /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
+
+locale:
+[1] C.UTF-8/C.UTF-8/C.UTF-8/C/C.UTF-8/C.UTF-8
+
+time zone: America/Edmonton
+tzcode source: internal
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+loaded via a namespace (and not attached):
+ [1] compiler_4.6.0   cli_3.6.6        tools_4.6.0      otel_0.2.0      
+ [5] curl_7.1.0       xml2_1.6.0       urlchecker_1.0.1 knitr_1.51      
+ [9] xfun_0.59        rlang_1.2.0      evaluate_1.0.5  
+

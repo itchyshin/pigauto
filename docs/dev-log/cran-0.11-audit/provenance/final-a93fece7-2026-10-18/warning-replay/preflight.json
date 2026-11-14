@@ -1,0 +1,42 @@
+{
+  "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/FINAL.json": {
+    "sha256": "781c6cf956656399abc1dc6363e6f64afe57672b11a73027dea982ed31576a8f",
+    "size": 10230
+  },
+  "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/check-command.txt": {
+    "sha256": "54499b6b550a5849ab94643f931013466f898bcf5500e993cc7cd9ae995c587a",
+    "size": 293
+  },
+  "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/check-environment.txt": {
+    "sha256": "f22ddc5feb391d728ea44c3052c4699ee41b6c4b9343b3a1968313d04cde5368",
+    "size": 347
+  },
+  "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/platform-evidence/check-exit.txt": {
+    "sha256": "51450b4515a2b080cff9cb39c3a1911ac49f51f2d0e6d1abdc3cfb629695e3b4",
+    "size": 40
+  },
+  "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/frozen-check/pigauto.Rcheck/00check.log": {
+    "sha256": "a031c1eea52c73ebb6c24289c4fc250a831979b35d3c8d143bb41e3f4316bba4",
+    "size": 3659
+  },
+  "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/frozen-check/pigauto.Rcheck/tests/testthat.Rout": {
+    "sha256": "f28f4671ec2cb4dc9f6ef10a6a4005fa1a87017a289e62f895d0ab77314635df",
+    "size": 13856
+  },
+  "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/native-macos/frozen-artifact/pigauto_0.11.0.tar.gz": {
+    "sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+    "size": 5137837
+  },
+  "/private/tmp/pigauto-final-closure-20261017/capture-warnings.R": {
+    "sha256": "99d01b0fe7bf96bcf2298d6111fde9b2afb8d8821bf38c41a61959aca38ecc74",
+    "size": 2361
+  },
+  "/private/tmp/pigauto-final-closure-20261017/final-warning-audit/contract.json": {
+    "sha256": "597555df543a712e43ede71cf85abd1cf20910dcb22dd6ab588a8cea67bab123",
+    "size": 193044
+  },
+  "/private/tmp/pigauto-final-closure-20261017/final-warning-audit/audit.py": {
+    "sha256": "be66a565bafe454a471b6216e69664af5a91fc24742d4217fb2abedd584f31a4",
+    "size": 23093
+  }
+}

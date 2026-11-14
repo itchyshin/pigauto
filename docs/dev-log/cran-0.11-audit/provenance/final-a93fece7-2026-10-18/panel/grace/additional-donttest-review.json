@@ -1,0 +1,23 @@
+{
+  "reviewer": "grace",
+  "verdict": "PASS_OLD_DONTTEST_FAILURE_CLASS_ADDRESSED",
+  "artifact_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "date": "2026-10-18",
+  "blockers": [],
+  "finding": "The current CRAN check page lists 13 regular flavors of published 0.10.0 as OK and links an additional donttest result. That old 2026-08-25 Fedora R-devel result fails in the compare_methods example when Lantern is not loaded. The actual frozen 0.11.0 man/compare_methods.Rd example checks torch installation and tries torch_tensor inside tryCatch before calling compare_methods. The installed-package utils::example(compare_methods, run.donttest=TRUE) check used the exact successor archive installation and logged clean skips both when torch_is_installed was mocked FALSE and when the tensor probe threw the old Lantern error. This addresses the observed old failure class without relying on the 13 regular 0.10.0 results as 0.11.0 evidence.",
+  "checked_evidence": [
+    "current-cran-check-page.html SHA-256 b0fa10d9594c4dfd33edc4ac5cd5ca0a8fc72ad8bb01d861ecda521218dfac0a",
+    "current-cran-donttest.out SHA-256 1c5a8a471658eecefd69ad167e0a413301a97cd4188ec2720e422a69e60220d4, lines 59-79",
+    "Frozen original archive SHA-256 a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb: pigauto/man/compare_methods.Rd extracted directly",
+    "cran-additional-issue/check-guard.R SHA-256 02fdbb32e3b753a03625ae63dfeedb7785a7abb723a8b4bd0ab8323086cb336f",
+    "cran-additional-issue/check-guard.log SHA-256 1f67d75824172c93914d4431fc60901c452a94c837a25b135b4a5744a832f632",
+    "mi/manifest.json and installed-novice/verdict.json bind the neither-cell installed package to the frozen successor archive"
+  ],
+  "limitations": [
+    "The currently published CRAN package and its 13 regular check flavors are version 0.10.0, not evidence that 0.11.0 has passed CRAN incoming or its additional donttest lane.",
+    "The installed 0.11.0 guard test used mocked absent and broken Lantern states; it does not recreate the old Fedora host or run a new native CRAN check.",
+    "Only the old compare_methods Lantern-not-loaded failure class is adjudicated; future distinct additional issues remain possible.",
+    "This supplement does not alter the earlier Grace READY vote or attest upload confirmation, policy acknowledgements, acceptance or publication."
+  ]
+}

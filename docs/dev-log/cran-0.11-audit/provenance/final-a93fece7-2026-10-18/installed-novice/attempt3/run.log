@@ -1,0 +1,8 @@
+Auto-detected trait type "count" (log1p-encoded) for integer column(s): clutch. If any is a continuous measurement stored as whole numbers (common after read.csv), override it: trait_types = c(clutch = "continuous").
+
+Calibrating gates on validation set (baseline only)...
+Calibrated gates: mass=0, clutch=0, threat_status=EN=0, threat_status=LC=0, threat_status=VU=0
+Conformal scores (latent scale, method=split): clutch=0.9173
+Warning message:
+Small validation set for 2 trait(s): clutch (n=1), threat_status (n=1). Calibrated gate and conformal scores will be noisy for these trait(s). 95% split-conformal coverage is NOT achievable for 1 trait(s) with fewer than 19 validation cells (clutch (n=1)): the achievable ceiling is n_val / (n_val + 1), which only reaches 0.95 at n_val >= 19. See `?fit_pigauto` under 'Calibration at small n' for smoothing options. 
+EXACT_ARCHIVE_INSTALLED_HELP_AND_NOVICE_WORKFLOW_PASS_2_MISSING_FILLED

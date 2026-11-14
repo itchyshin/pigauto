@@ -1,0 +1,268 @@
+{
+  "bundle": "raw/ubuntu-latest-release.evidence.tar.gz",
+  "bundle_sha256": "1a10dc086e114da76bf8423fd1709961a39aeeff956df2ee322adfbba865aac7",
+  "bundle_size_bytes": 2060387,
+  "kind": "evidence_bundle_not_release_archive",
+  "member_count": 43,
+  "members": [
+    {
+      "member": "frozen-check/pigauto.Rcheck/00check.log",
+      "sha256": "a835496d417cb72f416f5113153b02fa5022a0db1d1bdd8ea0b05112be2c9135",
+      "size_bytes": 3640,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/frozen-check/pigauto.Rcheck/00check.log"
+    },
+    {
+      "member": "frozen-check/pigauto.Rcheck/00install.out",
+      "sha256": "7f8a73b86b7d03565ff3003762e097a22aabf7fce7f9737a57df3161adc95993",
+      "size_bytes": 579,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/frozen-check/pigauto.Rcheck/00install.out"
+    },
+    {
+      "member": "frozen-check/pigauto.Rcheck/Rdlatex.log",
+      "sha256": "7fa34fd750fbb4cfdf1e98873e120e8852ab20a1b83c1b7e728f2f3167c85a99",
+      "size_bytes": 129451,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/frozen-check/pigauto.Rcheck/Rdlatex.log"
+    },
+    {
+      "member": "frozen-check/pigauto.Rcheck/build_vignettes.log",
+      "sha256": "a43f66a25ce23a4c37eebceeff62b0973e1bee67f277ae119e452a608039c2ff",
+      "size_bytes": 664,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/frozen-check/pigauto.Rcheck/build_vignettes.log"
+    },
+    {
+      "member": "frozen-check/pigauto.Rcheck/pigauto-Ex.R",
+      "sha256": "a5ab731a4425f56a090acbb821cf7c7acd7cb856af2426a1ed46dfe2eaabfdb9",
+      "size_bytes": 36184,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/frozen-check/pigauto.Rcheck/pigauto-Ex.R"
+    },
+    {
+      "member": "frozen-check/pigauto.Rcheck/pigauto-Ex.Rout",
+      "sha256": "f12854c3a98af4b34d3fa1de9ef8f29381c5d512c133bcec19e8826926d4567e",
+      "size_bytes": 63089,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/frozen-check/pigauto.Rcheck/pigauto-Ex.Rout"
+    },
+    {
+      "member": "frozen-check/pigauto.Rcheck/pigauto-Ex.pdf",
+      "sha256": "3d1fd7471aa1c0e15be52c21b4e173c37358cb02847bbc98f1bb712f7249b59f",
+      "size_bytes": 24993,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/frozen-check/pigauto.Rcheck/pigauto-Ex.pdf"
+    },
+    {
+      "member": "frozen-check/pigauto.Rcheck/pigauto-Ex.timings",
+      "sha256": "3085a7c010896d22e7c2fdb51c032a36e44606024f80e2e1199c8c12a44ec725",
+      "size_bytes": 1302,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/frozen-check/pigauto.Rcheck/pigauto-Ex.timings"
+    },
+    {
+      "member": "frozen-check/pigauto.Rcheck/pigauto-manual.log",
+      "sha256": "fa188cfb9f602e6072575ff8b87255e90fdb141694c289fefe1d2d5149c24583",
+      "size_bytes": 57640,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/frozen-check/pigauto.Rcheck/pigauto-manual.log"
+    },
+    {
+      "member": "frozen-check/pigauto.Rcheck/pigauto-manual.pdf",
+      "sha256": "13c78087a742edadd755e8590b9bbf60e646a5d7bef945c34b0f3b8eada0f2a8",
+      "size_bytes": 412747,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/frozen-check/pigauto.Rcheck/pigauto-manual.pdf"
+    },
+    {
+      "member": "frozen-check/pigauto.Rcheck/tests/testthat.Rout",
+      "sha256": "a9f6d7fca0552ec3be29e957b34de4e924820ce8a7ff568abfab41535a955c25",
+      "size_bytes": 13705,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/frozen-check/pigauto.Rcheck/tests/testthat.Rout"
+    },
+    {
+      "member": "platform-evidence/check-command.txt",
+      "sha256": "0abc7069e31ff3fea631129a75557932aba26c06adadc19471c2c4d7cd35ea5c",
+      "size_bytes": 209,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/check-command.txt"
+    },
+    {
+      "member": "platform-evidence/check-console.log",
+      "sha256": "bc09860a622b7a115a199815b8f7addd9897dd9aa72f5e3eeeb66c1a95d98da4",
+      "size_bytes": 3643,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/check-console.log"
+    },
+    {
+      "member": "platform-evidence/check-environment.txt",
+      "sha256": "69f8ec3efe18db937896b33a5841d24da1acfedc1045687760edb8bbc767841a",
+      "size_bytes": 472,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/check-environment.txt"
+    },
+    {
+      "member": "platform-evidence/check-exit.txt",
+      "sha256": "73712eb6d550de0214c2604b626c4b0bacc1ef5b9b9ff333f8942f7ebd54dc8b",
+      "size_bytes": 40,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/check-exit.txt"
+    },
+    {
+      "member": "platform-evidence/courier-canary.aux",
+      "sha256": "be3d8a27ab932481a725a941648e689be09cacdcfca75e9f47d30bb4c40cc38b",
+      "size_bytes": 32,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/courier-canary.aux"
+    },
+    {
+      "member": "platform-evidence/courier-canary.idx",
+      "sha256": "05d861deb1ec04a8bbd4a4e9b4458d9916d4d4fa7e1df507da0b8338a696f748",
+      "size_bytes": 24,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/courier-canary.idx"
+    },
+    {
+      "member": "platform-evidence/courier-canary.ilg",
+      "sha256": "4a26b12f27d802063ef0a8e5c1b1f11b9cd4f253fd9c3dcfb2c10f4c321f2bae",
+      "size_bytes": 357,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/courier-canary.ilg"
+    },
+    {
+      "member": "platform-evidence/courier-canary.ind",
+      "sha256": "bbdf5de01e41931199c31432a95061d4629eb1a9f8ec3e14727e5c9f5f6a5bf9",
+      "size_bytes": 53,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/courier-canary.ind"
+    },
+    {
+      "member": "platform-evidence/courier-canary.log",
+      "sha256": "ee2acccf4946cafd5343c06b81a16a493271f045f46c67e4856d130ecbf3f905",
+      "size_bytes": 4551,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/courier-canary.log"
+    },
+    {
+      "member": "platform-evidence/courier-canary.pdf",
+      "sha256": "5c5b5133151c7b464208084287d1e74fce951c2400500e9efeb27bcf681a0518",
+      "size_bytes": 16185,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/courier-canary.pdf"
+    },
+    {
+      "member": "platform-evidence/courier-canary.tex",
+      "sha256": "cee2752145e5495c93e44d02f87a93cf199ea337b04e9f4320ed9b5518c5b359",
+      "size_bytes": 258,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/courier-canary.tex"
+    },
+    {
+      "member": "platform-evidence/declared-dependencies.csv",
+      "sha256": "da620bb55999537b678b44cc61708a167d54583d3bfd05e45d626cf63567a44b",
+      "size_bytes": 437,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/declared-dependencies.csv"
+    },
+    {
+      "member": "platform-evidence/identity-download.json",
+      "sha256": "06c5e7f583bc4e8c72a5488acaa6a5e095978af2052f1e2fa2d3fe88da1b53cd",
+      "size_bytes": 556,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/identity-download.json"
+    },
+    {
+      "member": "platform-evidence/identity-post.json",
+      "sha256": "bb847831096aa2dd98276341d02c91691b56283988885920dc2a7aeef684064b",
+      "size_bytes": 552,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/identity-post.json"
+    },
+    {
+      "member": "platform-evidence/identity-pre.json",
+      "sha256": "750181f715ae5ba9a58e5c2ac58ee97b5fc9695857a8283c8fe44c7b8772cdf9",
+      "size_bytes": 551,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/identity-pre.json"
+    },
+    {
+      "member": "platform-evidence/index-after-exit.txt",
+      "sha256": "a98b6e5c561734573064072eff35d807aef8b295e2c67f6eb6b00b96fe421322",
+      "size_bytes": 66,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/index-after-exit.txt"
+    },
+    {
+      "member": "platform-evidence/index-after-stderr.txt",
+      "sha256": "39123455fc7865cd8d21b0a1d3ad139dec733d11d2e1cd0fc551bf5b30dc1912",
+      "size_bytes": 345,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/index-after-stderr.txt"
+    },
+    {
+      "member": "platform-evidence/index-after-stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/index-after-stdout.txt"
+    },
+    {
+      "member": "platform-evidence/index-before-exit.txt",
+      "sha256": "80e184c8130c77360957a79a32bf613c08f4869adee944323fdb32bb231ad673",
+      "size_bytes": 9,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/index-before-exit.txt"
+    },
+    {
+      "member": "platform-evidence/index-before-stderr.txt",
+      "sha256": "37425d4ba011c14015648dc46cde3ec89eecadab72e3e8df9b606eb9939fb071",
+      "size_bytes": 28,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/index-before-stderr.txt"
+    },
+    {
+      "member": "platform-evidence/index-before-stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size_bytes": 0,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/index-before-stdout.txt"
+    },
+    {
+      "member": "platform-evidence/index-probe.idx",
+      "sha256": "05d861deb1ec04a8bbd4a4e9b4458d9916d4d4fa7e1df507da0b8338a696f748",
+      "size_bytes": 24,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/index-probe.idx"
+    },
+    {
+      "member": "platform-evidence/index-probe.ilg",
+      "sha256": "39123455fc7865cd8d21b0a1d3ad139dec733d11d2e1cd0fc551bf5b30dc1912",
+      "size_bytes": 345,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/index-probe.ilg"
+    },
+    {
+      "member": "platform-evidence/index-probe.ind",
+      "sha256": "bbdf5de01e41931199c31432a95061d4629eb1a9f8ec3e14727e5c9f5f6a5bf9",
+      "size_bytes": 53,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/index-probe.ind"
+    },
+    {
+      "member": "platform-evidence/index-tools-before.txt",
+      "sha256": "64936188840418908d1034ec39f4a6eef50a9aa6fc7e8632110ff42b4d706bc8",
+      "size_bytes": 552,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/index-tools-before.txt"
+    },
+    {
+      "member": "platform-evidence/installed-packages.csv",
+      "sha256": "10dc14422afb69fdf328551faa5b1d9f5df706771545cb177377e27dc17fd96e",
+      "size_bytes": 10812,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/installed-packages.csv"
+    },
+    {
+      "member": "platform-evidence/manual-tools.txt",
+      "sha256": "90aaf3f34d510d9356bb8b0f0bfc6b4d6b8ae92a4e638933359209503dcc98a2",
+      "size_bytes": 303,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/manual-tools.txt"
+    },
+    {
+      "member": "platform-evidence/session-info.txt",
+      "sha256": "fc826d12f3aff27a7396b6f71273381e829dba6579c416182e78b3fb6a76bf8b",
+      "size_bytes": 4287,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/session-info.txt"
+    },
+    {
+      "member": "platform-evidence/warning-details.csv",
+      "sha256": "8b6709f11d5925be9b0abd7e5adf143a2ebd77a431d10204ba7e8c18b57a2fc2",
+      "size_bytes": 145174,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/warning-details.csv"
+    },
+    {
+      "member": "platform-evidence/warning-objects.rds",
+      "sha256": "cf4618a25e9f33b521ac27fffdad6377bb57b4a80fdf55b42cab5d7ac3d1961a",
+      "size_bytes": 1617538,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/warning-objects.rds"
+    },
+    {
+      "member": "platform-evidence/warning-replay.json",
+      "sha256": "539fc780dfa846a8bebb80ee6c6f6120ef11baf322fc4d2eb59564ccc8c659fa",
+      "size_bytes": 515,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/warning-replay.json"
+    },
+    {
+      "member": "platform-evidence/warning-session.txt",
+      "sha256": "02ef84351209cb7636f59d51fd78bac9dcdd3b017dba50974d504d78a96af51b",
+      "size_bytes": 3801,
+      "source": "/private/tmp/pigauto-final-closure-20261017/final-direct-39082452558/frozen-14ee7e5d-ubuntu-latest-release/platform-evidence/warning-session.txt"
+    }
+  ],
+  "release_archive_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb"
+}

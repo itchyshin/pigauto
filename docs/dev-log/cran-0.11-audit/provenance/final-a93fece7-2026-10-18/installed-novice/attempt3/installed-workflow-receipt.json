@@ -1,0 +1,19 @@
+{
+  "scope": "Installed novice workflow from exact frozen successor archive a93fece7; installed in the successor four-cell matrix's neither library",
+  "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "package_path": "/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/neither/pigauto",
+  "version": "0.11.0",
+  "impute_gnn_default": false,
+  "impute_help_default_and_opt_in_checked": true,
+  "report_help_default_and_opt_in_checked": true,
+  "configured_gnn": false,
+  "torch_namespace_loaded": true,
+  "gnn_training_disabled_by_config": true,
+  "library_paths": ["/private/tmp/pigauto-final-closure-20261017/successor-b2e6054/mi-matrix/neither", "/Library/Frameworks/R.framework/Versions/4.6/Resources/library"],
+  "input_missing": 2,
+  "output_missing": 0,
+  "observed_values_and_classes_preserved": true,
+  "browser_requests": "pigauto_report.html",
+  "browser_scope": "Suppressed only in this R process through options(browser=...); no browser, extension, or system settings changed",
+  "seed": 20261018
+}

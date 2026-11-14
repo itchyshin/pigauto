@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Multiple imputation and downstream models</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Multiple imputation and downstream
+models</h1>
+
+
+
+<p>This article shows how to carry imputation uncertainty into a
+downstream model: impute the missing cells <code>m</code> times, fit the
+same model to each completed dataset, and combine the fits. The chunks
+are not evaluated when the article is built because the posterior
+sampler takes minutes. They were run end to end once with shortened
+sampler chains.</p>
+<div id="which-imputations-can-be-pooled" class="section level2">
+<h2>Which imputations can be pooled</h2>
+<p><code>multi_impute()</code> offers three ways to draw the missing
+cells. Only one of them is a proper multiple imputation for downstream
+inference. The default, <code>draws_method = &quot;auto&quot;</code>, uses
+<code>&quot;posterior&quot;</code> whenever the data meet its requirements (below)
+and otherwise falls back to <code>&quot;conformal&quot;</code> with a message
+saying why.</p>
+<table>
+<colgroup>
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th><code>draws_method</code></th>
+<th>Use it for</th>
+<th>Pass to <code>with_imputations()</code> and
+<code>pool_mi()</code>?</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>&quot;posterior&quot;</code></td>
+<td>Linear analyses of imputed continuous traits on their imputation
+scale</td>
+<td>Yes, for those analyses</td>
+</tr>
+<tr class="even">
+<td><code>&quot;conformal&quot;</code> (<code>&quot;auto&quot;</code> fallback)</td>
+<td>Looking at the spread of plausible values</td>
+<td>No, refused</td>
+</tr>
+<tr class="odd">
+<td><code>&quot;mc_dropout&quot;</code></td>
+<td>Looking at the spread of plausible values</td>
+<td>No, refused</td>
+</tr>
+</tbody>
+</table>
+<p>The conformal and MC-dropout draws perturb each missing cell around a
+point prediction. They do not draw the cells jointly from their
+distribution given the observed data. In a simulation of a phylogenetic
+regression slope (16 regimes: two traits, n = 300 or 1000, Pagel’s
+lambda 1 or 0.5, random or clade-structured missingness, 120 replicates
+each), conformal draws biased the pooled slope towards zero by 0.20 to
+0.46 and the pooled 95% intervals covered the true slope in 0 to 17% of
+replicates. Other estimands were not measured.
+<code>with_imputations()</code> therefore refuses these draws. A list of
+fits built by hand is still pooled by <code>pool_mi()</code>, with a
+warning that its provenance cannot be checked; do not do this with
+conformal or MC-dropout draws.</p>
+<p>This applies to the draws, not to the per-cell conformal intervals
+that <code>impute()</code> reports. Those intervals summarise
+uncertainty about a single imputed value and were close to 95% coverage
+in simulation (0.954 to 0.971, GNN off, random missingness), but
+coverage can fall below 95% at small n (about 100 species) and when
+missingness is clustered in clades.</p>
+<p><code>draws_method = &quot;posterior&quot;</code> fits a Bayesian multivariate
+phylogenetic mixed model and samples each completed dataset from the
+posterior predictive distribution of the missing cells. It currently
+requires:</p>
+<ul>
+<li>continuous traits only,</li>
+<li>one row per species (no <code>species_col</code>),</li>
+<li>no <code>covariates</code>.</li>
+</ul>
+<p>In simulation (continuous traits, 30% missing completely at random,
+200 datasets per cell, n = 100 to 1000, Pagel’s lambda 0.3 to 1, trait
+correlation 0 or 0.5), a Rubin-pooled downstream PGLS slope and
+phylogenetic correlation had 95% interval coverage of 0.925 to 0.975 in
+every cell, including correlated traits at lambda = 1 (slope coverage
+0.955, 0.940 and 0.965 at n = 100, 300 and 1000). At n = 100 with
+correlated traits the pooled slope was biased by about -0.02 towards
+zero, with coverage still 0.96. The current residual prior separates
+standard deviations, with half-Cauchy priors scaled to the observed
+latent traits, from a residual correlation with an LKJ(1) prior. Before
+pigauto 0.11.0.9002, the sampler used an inverse-Wishart residual prior.
+In the simulation above, that legacy prior attenuated the relationship
+between correlated traits at lambda near 1 (coverage 0.75 at n = 1000).
+It remains selectable only when reproducing that earlier analysis: set
+<code>posterior_control = list(residual_prior = &quot;iw&quot;)</code>. New
+posterior fits use the separation prior described above by default.</p>
+<p>For one incomplete covariate in a Gaussian <code>lm</code>, a
+binomial <code>glm</code> or an <code>lmer</code> with one random
+intercept, <code>multi_impute_analysis()</code> provides a narrower
+analysis-aware route; see <code>?multi_impute_analysis</code>.</p>
+</div>
+<div id="impute" class="section level2">
+<h2>Impute</h2>
+<p>The bundled AVONET300 data are complete for the four continuous
+traits, so we delete some values to have something to impute.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(pigauto)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">data</span>(avonet300, tree300)</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>traits <span class="ot">&lt;-</span> avonet300[, <span class="fu">c</span>(<span class="st">&quot;Mass&quot;</span>, <span class="st">&quot;Wing.Length&quot;</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>                        <span class="st">&quot;Beak.Length_Culmen&quot;</span>, <span class="st">&quot;Tarsus.Length&quot;</span>)]</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="fu">rownames</span>(traits) <span class="ot">&lt;-</span> avonet300<span class="sc">$</span>Species_Key</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>traits<span class="sc">$</span>Mass[<span class="fu">sample</span>(<span class="fu">nrow</span>(traits), <span class="dv">60</span>)] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>traits<span class="sc">$</span>Wing.Length[<span class="fu">sample</span>(<span class="fu">nrow</span>(traits), <span class="dv">45</span>)] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>mi <span class="ot">&lt;-</span> <span class="fu">multi_impute</span>(traits, tree300, <span class="at">m =</span> <span class="dv">20</span><span class="dt">L</span>,</span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>                   <span class="at">draws_method =</span> <span class="st">&quot;posterior&quot;</span>, <span class="at">seed =</span> <span class="dv">1</span><span class="dt">L</span>)</span>
+<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>mi</span></code></pre></div>
+<p>With the default sampler settings, a simulated four-trait dataset of
+300 species took about ten minutes per fit on one core (median 616 s,
+Totoro server); fits that need automatic chain extensions take longer.
+Check convergence before using the draws:
+<code>mi$posterior$diagnostics</code> holds split R-hat and bulk
+effective sample size for each parameter, and
+<code>multi_impute()</code> warns if the chains have not converged after
+its automatic extensions.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>mi<span class="sc">$</span>posterior<span class="sc">$</span>diagnostics</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">attr</span>(mi<span class="sc">$</span>posterior<span class="sc">$</span>diagnostics, <span class="st">&quot;converged&quot;</span>)</span></code></pre></div>
+<p><code>mi$datasets</code> is a list of <code>m</code> completed data
+frames with species as row names. Observed values are unchanged in every
+dataset; only the missing cells differ.</p>
+</div>
+<div id="fit-and-pool" class="section level2">
+<h2>Fit and pool</h2>
+<p><code>with_imputations()</code> applies a model-fitting function to
+every completed dataset and records where the datasets came from.
+<code>pool_mi()</code> then combines the fixed-effect estimates with
+Rubin’s rules (Rubin 1987; Barnard and Rubin 1999) and returns one row
+per coefficient with the pooled estimate, standard error, degrees of
+freedom, confidence interval and the fraction of missing information
+(<code>fmi</code>).</p>
+<p><code>drmTMB</code> and <code>gllvmTMB</code> are optional model
+packages, not pigauto dependencies. Install either separately before
+running its example: use <code>install.packages(&quot;drmTMB&quot;)</code> for the
+location-scale model, or
+<code>remotes::install_github(&quot;itchyshin/gllvmTMB&quot;)</code> for the
+latent-variable model. Other external model packages used below also
+need to be installed separately.</p>
+<p>The examples below show how each model class is fitted and how its
+fixed effects are extracted. Inferential validation of these posterior
+imputations is narrower: the analysis must be linear in the imputed
+continuous traits, use them on their imputation scale, and include no
+variables outside those traits. Check which traits
+<code>log_transform</code> transformed before fitting
+<code>log(...)</code>. The joined diet variable, distributional model,
+and latent-model structure in later examples are outside that
+validation. Their pooled tables demonstrate software compatibility; they
+do not establish calibrated inference for those analyses.</p>
+<p>The question in every example is the same: how does wing length scale
+with body mass?</p>
+<div id="phylogenetic-regression-nlme" class="section level3">
+<h3>Phylogenetic regression (nlme)</h3>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>fits <span class="ot">&lt;-</span> <span class="fu">with_imputations</span>(mi, <span class="cf">function</span>(d) {</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  d<span class="sc">$</span>species <span class="ot">&lt;-</span> <span class="fu">rownames</span>(d)</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>  nlme<span class="sc">::</span><span class="fu">gls</span>(<span class="fu">log</span>(Wing.Length) <span class="sc">~</span> <span class="fu">log</span>(Mass), <span class="at">data =</span> d,</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>            <span class="at">correlation =</span> ape<span class="sc">::</span><span class="fu">corBrownian</span>(<span class="at">phy =</span> tree300, <span class="at">form =</span> <span class="sc">~</span>species),</span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>            <span class="at">method =</span> <span class="st">&quot;ML&quot;</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a>})</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="fu">pool_mi</span>(fits)</span></code></pre></div>
+</div>
+<div id="mixed-models-lme4-and-glmmtmb" class="section level3">
+<h3>Mixed models (lme4 and glmmTMB)</h3>
+<p>Variables that were not imputed can be joined to each completed
+dataset inside the fitting function. Here diet category
+(<code>Trophic.Level</code>) becomes a random intercept.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>add_diet <span class="ot">&lt;-</span> <span class="cf">function</span>(d) {</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>  d<span class="sc">$</span>Trophic.Level <span class="ot">&lt;-</span> avonet300<span class="sc">$</span>Trophic.Level[</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>    <span class="fu">match</span>(<span class="fu">rownames</span>(d), avonet300<span class="sc">$</span>Species_Key)]</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>  d</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>}</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>fits_lmer <span class="ot">&lt;-</span> <span class="fu">with_imputations</span>(mi, <span class="cf">function</span>(d) {</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a>  lme4<span class="sc">::</span><span class="fu">lmer</span>(<span class="fu">log</span>(Wing.Length) <span class="sc">~</span> <span class="fu">log</span>(Mass) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> Trophic.Level),</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>             <span class="at">data =</span> <span class="fu">add_diet</span>(d))</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a>})</span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="fu">pool_mi</span>(fits_lmer)</span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a>fits_tmb <span class="ot">&lt;-</span> <span class="fu">with_imputations</span>(mi, <span class="cf">function</span>(d) {</span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a>  glmmTMB<span class="sc">::</span><span class="fu">glmmTMB</span>(<span class="fu">log</span>(Wing.Length) <span class="sc">~</span> <span class="fu">log</span>(Mass) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> Trophic.Level),</span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a>                   <span class="at">data =</span> <span class="fu">add_diet</span>(d))</span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a>})</span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="fu">pool_mi</span>(fits_tmb)</span></code></pre></div>
+<p>For <code>glmmTMB</code> fits, <code>pool_mi()</code> pools the
+conditional (mean) model only; zero-inflation and dispersion
+coefficients are not included.</p>
+<p>A caveat on joined variables: the posterior imputation model
+conditions on the imputed traits and the tree, not on
+<code>Trophic.Level</code>. When a variable that matters for the
+analysis is left out of the imputation model, its association with the
+imputed traits is weakened in the imputed cells. Because the posterior
+route accepts continuous traits only, a categorical variable such as
+diet cannot currently be added to the imputation model; treat its
+estimated effects with this in mind. (Diet is also a small grouping
+factor here, four levels, one of them with a single species, so the
+random-intercept variance is poorly estimated.)</p>
+</div>
+<div id="location-scale-models-drmtmb" class="section level3">
+<h3>Location-scale models (drmTMB)</h3>
+<p><code>drmTMB</code> models the mean and the residual standard
+deviation together. <code>pool_mi()</code> pools both sets of fixed
+effects, labelled <code>mu:</code> and <code>sigma:</code>. The
+posterior imputation model has a constant residual variance, so the
+imputed cells carry no relationship between body mass and residual
+spread. We expect this to weaken a pooled <code>sigma:</code> slope when
+many cells are imputed; this has not been measured.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>fits_drm <span class="ot">&lt;-</span> <span class="fu">with_imputations</span>(mi, <span class="cf">function</span>(d) {</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>  drmTMB<span class="sc">::</span><span class="fu">drmTMB</span>(drmTMB<span class="sc">::</span><span class="fu">bf</span>(<span class="fu">log</span>(Wing.Length) <span class="sc">~</span> <span class="fu">log</span>(Mass),</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>                            sigma <span class="sc">~</span> <span class="fu">log</span>(Mass)),</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>                 <span class="at">data =</span> d)</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>})</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="fu">pool_mi</span>(fits_drm)</span></code></pre></div>
+</div>
+<div id="multivariate-latent-variable-models-gllvmtmb" class="section level3">
+<h3>Multivariate latent-variable models (gllvmTMB)</h3>
+<p><code>gllvmTMB</code> fits all traits jointly in long format.
+<code>pool_mi()</code> pools its fixed effects (here the trait means);
+latent loadings and variance components are not pooled.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>to_long <span class="ot">&lt;-</span> <span class="cf">function</span>(d) {</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>  tr <span class="ot">&lt;-</span> <span class="fu">names</span>(d)</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">species =</span> <span class="fu">factor</span>(<span class="fu">rep</span>(<span class="fu">rownames</span>(d), <span class="at">times =</span> <span class="fu">length</span>(tr))),</span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>             <span class="at">trait   =</span> <span class="fu">factor</span>(<span class="fu">rep</span>(tr, <span class="at">each =</span> <span class="fu">nrow</span>(d)), <span class="at">levels =</span> tr),</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>             <span class="at">value   =</span> <span class="fu">log</span>(<span class="fu">unlist</span>(d, <span class="at">use.names =</span> <span class="cn">FALSE</span>)))</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a>}</span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a>fits_gllvm <span class="ot">&lt;-</span> <span class="fu">with_imputations</span>(mi, <span class="cf">function</span>(d) {</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a>  gllvmTMB<span class="sc">::</span><span class="fu">gllvmTMB</span>(value <span class="sc">~</span> <span class="dv">0</span> <span class="sc">+</span> trait <span class="sc">+</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a>                       <span class="fu">latent</span>(<span class="dv">0</span> <span class="sc">+</span> trait <span class="sc">|</span> species, <span class="at">d =</span> <span class="dv">1</span>, <span class="at">unique =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a>                     <span class="at">data =</span> <span class="fu">to_long</span>(d), <span class="at">trait =</span> <span class="st">&quot;trait&quot;</span>, <span class="at">unit =</span> <span class="st">&quot;species&quot;</span>,</span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a>                     <span class="at">family =</span> <span class="fu">gaussian</span>(), <span class="at">REML =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a>                     <span class="at">engine =</span> <span class="st">&quot;tmb&quot;</span>, <span class="at">silent =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a>})</span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="fu">pool_mi</span>(fits_gllvm)</span></code></pre></div>
+</div>
+<div id="other-models" class="section level3">
+<h3>Other models</h3>
+<p>For other model classes, pass extractor functions to
+<code>pool_mi()</code> through <code>coef_fun</code> and
+<code>vcov_fun</code>, or a <code>tidy_fun</code> returning
+<code>term</code>, <code>estimate</code> and <code>std.error</code>. The
+same named, finite fixed-effect terms must be available across the
+retained fits; inspect reported fit failures before using pooled
+estimates.</p>
+</div>
+</div>
+<div id="bayesian-models-concatenate-do-not-pool" class="section level2">
+<h2>Bayesian models: concatenate, do not pool</h2>
+<p>Rubin’s rules combine point estimates and standard errors. A Bayesian
+fit already has a posterior distribution, and the right way to combine
+imputations is to stack the posterior draws from all <code>m</code> fits
+into one sample. <code>pool_mi()</code> refuses <code>brmsfit</code> and
+<code>MCMCglmm</code> objects for this reason.</p>
+<p>With brms, <code>brm_multiple()</code> fits every completed dataset
+and combines the draws for you:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>fit_b <span class="ot">&lt;-</span> brms<span class="sc">::</span><span class="fu">brm_multiple</span>(<span class="fu">log</span>(Wing.Length) <span class="sc">~</span> <span class="fu">log</span>(Mass),</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>                            <span class="at">data =</span> mi<span class="sc">$</span>datasets, <span class="at">chains =</span> <span class="dv">2</span>, <span class="at">refresh =</span> <span class="dv">0</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="fu">summary</span>(fit_b)</span></code></pre></div>
+<p>Check the per-dataset convergence diagnostics in
+<code>fit_b$rhats</code>; the combined R-hat can look poor simply
+because the imputed datasets differ. Stacking draws needs more
+imputations than Rubin’s rules for stable results (Zhou and Reiter
+2010), so prefer a larger <code>m</code> than the 20 used here.</p>
+<p>With MCMCglmm, fit each dataset and bind the fixed-effect
+samples:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>fits_mc <span class="ot">&lt;-</span> <span class="fu">lapply</span>(mi<span class="sc">$</span>datasets, <span class="cf">function</span>(d) {</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>  MCMCglmm<span class="sc">::</span><span class="fu">MCMCglmm</span>(<span class="fu">log</span>(Wing.Length) <span class="sc">~</span> <span class="fu">log</span>(Mass), <span class="at">data =</span> d, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a>})</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a>sol <span class="ot">&lt;-</span> coda<span class="sc">::</span><span class="fu">as.mcmc</span>(<span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(fits_mc, <span class="cf">function</span>(f) f<span class="sc">$</span>Sol)))</span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="fu">summary</span>(sol)</span></code></pre></div>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p>Barnard J, Rubin DB (1999). Small-sample degrees of freedom with
+multiple imputation. <em>Biometrika</em> 86: 948-955.</p>
+<p>Nakagawa S, Freckleton RP (2008). Missing inaction: the dangers of
+ignoring missing data. <em>Trends in Ecology and Evolution</em> 23:
+592-596.</p>
+<p>Rubin DB (1987). <em>Multiple Imputation for Nonresponse in
+Surveys</em>. Wiley.</p>
+<p>Zhou X, Reiter JP (2010). A note on Bayesian inference after multiple
+imputation. <em>The American Statistician</em> 64: 159-163.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

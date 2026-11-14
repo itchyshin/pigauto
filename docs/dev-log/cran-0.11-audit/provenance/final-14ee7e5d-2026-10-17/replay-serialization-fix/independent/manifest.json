@@ -1,0 +1,52 @@
+{
+  "assessment_status": "ASSESSMENT_RECORDED",
+  "files": {
+    "README.md": {
+      "sha256": "6e528d185aa6239a4dafb79162b8005e0d59e8b2d83c6a79e2019357ea2441e7",
+      "size_bytes": 3436
+    },
+    "assessment-check.txt": {
+      "sha256": "93c816a966e2c7a908452ceaecf7dea55e0bf883648dc2ece7811d53e370ff76",
+      "size_bytes": 460
+    },
+    "assessment.json": {
+      "sha256": "72b802548378fd2a3a7feed0cd9880ceb9bf74c083bbd86faa45eeb53fbda132",
+      "size_bytes": 3716
+    },
+    "controls.json": {
+      "sha256": "56824f04361bde33fd07820ae758c3d6709519086e893a957797fe278ea8f659",
+      "size_bytes": 54402
+    },
+    "existing-selftest.log": {
+      "sha256": "95c4a9143aa1ecc9a94770062e75a9158b082462e3f1b9cc129ab39116653cdc",
+      "size_bytes": 261
+    },
+    "producer-source-binding.json": {
+      "sha256": "682c3cd8035a6b8cb67a0db9399b729ade7af670cbb78289b3b89185bc156b11",
+      "size_bytes": 289
+    },
+    "protected-inputs-after.json": {
+      "sha256": "c9d77812f21bca890d11b59bbc12ccf8160c837fad694707803f0790806b9827",
+      "size_bytes": 35891
+    },
+    "protected-inputs-before.json": {
+      "sha256": "c9d77812f21bca890d11b59bbc12ccf8160c837fad694707803f0790806b9827",
+      "size_bytes": 35891
+    },
+    "review-result.json": {
+      "sha256": "06352c44e33c3f5de0c865ef2afefd7ce4b13b2ef16ea371b2f975dd42766bb6",
+      "size_bytes": 3931
+    },
+    "review.py": {
+      "sha256": "ea2b260fbf900101bd4602ab9c87f51abe4825a8b1a305270519fcb8825a39bd",
+      "size_bytes": 8637
+    },
+    "root-controls.log": {
+      "sha256": "0270f0e4cd315e79e1b8c20ab0a7d8c0fbb8a978932c669c9019974d2c931f77",
+      "size_bytes": 65
+    }
+  },
+  "protected_file_count": 138,
+  "protected_inputs_still_unchanged": true,
+  "verdict": "PASS_NARROW_REPLAY_ENVIRONMENT_VALIDATOR_FIX"
+}

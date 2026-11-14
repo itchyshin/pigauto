@@ -1,0 +1,11 @@
+{
+  "artifact": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "url": "http://builder2.rhub.io/api/-/package/062a7517bd61fe3fd188ab5f0fd12254",
+  "changes": "Only URL/SHA/size/inventory constants and artifact naming labels; identity/control/check execution code unchanged",
+  "files": [
+    "script/cran-0.11-platform/artifact.py",
+    "script/cran-0.11-platform/verify_results.py",
+    ".github/workflows/frozen-tarball-check.yaml"
+  ]
+}

@@ -1,0 +1,12 @@
+{"label":"setup","eval":true} 
+{"label":"simulate","eval":true} 
+{"label":"preprocess","eval":true} 
+{"label":"trait_map","eval":true} 
+{"label":"splits","eval":true} 
+{"label":"baseline","eval":true} 
+{"label":"train","eval":true} 
+{"label":"predict","eval":true} 
+{"label":"probs","eval":true} 
+{"label":"se","eval":true} 
+{"label":"evaluate","eval":true} 
+{"label":"mi_workflow","eval":false} 

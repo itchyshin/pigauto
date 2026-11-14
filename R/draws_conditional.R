@@ -164,6 +164,12 @@ draw_conditional_bm <- function(fit_or_result, m = 20L, seed = NULL,
          "preprocessed data (internal error).", call. = FALSE)
   }
 
+  # Both covariance estimators require at least one observed cell.
+  if (!any(!is.na(X))) {
+    stop("draw_conditional_bm(): no observed cells to condition on.",
+         call. = FALSE)
+  }
+
   # ---- Sigma: reuse pigauto's own joint-MVN estimator, read-only ---------
   # fit_mvn_bm_inhouse() (R/joint_mvn_solver.R) is exactly what
   # fit_joint_mvn_baseline() calls internally. max_iter = 0L / predict_method
@@ -236,11 +242,6 @@ draw_conditional_bm <- function(fit_or_result, m = 20L, seed = NULL,
       class = "pigauto_draws_conditional_bm"
     ))
   }
-  if (!length(obs_cells)) {
-    stop("draw_conditional_bm(): no observed cells to condition on.",
-         call. = FALSE)
-  }
-
   for (t in seq_len(K)) unk_cells <- c(unk_cells, cell_idx(t, I_idx))
   n_unk <- length(unk_cells)
   if (n_unk > max_cells) {
@@ -345,14 +346,15 @@ draw_conditional_bm <- function(fit_or_result, m = 20L, seed = NULL,
   trait_of <- ((seq_along(v) - 1L) %/% n) + 1L
   for (it in seq_len(max_iter)) {
     C <- kronecker(Sigma, R)
-    C_oo <- C[o_idx, o_idx]; C_mo <- C[m_idx, o_idx]
+    C_oo <- C[o_idx, o_idx, drop = FALSE]
+    C_mo <- C[m_idx, o_idx, drop = FALSE]
     A <- t(solve(C_oo, t(C_mo)))                 # C_mo C_oo^{-1}
     mu_m <- as.vector(A %*% v[o_idx])
-    V_m <- C[m_idx, m_idx] - A %*% t(C_mo)
+    V_m <- C[m_idx, m_idx, drop = FALSE] - A %*% t(C_mo)
     Lhat <- L; Lhat[miss] <- mu_m
     S_new <- crossprod(Lhat, Rinv %*% Lhat)
     ta <- tip_of[m_idx]; tr <- trait_of[m_idx]
-    W <- Rinv[ta, ta] * V_m                      # R^{-1}_ab V[(a,j),(b,k)]
+    W <- Rinv[ta, ta, drop = FALSE] * V_m                      # R^{-1}_ab V[(a,j),(b,k)]
     for (j in seq_len(K)) for (k in seq_len(K)) {
       S_new[j, k] <- S_new[j, k] + sum(W[tr == j, tr == k, drop = FALSE])
     }

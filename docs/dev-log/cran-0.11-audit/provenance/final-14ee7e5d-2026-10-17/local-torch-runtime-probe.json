@@ -1,0 +1,8 @@
+{
+  "torch": "0.17.0",
+  "cuda": false,
+  "mps": false,
+  "threads": 1,
+  "cpu_tensor_device": "cpu",
+  "scope": "Runtime probe, not instrumentation of the already running native test process"
+}

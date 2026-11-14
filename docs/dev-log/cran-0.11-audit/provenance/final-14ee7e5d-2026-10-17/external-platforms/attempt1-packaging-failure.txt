@@ -1,0 +1,1 @@
+First packaging execution stopped fail-closed at exit=0 raw text regex because Windows CRLF has carriage return before $. Raw evidence unchanged. Checker-only parser now uses splitlines()[0] exact match. Partial first publication output preserved separately. No R checks rerun.

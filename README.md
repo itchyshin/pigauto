@@ -38,8 +38,10 @@ install from GitHub:
 pak::pak("itchyshin/pigauto")
 ```
 
-The optional neural network also requires `torch::install_torch()` once.
-The default `gnn = FALSE` workflow does not require the torch runtime.
+The R package `torch` is installed as a dependency. The optional neural network
+also requires the separate runtime, installed once with `torch::install_torch()`.
+Loading pigauto and using the default `gnn = FALSE` do not load torch or require
+that runtime.
 
 ### How pigauto works
 

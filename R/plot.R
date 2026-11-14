@@ -836,7 +836,7 @@ plot_comparison <- function(results, metric = NULL,
   # Sort by baseline value
   comp <- comp[order(comp$baseline), ]
 
-  # Determine whether GNN is better
+  # Compare the supplied second method with the reference
   if (lower_is_better) {
     comp$gnn_better <- comp$gnn < comp$baseline
   } else {
@@ -885,7 +885,7 @@ plot_comparison <- function(results, metric = NULL,
   abline(h = yi, col = adjustcolor("#cccccc", 0.3), lwd = 0.5)
 
   legend("bottomright",
-         legend = c(methods[1], methods[2], "GNN better", "GNN worse"),
+         legend = c(methods[1], methods[2], paste(methods[2], c("better", "worse"))),
          pch = c(16, 17, NA, NA),
          lty = c(NA, NA, 1, 1),
          lwd = c(NA, NA, 2, 2),

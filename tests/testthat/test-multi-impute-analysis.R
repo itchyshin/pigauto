@@ -41,14 +41,21 @@ test_that("Bayesian Normal analysis-aware MI is seed reproducible", {
   a <- multi_impute_analysis(
     data, y ~ x + z, "x", model = "lm", m = 3L, seed = 9L
   )
+  rng_a <- .Random.seed
   b <- multi_impute_analysis(
     data, y ~ x + z, "x", model = "lm", m = 3L, seed = 9L
   )
+  rng_b <- .Random.seed
   c <- multi_impute_analysis(
     data, y ~ x + z, "x", model = "lm", m = 3L, seed = 10L
   )
-  expect_identical(a$datasets, b$datasets)
-  expect_false(identical(a$datasets, c$datasets))
+  # BLAS implementations can differ in their last bits even when the same
+  # random stream is used. Test the stream exactly and the draws tightly.
+  expect_identical(rng_a, rng_b)
+  expect_equal(a$datasets, b$datasets, tolerance = 1e-12)
+  changed <- is.na(data$x)
+  expect_gt(max(abs(a$datasets[[1]]$x[changed] -
+                      c$datasets[[1]]$x[changed])), 1e-8)
 })
 
 test_that("Bayesian Normal analysis-aware MI accepts the ambient RNG stream", {

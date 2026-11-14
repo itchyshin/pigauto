@@ -1,0 +1,58 @@
+{
+  "reviewer": "grace",
+  "verdict": "PASS",
+  "source_commit": "816987fd160c1d2c5c58b020b07357ff17c077e5",
+  "base_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636",
+  "source_pr": 238,
+  "scope": "Independent source-merge approval checkpoint review only: withdrawal/precedence/preservation, proposed four-file fix binding, provisional installed/source/site evidence, exact-head source CI and truthful saved reports. Not an archive/release READY vote or authority to merge.",
+  "blockers": [],
+  "conditions": [
+    "Human approval is still required for PR238 merge and automatic deployment. Recheck current head/base/checks immediately before any authorized merge.",
+    "Verify the resulting actual deployment, freeze a new clean merged-source archive and repeat corresponding exact-artifact checks and fresh final reviews before submission-ready.",
+    "Keep evidence PR236 draft and unmerged. CRAN upload/confirmation, tag and announcement require their separate authority.",
+    "Preserve all original14ee archive bytes, checks and Grace/Rose/Pat votes; this source checkpoint does not upgrade them."
+  ],
+  "highest_supported_rung": "source-clean for proposed816987fd",
+  "next_unproven_rung": "tarball-clean for successor after approved merge/deployment",
+  "withdrawn_predecessor_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+  "original_grace_artifact_verdict_unchanged": true,
+  "reviewed_saved_drafts": {
+    "after-task.md": {
+      "sha256": "f620db12201dcb92152b1fac6249af19b679f398128a7d84ce5fba19b4d985e5"
+    },
+    "README.md": {
+      "sha256": "78ffcb400d4e0cc5b876c4c869a5b8216cf65d6f84e3ededb4f48f0055b4fcad"
+    }
+  },
+  "checked_evidence": [
+    "initial-readback.json",
+    "source-binding.json",
+    "source-ci-final.json",
+    "pr238-final.json",
+    "site-review/verdict.json",
+    "pat-review/verdict.json",
+    "execution.json",
+    "runtime-AST-comparison.csv",
+    "withdrawal-and-successor.json",
+    "current GATES.md and release-ledger.json",
+    "predecessor README.md and closure-summary.json",
+    "original three panel verdicts",
+    "historical cran-comments.md header",
+    "verify-approval-checkpoint.py and controls",
+    "raw-evidence-whitespace-and-staged-byte-readback.json",
+    "after-task-full-check-stopped.json and structure log",
+    "handoff-gate-interpretation.json"
+  ],
+  "limits": [
+    "CI and local site do not validate a frozen gzip or a live deployed correction.",
+    "49 identical executable syntax trees do not imply identical installed files; two roxygen and two Rd files change.",
+    "No new native check, fit, campaign, source/archive edit, external message, merge or submission was performed by this reviewer.",
+    "Technical timing acceptance for withdrawn14ee remains separate from maintainer timing/upload decisions for a future successor.",
+    "The whole-goal and landing checks remain open; structural report validation alone is not whole-goal acceptance."
+  ],
+  "reviewed_utc": "2026-10-18T02:03:22.065673+00:00",
+  "exact_draft_assessments": {
+    "after-task.md": "after-task-assessment.json",
+    "README.md": "README-assessment.json"
+  }
+}

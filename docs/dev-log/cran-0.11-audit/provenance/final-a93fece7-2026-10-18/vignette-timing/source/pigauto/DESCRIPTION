@@ -1,0 +1,50 @@
+Package: pigauto
+Title: Fill in Missing Species Traits Using a Phylogenetic Tree
+Version: 0.11.0
+Authors@R: 
+    person("Shinichi", "Nakagawa", role = c("aut", "cre", "cph"), email = "itchyshin@gmail.com")
+Description: Imputes missing species trait data for comparative analyses
+    by combining three sources of information: phylogenetic similarity
+    (closely related species share similar traits), cross-trait
+    correlations (observed traits inform missing ones), and optional
+    environmental covariates (climate, habitat, geography). Handles
+    continuous measurements, counts, binary variables, ordered categories,
+    unordered categories, bounded proportions, zero-inflated counts, and
+    compositional multi-proportion data in a single call. The default
+    method is a phylogenetic baseline calibrated on held-out data; an
+    optional graph neural network correction, which is needed to use
+    covariates, is blended in through a per-trait gate that retains a
+    baseline fallback. Provides conformal
+    prediction intervals for continuous, count, ordinal, and proportion
+    traits and an experimental analysis-aware multiple-imputation workflow
+    for one missing continuous covariate in Gaussian linear, binomial-logit,
+    and Gaussian random-intercept models, with Rubin pooling limited to
+    fixed effects.
+    Stochastic graph-network and posterior-tree completions are prediction
+    diagnostics rather than validated inferential imputations.
+    Bundled datasets include 300-species and 9,993-species bird-trait subsets
+    with matching example phylogenetic trees.
+    Rubin (1987, ISBN:978-0-471-08705-2); Vovk et al. (2005,
+    ISBN:978-0-387-25061-8); Nakagawa and de Villemereuil (2019)
+    <doi:10.1093/sysbio/syy089>.
+License: MIT + file LICENSE
+URL: https://itchyshin.github.io/pigauto/,
+        https://github.com/itchyshin/pigauto
+BugReports: https://github.com/itchyshin/pigauto/issues
+Encoding: UTF-8
+LazyData: true
+LazyDataCompression: xz
+Depends: R (>= 4.1)
+Imports: torch, ape, ggplot2, Matrix, rlang, stats, utils, graphics,
+        grDevices, withr,
+Suggests: testthat, jsonlite, knitr, rmarkdown, pkgdown, RSpectra,
+        Rphylopars, jomo, MCMCglmm, brms, glmmTMB, lme4, nlme,
+        phangorn, phylolm, rgbif, smcfcs, terra, phytools
+VignetteBuilder: knitr
+Roxygen: list(markdown = TRUE)
+Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0
+NeedsCompilation: no
+Packaged: 2026-10-18 02:40:59 UTC; z3437171
+Author: Shinichi Nakagawa [aut, cre, cph]
+Maintainer: Shinichi Nakagawa <itchyshin@gmail.com>

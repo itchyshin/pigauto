@@ -64,9 +64,10 @@ An object of class \code{"pigauto_benchmark"} with:
 \describe{
 \item{results}{data.frame with columns: \code{scenario},
 \code{rep}, \code{method}, \code{trait}, \code{type},
-\code{metric}, \code{value}, \code{n_test}. Failed attempts are
-caught and omitted; their messages are suppressed when
-\code{verbose = FALSE}. There is no returned attempt/failure table.}
+\code{metric}, \code{value}, \code{n_test}. When some replicates
+succeed, failed pipeline attempts are caught and omitted; their messages are
+suppressed when \code{verbose = FALSE}. There is no returned
+attempt/failure table.}
 \item{summary}{data.frame averaged over surviving metric rows.
 Its \code{n_reps} column counts non-missing values for that metric,
 rather than all requested attempts.}
@@ -122,6 +123,11 @@ is an empirical outcome, not a guaranteed advantage for either method.}
 1 categorical trait (3 levels). This scenario exercises these three
 types together; it does not cover every supported trait type.}
 }
+
+If the replicate loop finishes without evaluations, an error reports the attempted
+replicate count and the first pipeline failure, when available, even
+when \code{verbose = FALSE}. With no attempted replicates, the error
+states that no fits were run.
 }
 \section{Printing}{
 

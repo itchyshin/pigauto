@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>GNN architecture and the math behind pigauto</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">GNN architecture and the math behind
+pigauto</h1>
+
+
+
+<p>This article opens up <code>pigauto</code>’s engine room. It is
+intended for readers who want to know <em>exactly</em> what the package
+does between <code>impute(traits, tree, covariates)</code> and the
+returned <code>pigauto_result</code>. We cover the data flow, the gated
+ensemble formula, the phylogenetic baseline (joint MVN / threshold-joint
+/ OVR), the GNN’s transformer blocks, the optional within-row
+cross-trait attention added in v0.9.3, and the calibration / uncertainty
+quantification machinery on top.</p>
+<p>The GNN described here runs only when <code>gnn = TRUE</code>. Since
+version 0.11.0.9001 the default is <code>gnn = FALSE</code>, which fits
+the phylogenetic baseline and the calibration and uncertainty machinery
+without a network; at the current baseline defaults the GNN did not
+lower imputation error on simulated or real benchmark data. User
+<code>covariates</code> are used only by the GNN.</p>
+<p>We assume familiarity with maximum-likelihood Brownian motion (BM) on
+trees and with standard transformer attention. We do
+<strong>not</strong> assume familiarity with the package’s
+internals.</p>
+<div id="end-to-end-data-flow" class="section level2">
+<h2>1. End-to-end data flow</h2>
+<p><code>impute()</code> chains six internal stages. Tensor shapes use
+<span class="math inline">\(n\)</span> for observations (= species in
+single-obs mode, &gt; species when each species has multiple
+measurements), <span class="math inline">\(p\)</span> for the
+<em>latent</em> trait dimension (which expands categorical traits to
+<span class="math inline">\(K\)</span> one-hot columns), <span class="math inline">\(k\)</span> for spectral Laplacian features, <span class="math inline">\(c\)</span> for covariate dimensions, and <span class="math inline">\(T\)</span> for a posterior-tree
+prediction-sensitivity sample.</p>
+<pre><code>INPUT:
+  traits      data.frame   n × p_traits     (mixed types, NAs allowed)
+  tree        phylo        m tips
+  covariates  data.frame   n × c            (optional)
+
+STEP 1 — preprocess_traits()
+  X_scaled       n × p           per-type encoding + z-score
+  trait_map      list            descriptors per trait (type, levels, mean, sd)
+  obs_to_species n               only if n &gt; m (multi-obs mode)
+
+STEP 2 — build_phylo_graph()
+  coords  m × k                  Laplacian eigenvectors
+  adj     m × m                  Gaussian kernel on cophenetic distance
+  D_sq    m × m                  squared cophenetic distance (B2)
+
+STEP 3 — fit_baseline()  [FIXED, NOT TRAINED]
+  mu  m × p                      phylogenetic baseline (BM / LP / joint)
+  se  m × p                      conditional-MVN standard errors
+
+STEP 4 — fit_pigauto() trains ResidualPhyloDAE on a DAE objective
+  produces a torch nn_module + per-column gate
+
+STEP 5 — calibrate_gates() picks per-trait r_cal on held-out val cells
+
+STEP 6 — predict.pigauto_fit() applies the blend:
+  pred = (1 - r_cal) · mu + r_cal · delta_GNN</code></pre>
+<p>The two essential ideas are:</p>
+<ol style="list-style-type: decimal">
+<li><strong>A simple, well-understood phylogenetic baseline does most of
+the work</strong>, and the GNN only contributes when calibrated to do
+so.</li>
+<li><strong>The blend gate <span class="math inline">\(r_\text{cal}\)</span> is a safety floor</strong>:
+at <span class="math inline">\(r_\text{cal}=0\)</span> the prediction
+collapses to the baseline. This bounds the worst-case regression to “as
+good as the baseline” regardless of how poorly the GNN trains.</li>
+</ol>
+</div>
+<div id="the-phylogenetic-baseline" class="section level2">
+<h2>2. The phylogenetic baseline</h2>
+<p>The baseline is a per-trait-type dispatcher inside
+<code>fit_baseline()</code>. For each trait you get <span class="math inline">\(\mu_i\)</span> (prior posterior mean for missing
+cell <span class="math inline">\(i\)</span>) and <span class="math inline">\(\sigma_i\)</span> (its posterior SD). All later
+inference is conditional on this.</p>
+<div id="continuous-count-ordinal-proportion-brownian-motion" class="section level3">
+<h3>2.1 Continuous, count, ordinal, proportion: Brownian motion</h3>
+<p>For one continuous trait <span class="math inline">\(y\)</span> with
+<span class="math inline">\(y_O\)</span> observed and <span class="math inline">\(y_M\)</span> missing, <span class="math inline">\(y \sim \mathcal{N}(\beta \mathbf{1},\, \sigma^2
+\mathbf{R})\)</span> under BM on the species tree, where <span class="math inline">\(\mathbf{R} =
+\mathrm{cov2cor}(\mathrm{vcv}(\text{tree}))\)</span> is the phylogenetic
+correlation matrix. The conditional posterior is the closed-form GLS
+solution:</p>
+<p><span class="math display">\[
+\hat{\mu}_M = \beta \mathbf{1} + \mathbf{R}_{MO} \mathbf{R}_{OO}^{-1}
+(y_O - \beta \mathbf{1}_O),
+\quad
+\widehat{\sigma}^2_{M|O} = \sigma^2\bigl(1 -
+\mathrm{diag}(\mathbf{R}_{MO} \mathbf{R}_{OO}^{-1}
+\mathbf{R}_{OM})\bigr).
+\]</span></p>
+<p><code>R/bm_internal.R::bm_impute_col()</code> implements this
+directly. Count traits are log1p-transformed, ordinal traits are coerced
+to integers and z-scored, proportions are logit-z-scored. The same
+conditional formula is used in each transformed space.</p>
+</div>
+<div id="binary-and-categorical-phylogenetic-label-propagation-lp" class="section level3">
+<h3>2.2 Binary and categorical: phylogenetic label propagation (LP)</h3>
+<p>Discrete traits use a softer phylogenetic prior: each species’s class
+probability is a kernel-weighted average over the rest of the tree,
+<span class="math inline">\(\Pr(y_i = k) \propto \sum_{j}
+\mathbf{A}_{ij} \, \mathbb{1}(y_j = k)\)</span>, with <span class="math inline">\(\mathbf{A}\)</span> the same Gaussian kernel used
+in the GNN’s adjacency. For categorical traits with <span class="math inline">\(K\)</span> classes this returns <span class="math inline">\(K\)</span> log-probability columns; binary returns
+one logit column.</p>
+</div>
+<div id="joint-mvn-baseline-phase-2" class="section level3">
+<h3>2.3 Joint MVN baseline (Phase 2)</h3>
+<p>When ≥ 2 continuous-like latent columns exist, pigauto upgrades to a
+joint multivariate-BM baseline. Stack the <span class="math inline">\(p\)</span> BM-eligible columns into <span class="math inline">\(\mathbf{Y}\)</span>. Under joint BM, <span class="math inline">\(\mathrm{vec}(\mathbf{Y}) \sim
+\mathcal{N}(\mathrm{vec}(\boldsymbol{\beta}),\,
+\mathbf{\Sigma} \otimes \mathbf{R})\)</span>. pigauto’s <strong>in-house
+solver</strong> (<code>R/joint_mvn_solver.R</code>) fits <span class="math inline">\(\hat{\mathbf{\Sigma}}\)</span> jointly across
+traits and the conditional posterior is the GLS solution with the
+Kronecker covariance. This captures cross-trait phylogenetic correlation
+that the per-column path loses.</p>
+<p>Two points of precision, since both were previously misstated
+here:</p>
+<p><em>The solver is pigauto’s own, not <code>Rphylopars</code>.</em>
+Earlier versions delegated to <code>Rphylopars::phylopars()</code> and
+this section still credited it; <code>joint_mvn_available()</code> now
+returns <code>TRUE</code> unconditionally and the joint path has no
+<code>Rphylopars</code> dependency. (<code>Rphylopars</code> remains in
+<code>Suggests</code> for comparison benchmarks only.)</p>
+<p><em>What the shipped default computes.</em> The solver’s
+<code>max_iter</code> argument defaults to <code>0</code>, which returns
+the closed-form <span class="math inline">\(\hat{\mathbf{\Sigma}} =
+\mathbf{L}^\top \mathbf{R}^{-1} \mathbf{L} / n\)</span> estimate —
+consistent under matrix-normal BM. What <code>max_iter = 0</code>
+switches off is the <em>cross-trait EM cell-refinement</em> loop,
+disabled in 2026-05 because it diverged on strong-signal data (the
+conditional prior ignores <span class="math inline">\(\mathbf{R}\)</span>-mediated cross-row
+correlation, and <span class="math inline">\(\mathbf{R}^{-1}\)</span>
+amplifies the resulting discrepancy into a multiplicative <span class="math inline">\(\mathbf{\Sigma}\)</span> blow-up). The non-refined
+path was empirically much better on synthetic <span class="math inline">\(K=5\)</span> BM data (0.93 vs 0.53 argmax accuracy
+at <span class="math inline">\(n=100\)</span>, 30% missing). So <span class="math inline">\(\hat{\mathbf{\Sigma}}\)</span> <em>is</em>
+estimated jointly; it is the iterative cell refinement on top that is
+off by default, and deliberately so.</p>
+<p>The bench in <code>script/bench_joint_baseline.R</code> reported a
+33.7% RMSE lift on simulated correlated BM data. That figure predates
+the in-house solver and has not been re-measured against it — treat it
+as indicative of the joint-vs-per-column direction, not as a current
+performance number for the shipped path.</p>
+</div>
+<div id="threshold-joint-baseline-phase-3" class="section level3">
+<h3>2.4 Threshold-joint baseline (Phase 3)</h3>
+<p>To bring binary traits inside the joint MVN, pigauto’s
+<code>fit_joint_threshold_baseline()</code> uses the Wright–Falconer
+liability model: each observed binary cell <span class="math inline">\(y
+\in \{0, 1\}\)</span> is replaced by the posterior mean of an underlying
+continuous <em>liability</em> <span class="math inline">\(L\)</span>
+truncated by <span class="math inline">\(y\)</span>. With prior <span class="math inline">\(L \sim \mathcal{N}(0, 1)\)</span> this is the
+standard truncated-normal mean. The resulting matrix is then handed to
+the same <strong>in-house joint solver</strong> as the continuous case.
+Binary posteriors are decoded back to probabilities via <span class="math inline">\(p = \Phi\bigl(\mu_L / \sqrt{1 +
+\sigma_L^2}\bigr)\)</span>, clipped to <span class="math inline">\([0.01, 0.99]\)</span>. Ordinal liability uses K-1
+interval cuts (B3 ordinal).</p>
+</div>
+<div id="ovr-categorical-phase-6" class="section level3">
+<h3>2.5 OVR categorical (Phase 6)</h3>
+<p>The single-fit approach to categorical liability (K columns into one
+joint call) is rank-deficient and unstable. pigauto instead runs <span class="math inline">\(K\)</span> independent threshold-joint fits —
+class <span class="math inline">\(k\)</span> vs the rest — and
+renormalises the resulting <span class="math inline">\(K\)</span>
+probabilities into a row-stochastic distribution. That is a
+numerical-stability choice, not a published accuracy lift for this
+package.</p>
+</div>
+<div id="multi-obs-aggregation-phase-10-b1-soft" class="section level3">
+<h3>2.6 Multi-obs aggregation (Phase 10 + B1 soft)</h3>
+<p>When each species has multiple observations, baselines run at species
+level. Phase 10 aggregates obs→species with type-aware rules: mean for
+continuous, modal class (or argmax one-hot) for discrete. B1 (v0.9.0)
+adds an opt-in soft path that preserves evidence strength: a species
+observed as class 1 in 6/10 rows uses the convex combination <span class="math inline">\(p \cdot E[L \mid L &gt; 0] + (1 - p) \cdot E[L
+\mid L &lt; 0]\)</span> instead of collapsing to hard class 1.</p>
+</div>
+</div>
+<div id="the-gnn-residualphylodae" class="section level2">
+<h2>3. The GNN: ResidualPhyloDAE</h2>
+<p>The optional GNN learns a full per-cell prediction that is blended
+with the phylogenetic baseline. It is a denoising autoencoder (DAE)
+trained with masked-cell reconstruction loss.</p>
+<blockquote>
+<p><strong>Name note.</strong> The torch class is
+<code>ResidualPhyloDAE</code> because its internal blocks use
+ResNet-style residual skip connections. The network output
+<code>delta</code> is <strong>not</strong> a statistical residual <span class="math inline">\(y - \mu\)</span> — it is a full per-cell
+prediction, blended externally with <span class="math inline">\(\mu\)</span> via the per-trait gate.</p>
+</blockquote>
+<div id="encoder" class="section level3">
+<h3>3.1 Encoder</h3>
+<p>Input tensors:</p>
+<ul>
+<li><code>x</code> <span class="math inline">\(\in \mathbb{R}^{n \times
+p}\)</span> — current trait latent matrix (missing cells replaced by a
+learnable mask token).</li>
+<li><code>coords</code> <span class="math inline">\(\in \mathbb{R}^{m
+\times k}\)</span> — species-level spectral Laplacian features.</li>
+<li><code>covs</code> <span class="math inline">\(\in \mathbb{R}^{n
+\times c}\)</span> — <code>[baseline_mu | NA-mask | user_covs]</code>
+(the user covariates plus a per-cell mask indicator and the baseline
+prediction).</li>
+</ul>
+<p>If <code>use_trait_attention = TRUE</code> (new in v0.9.3, see §3.5),
+a pooled trait-context feature of dimension <code>trait_embed_dim</code>
+is also concatenated. The encoder is a two-layer MLP:</p>
+<p><span class="math display">\[
+h = \mathrm{ReLU}\bigl(\mathbf{W}_2 \,
+\mathrm{Dropout}(\mathrm{ReLU}(\mathbf{W}_1 \mathrm{concat}(x,
+\text{coords}, \text{covs}, \ldots)))\bigr),
+\]</span></p>
+<p>producing <span class="math inline">\(h \in \mathbb{R}^{n \times
+h_d}\)</span> with hidden dim <span class="math inline">\(h_d\)</span>
+(default 64).</p>
+<p>In multi-obs mode, <span class="math inline">\(h\)</span> is averaged
+across observations of the same species (<code>scatter_mean</code>) to
+produce a species-level hidden state <span class="math inline">\(h_\text{species} \in \mathbb{R}^{m \times
+h_d}\)</span> for the graph message passing, then broadcast back to
+observation level afterwards.</p>
+</div>
+<div id="graph-transformer-block-phase-9-b2" class="section level3">
+<h3>3.2 Graph Transformer Block (Phase 9 + B2)</h3>
+<p>The default path stacks <span class="math inline">\(L\)</span>
+pre-norm transformer encoder blocks (<code>n_gnn_layers</code>, default
+2). Each block has:</p>
+<ul>
+<li>Multi-head attention (<code>n_heads</code> default 4) over the <span class="math inline">\(m\)</span> species, with a <strong>per-head
+learnable phylogenetic bias</strong> added to the attention scores. With
+<span class="math inline">\(\mathbf{D}^2\)</span> the squared
+cophenetic-distance matrix and <span class="math inline">\(\beta_h =
+\mathrm{softplus}(\mathrm{log\_bw}_h)\)</span> a learned bandwidth per
+head, the bias is <span class="math inline">\(\mathbf{B}_h =
+-\mathbf{D}^2 / (2\beta_h^2)\)</span>. One head can attend tightly
+(fast-evolving traits), another broadly (conserved traits).</li>
+<li>A position-wise FFN with width <span class="math inline">\(h_d \cdot
+\mathtt{ffn\_mult}\)</span> (default 4), output linear initialised to
+zero so the block ≈ identity at training step 0 — preserves the
+gate-closed-at-init safety.</li>
+<li>Layer norm before each sub-block, residual skips after each.</li>
+<li>Optional per-layer covariate injection (when user covariates are
+present): <code>cov_h = cov_encoder(user_covs)</code> is added inside
+the block via a learnable projection, so covariate features are visible
+at every depth, not just the encoder.</li>
+</ul>
+<p>Legacy single-head attention is retained behind
+<code>use_transformer_blocks = FALSE</code> for reconstructing
+pre-v0.9.0 fits.</p>
+</div>
+<div id="decoder-and-the-gate" class="section level3">
+<h3>3.3 Decoder and the gate</h3>
+<p>A symmetric two-layer MLP maps the species-broadcast hidden state
+back to the latent space: <code>delta = dec2(ReLU(dec1(h)))</code> of
+shape <span class="math inline">\(n \times p\)</span>.</p>
+<p>The per-column <strong>blend gate</strong> is</p>
+<p><span class="math display">\[
+r = \sigma(\rho) \cdot \mathtt{gate\_cap}, \qquad r \in (0,
+\mathtt{gate\_cap}],
+\]</span></p>
+<p>with <span class="math inline">\(\rho \in \mathbb{R}^p\)</span> a
+learnable per-column parameter. The model output is</p>
+<p><span class="math display">\[
+\hat{x} = (1 - r) \cdot \mu + r \cdot \mathrm{delta} +
+\mathrm{cov\_linear}(u),
+\]</span></p>
+<p>where <code>cov_linear</code> is a small direct linear regression on
+user covariates (added outside the blend; gives the GNN a “linear
+shortcut” on covariates so it doesn’t have to learn <span class="math inline">\(\beta\)</span> through nonlinear layers).</p>
+<p>The gate is initialised so the GNN contribution starts negligible:
+<span class="math inline">\(\rho_\text{init} = -1\)</span> for
+continuous columns (effective gate ≈ 0.135 × gate_cap), <span class="math inline">\(\rho_\text{init} \approx 0\)</span> for discrete
+(fully closed).</p>
+</div>
+<div id="loss-and-three-safety-regularisations" class="section level3">
+<h3>3.4 Loss and three safety regularisations</h3>
+<p>For each training batch:</p>
+<p><span class="math display">\[
+\mathcal{L} = \underbrace{\mathcal{L}_\text{type}(\hat{x},
+y_\text{true})}_\text{type-aware reconstruction}
++ \lambda_\text{shrink} \cdot \mathrm{MSE}(\mathrm{delta} - \mu)
++ \lambda_\text{gate} \cdot \mathrm{MSE}(r).
+\]</span></p>
+<ul>
+<li><span class="math inline">\(\mathcal{L}_\text{type}\)</span>
+dispatches by trait type: MSE for continuous / count / ordinal /
+proportion, BCE for binary / zi-gate, cross-entropy for categorical, MSE
+on CLR for multi-proportion.</li>
+<li><span class="math inline">\(\lambda_\text{shrink}\)</span> (default
+0.03) penalises <code>delta</code> drifting away from the baseline.</li>
+<li><span class="math inline">\(\lambda_\text{gate}\)</span> (default
+0.01) actively pushes the gate toward zero. Without this term, <span class="math inline">\(\rho\)</span> has no gradient when delta ≈ μ (both
+shrinkage and reconstruction losses are zero), so the gate would stay at
+its init. The explicit penalty encourages the gate toward
+baseline-only.</li>
+</ul>
+<p>Together with the architectural cap (<code>gate_cap</code> ≤ 0.8 by
+default), these three give a <em>strong inductive bias toward the
+phylogenetic baseline</em> — useful when the GNN has nothing extra to
+learn on a given dataset.</p>
+</div>
+<div id="within-row-cross-trait-attention-b3-v0.9.3-opt-in" class="section level3">
+<h3>3.5 Within-row cross-trait attention (B3, v0.9.3, opt-in)</h3>
+<p>The encoder above mixes all trait columns into a single hidden vector
+via a linear projection, which loses per-trait identity. When
+<code>use_trait_attention = TRUE</code>, the model additionally builds a
+per-trait token sequence:</p>
+<p><span class="math display">\[
+\text{tokens}_{i,j} = \mathbf{W}_v \, x_{i,j} + \mathbf{e}_j, \qquad
+j = 1, \ldots, p,
+\]</span></p>
+<p>with <span class="math inline">\(\mathbf{e}_j \in
+\mathbb{R}^{e_d}\)</span> a learnable positional embedding per trait
+column (dim <code>trait_embed_dim</code>, default 32). One multi-head
+self-attention block (<code>n_trait_heads</code>, default 2) mixes these
+<span class="math inline">\(p\)</span> tokens within each row <span class="math inline">\(i\)</span>, followed by mean-pool to a single
+<span class="math inline">\(e_d\)</span>-dim feature. That feature is
+concatenated alongside <span class="math inline">\((x, \text{coords},
+\text{covs})\)</span> at the encoder input.</p>
+<p>This opt-in mechanism changes the model architecture. Assess it with
+a held-out comparison on the intended data rather than transferring a
+result from another trait set or simulation regime.</p>
+<p>Backward-compatible: saved fits without the field default to
+<code>use_trait_attention = FALSE</code> and reconstruct
+identically.</p>
+</div>
+</div>
+<div id="calibration-making-the-gate-a-real-safety-floor" class="section level2">
+<h2>4. Calibration: making the gate a real safety floor</h2>
+<p>After training, pigauto does <strong>not</strong> ship the gate <span class="math inline">\(\sigma(\rho)\)</span> that the optimiser converged
+to. Instead it overrides <span class="math inline">\(\rho\)</span> with
+a per-trait <em>calibrated</em> gate <span class="math inline">\(r_\text{cal}\)</span> chosen on held-out
+validation cells.</p>
+<p><code>calibrate_gates()</code> runs a per-trait grid search of <span class="math inline">\(r \in [0, \mathtt{gate\_cap}]\)</span> minimising
+val-set reconstruction loss (MSE for continuous; 0/1 loss for discrete
+with an absolute cell floor and a split-validation cross-check that
+prevents the GNN from harming baseline accuracy). The output is a single
+scalar <span class="math inline">\(r_\text{cal}\)</span> per latent
+column, stored on the fit and used at prediction time.</p>
+<p>This is the second layer of safety: even if training somehow pushes
+the learnable gate wide open, calibration on held-out cells can close it
+back down. In practice, on datasets with strong phylogenetic signal
+where the GNN cannot improve on BM, <span class="math inline">\(r_\text{cal} \approx 0\)</span> and the prediction
+is exactly the baseline.</p>
+</div>
+<div id="uncertainty-quantification" class="section level2">
+<h2>5. Uncertainty quantification</h2>
+<p>pigauto exposes three distinct uncertainty mechanisms; they answer
+different questions and must not be conflated.</p>
+<p><strong>Baseline <code>pred$se</code> (continuous / count / ordinal /
+proportion).</strong> On the single-column BM path
+(<code>R/bm_internal.R</code>) this is the conditional-MVN standard
+deviation, delta-method back-transformed — exact under BM,
+model-dependent. When ≥ 2 BM-eligible columns use the joint /
+threshold-joint path, <code>pred$se</code> is the per-tip conditional SD
+<span class="math inline">\(\sigma\sqrt{v_i}\)</span> from the sparse
+Henderson precision (same factorisation as the mean; 2026-08 fix). That
+is model-dependent Henderson variance, not the single-trait closed-form
+“exact under BM” guarantee, and it does not use the un-restored
+cross-trait EM (<code>max_iter = 0</code>).</p>
+<p><strong><code>pred$se</code> (binary / categorical).</strong> <span class="math inline">\(\min(p, 1-p)\)</span> or <span class="math inline">\(1 - \max_k p_k\)</span> — an uncertainty score,
+<strong>not</strong> a Gaussian standard error. Use it for ranking or
+reporting. Do <strong>not</strong> plug it into Rubin’s rules.</p>
+<p><strong>Conformal interval (<code>pred$conformal_lower</code>,
+<code>pred$conformal_upper</code>).</strong> Split-conformal residual
+quantile on the validation set: <span class="math inline">\(s =
+q_{(1-\alpha)}(|y - \hat{y}|_{\mathrm{val}})\)</span>. This is a
+marginal prediction-coverage diagnostic under exchangeability and a
+fixed calibration procedure. It is not an MI draw distribution.</p>
+<p>For prediction diagnostics, <code>multi_impute()</code> exposes two
+stochastic draw methods. <code>&quot;conformal&quot;</code> (chosen by the default
+<code>draws_method = &quot;auto&quot;</code> when the posterior route does not
+apply) uses the heuristic <span class="math inline">\(\mathcal{N}(\mu,
+s/1.96)\)</span> on the transformed scale, where <span class="math inline">\(s\)</span> is the conformal residual quantile. A
+conformal prediction interval does not by itself establish that these
+Normal draws are proper multiple imputations. <code>&quot;mc_dropout&quot;</code>
+runs <span class="math inline">\(M\)</span> stochastic GNN passes in
+training mode (dropout active) on top of BM-draw inputs. These paths are
+unsupported for inference.</p>
+<p>The separate experimental <code>multi_impute_analysis()</code>
+backend declares the substantive model before imputation. It supports
+one incomplete continuous covariate under MAR, dispatching to proper
+Bayesian normal-regression MI for Gaussian <code>lm</code>,
+<code>smcfcs</code> for binomial-logit <code>glm</code>, and
+<code>jomo.smc</code> for a Gaussian <code>lmer</code> with one random
+intercept. <code>pool_mi()</code> then applies Rubin’s rules to fixed
+effects only. The interface remains experimental and deliberately
+narrow.</p>
+</div>
+<div id="posterior-tree-prediction-sensitivity" class="section level2">
+<h2>6. Posterior-tree prediction sensitivity</h2>
+<p><code>multi_impute_trees()</code> can compare point predictions
+across a posterior tree sample. Tree uncertainty was outside the
+analysis-aware validation campaign, so its stochastic datasets are
+unsupported for downstream inference and cannot currently be combined
+with <code>multi_impute_analysis()</code>.</p>
+</div>
+<div id="putting-it-together-a-worked-predictive-equation" class="section level2">
+<h2>7. Putting it together: a worked predictive equation</h2>
+<p>A clean end-to-end summary of what <code>predict.pigauto_fit()</code>
+returns for one continuous trait on one missing cell <span class="math inline">\(i\)</span> in a single-tree, single- imputation
+call:</p>
+<p><span class="math display">\[
+\hat{y}_i \;=\; \underbrace{(1 - r_\text{cal}) \cdot
+\mu_i^{\text{BM/joint-MVN}}}_\text{baseline contribution}
++ \underbrace{r_\text{cal} \cdot
+\mathrm{delta}_i^{\text{GNN}}}_\text{GNN contribution}
++ \underbrace{\mathrm{cov\_linear}(u_i)}_\text{linear cov shortcut},
+\]</span></p>
+<p>with <span class="math inline">\(\mu_i\)</span> from the joint MVN
+(or per-column BM fallback), <span class="math inline">\(\mathrm{delta}_i\)</span> from the GNN
+(transformer blocks + optional within- row cross-trait attention), and
+<span class="math inline">\(r_\text{cal}\)</span> from validation
+calibration. The conformal interval is</p>
+<p><span class="math display">\[
+\hat{y}_i \pm s_t,
+\]</span></p>
+<p>where <span class="math inline">\(s_t\)</span> is the split-conformal
+residual quantile for trait <span class="math inline">\(t\)</span>.
+Treat this as a nominal held-out diagnostic under the stated
+assumptions, not a package-wide interval certification.</p>
+</div>
+<div id="where-to-look-in-the-code" class="section level2">
+<h2>8. Where to look in the code</h2>
+<table>
+<colgroup>
+<col width="60%" />
+<col width="40%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Concept</th>
+<th>File</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>BM kernel + conditional MVN</td>
+<td><code>R/bm_internal.R</code></td>
+</tr>
+<tr class="even">
+<td>Joint MVN baseline</td>
+<td><code>R/joint_mvn_baseline.R</code></td>
+</tr>
+<tr class="odd">
+<td>Threshold-joint (binary + ordinal)</td>
+<td><code>R/joint_threshold_baseline.R</code>,
+<code>R/liability.R</code></td>
+</tr>
+<tr class="even">
+<td>OVR categorical</td>
+<td><code>R/ovr_categorical.R</code></td>
+</tr>
+<tr class="odd">
+<td>Graph Transformer Block (B2)</td>
+<td><code>R/graph_transformer_block.R</code></td>
+</tr>
+<tr class="even">
+<td>ResidualPhyloDAE + B3 trait attention</td>
+<td><code>R/model_residual_dae.R</code></td>
+</tr>
+<tr class="odd">
+<td>Training loop, gate calibration</td>
+<td><code>R/fit_pigauto.R</code>, <code>R/fit_helpers.R</code></td>
+</tr>
+<tr class="even">
+<td>Prediction, conformal intervals</td>
+<td><code>R/predict_pigauto.R</code></td>
+</tr>
+<tr class="odd">
+<td>Analysis-aware MI and fixed-effect pooling</td>
+<td><code>R/multi_impute_analysis.R</code>,
+<code>R/pool_mi.R</code></td>
+</tr>
+<tr class="even">
+<td>Prediction-diagnostic draws</td>
+<td><code>R/multi_impute.R</code>, <code>R/predict_pigauto.R</code></td>
+</tr>
+<tr class="odd">
+<td>Experimental tree-sensitivity workflow</td>
+<td><code>R/multi_impute_trees.R</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<ul>
+<li>Felsenstein, J. (1985). <em>Phylogenies and the comparative
+method.</em> AmNat.</li>
+<li>Pagel, M. (1999). <em>Inferring the historical patterns of
+biological evolution.</em> Nature.</li>
+<li>Bruggeman, J., Heringa, J., &amp; Brandt, B. W. (2009).
+<em>PhyloPars: estimation of missing parameter values using
+phylogeny.</em> NAR.</li>
+<li>Goolsby, E. W., Bruggeman, J., &amp; Ané, C. (2017). <em>Rphylopars:
+fast multivariate phylogenetic comparative methods for missing data and
+within-species variation.</em> MEE.</li>
+<li>Wright, S. (1934). <em>An analysis of variability in number of
+digits in an inbred strain of guinea pigs.</em> Genetics. (Liability
+model)</li>
+<li>Vaswani, A. et al. (2017). <em>Attention is all you need.</em>
+NeurIPS.</li>
+<li>Ying, C. et al. (2021). <em>Do Transformers Really Perform Bad for
+Graph Representation?</em> NeurIPS. (Graphormer / multi-scale
+phylogenetic attention bias.)</li>
+<li>Rubin, D. B. (1987). <em>Multiple Imputation for Nonresponse in
+Surveys.</em></li>
+<li>Nakagawa, S., &amp; Freckleton, R. P. (2008, 2011). <em>Missing
+inaction: the dangers of ignoring missing data.</em> TREE / <em>Model
+averaging, missing data and multiple imputation.</em> BES.</li>
+<li>Nakagawa, S., &amp; de Villemereuil, P. (2019). <em>A general method
+for simultaneously accounting for phylogenetic and species sampling
+uncertainty via Rubin’s rules in comparative analysis.</em> Syst. Biol.
+68(4): 632–641.</li>
+<li>Vovk, V., Gammerman, A., &amp; Shafer, G. (2005). <em>Algorithmic
+Learning in a Random World.</em> (Conformal prediction.)</li>
+</ul>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

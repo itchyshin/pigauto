@@ -1,0 +1,32 @@
+{
+  "reviewer": "pat",
+  "verdict": "PASS",
+  "scope": "Bounded closure review of the proposed four-file baseline/GNN help fix, neighboring reader-facing default claims, and the provisional installed-help and novice-workflow receipts.",
+  "branch": "docs/cran-011-baseline-help",
+  "base_commit": "8e275ca738129c8d608f06ffc407b8141c1a2636",
+  "reviewed_file_sha256": {
+    "R/impute.R": "b75d47cf1c602507492331856a78544cc0b6bc7fe7873a5c4a75b9e58a8139f8",
+    "R/report.R": "6f9a4ae97d398b9647622bb2c7e3d5254ad47d357aa344e8192cedb74884a5d2",
+    "man/impute.Rd": "74500308e3bd95ac1f963d73a14a2af56bb7555be92b93135abb7cdacd2d56ea",
+    "man/pigauto_report.Rd": "cf22cbbf3ccef4a6197b658c9e3e4c672bd738c4fe6526da232033fdb70cef85"
+  },
+  "blockers": [],
+  "conditions": [
+    "PASS applies only to the proposed source fix and provisional install.",
+    "The original 14ee frozen archive remains NOT_READY and was not modified or re-reviewed as fixed.",
+    "Do not claim release readiness until the source fix is merged, a new exact archive is frozen, required checks and final ledger consolidation pass, and separate human release gates are resolved."
+  ],
+  "checked_evidence": [
+    "Four-file diff is limited to the two requested roxygen descriptions and generated Rd pages.",
+    "Installed impute help explicitly states gnn=FALSE baseline behavior and gnn=TRUE GNN training/calibration.",
+    "Installed pigauto_report help explicitly distinguishes baseline-only reports from GNN comparison/training-history reports and says metrics/coverage are included when available.",
+    "Provisional source install exited 0; installed-workflow receipt reports path task/help-fix/installed-library/pigauto, version 0.11.0, default/configured gnn=false, 2 missing cells before, 0 after, observed values/classes preserved.",
+    "All 49 R executable ASTs were identical to the base commit; existing report tests passed 17 assertions, 0 failures, 0 skips, with 2 expected small-validation warnings; installed-help/novice script exited 0.",
+    "Neighboring README, Getting Started, mixed-type and MI docs were inspected. Dedicated comparison defaults in compare_methods and simulate_benchmark explicitly document gnn=TRUE; fit_pigauto documents its gnn=FALSE baseline-only behavior. No additional blocker found."
+  ],
+  "limits": [
+    "No full suite, native check, campaign, or new frozen archive was run by this reviewer.",
+    "Provisional install evidence does not validate a future archive or source PR CI.",
+    "No publication, submission, timing disposition, or external action is authorized by this verdict."
+  ]
+}

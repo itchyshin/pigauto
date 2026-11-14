@@ -1,0 +1,36 @@
+{
+  "reviewer": "grace",
+  "verdict": "READY",
+  "artifact_sha256": "a93fece7e272565a97518021ed12c809e04f41462d2e163f8b806f5060a29feb",
+  "source_commit": "b2e6054685e6bdedb073ba46e058af2c0a619a18",
+  "blockers": [],
+  "findings": [
+    "The original 5,137,837-byte archive has 250 entries, inventory SHA-256 d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d, no forbidden development paths, and a clean source commit.",
+    "All four original-gzip native checks end Status: OK with all 29 declared dependencies, 3,195 test passes, zero failures, 161 classified fixture warnings and 86 skips; three downloaded evidence ZIP hashes match GitHub server digests.",
+    "Windows release native elapsed time was 627.141 seconds, but its vignette rebuild was 20 seconds; the retained current CRAN policy provides no fixed whole-check cutoff. Treat whole-check time as a visible risk, not a demonstrated submission blocker.",
+    "One DOI URL returned HTTP 403; Crossref 200 confirms identifier identity only. The access denial is disclosed in cran-comments.md and is not described as URL-clean.",
+    "Warning-capture timing was amended from an invalid mixed pair while preserving both successful pairs and two failed setups; identical audited RDS bytes prevent unique run attribution, without changing native checks."
+  ],
+  "checked_evidence": [
+    "Permanent immutable archive: recomputed SHA-256, byte size, member count, DESCRIPTION and forbidden-path scan",
+    "final-a93fece7-2026-10-18/inventory.txt: recomputed digest",
+    "final-a93fece7-2026-10-18/freeze-review/actual-verdict.json and freeze-receipt.json",
+    "final-a93fece7-2026-10-18/native/{macos-arm64,ubuntu-latest-release,windows-latest-release,windows-latest-devel}/Rcheck/00check.log: read statuses and recomputed four hashes",
+    "final-a93fece7-2026-10-18/native-platform-summary.json and native-summary-review/actual-readback.json",
+    "final-a93fece7-2026-10-18/native/server-digest-binding.json, direct-verification.log, direct-artifacts.json and three downloaded CI ZIPs: recomputed container digests",
+    "final-a93fece7-2026-10-18/source-workflow-size-binding.json and script/cran-0.11-platform/check.R",
+    "final-a93fece7-2026-10-18/actual-warning-audit/actual-successor-a93fece7/report.md and timing-provenance-amendment/amendment.json",
+    "final-a93fece7-2026-10-18/mi/manifest.json, installed-novice/verdict.json, vignette-timing/verdict.json and ancillary/verdict.json",
+    "final-a93fece7-2026-10-18/policy-refresh/{policy.html,checklist.html,urls.html,receipt.json}, cran-publication-and-revdeps.json, current release-ledger.json and cran-comments.md"
+  ],
+  "limitations": [
+    "This vote does not claim submission, confirmation, incoming success, acceptance, CRAN publication, general interval coverage or broader scientific recovery.",
+    "The Windows release check took 627.141 seconds in this runner; CRAN farm time may differ.",
+    "The DOI resolver returned 403 and is not URL-clean; Crossref metadata verifies identity only.",
+    "The warning RDS is byte-identical across two retained captures, so unique invocation attribution and complete concurrent capture history cannot be proved.",
+    "The optional dependency matrix reused recorded symlinks and did not reinstall every dependency from source.",
+    "Rights rely on the recorded maintainer warranty and unchanged credited streams; no independent BirdTree redistribution licence is asserted.",
+    "Earlier Win-builder and R-hub rebuilt-source results for predecessor archives were not promoted to this archive."
+  ],
+  "date": "2026-10-18"
+}

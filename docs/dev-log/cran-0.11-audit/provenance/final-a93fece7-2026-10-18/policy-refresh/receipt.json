@@ -1,0 +1,23 @@
+{
+  "retrieved_utc": "2026-10-18T07:10:46.651847+00:00",
+  "records": [
+    {
+      "url": "https://cran.r-project.org/web/packages/policies.html",
+      "status": 200,
+      "sha256": "df82e90cbc5bbd1623cefe6d4a591dc127cbf00af01e086ce10dc2e35295fffc",
+      "bytes": 30860
+    },
+    {
+      "url": "https://cran.r-project.org/web/packages/submission_checklist.html",
+      "status": 200,
+      "sha256": "fa78a8c5d9c6b37c91e42a49f2ad225b6dd46602471f46dc3b475ca1274dc955",
+      "bytes": 6210
+    },
+    {
+      "url": "https://cran.r-project.org/web/packages/URL_checks.html",
+      "status": 200,
+      "sha256": "319d3b53bd3d317766e8062f5d420ec1f107d81c97b67a300b3061d0c94efc67",
+      "bytes": 5177
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "e8e874ff999c1fa14c69e820ce5029451086e51f33a0643697c2efdbe4cc5e34",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex preparation driver",
+  "method": "Separate post-draft reading for clarity, repetitive phrasing and traceable evidence; factual comparison with retained check, extraction, warning and site receipts.",
+  "genre": "technical checkpoint report",
+  "coverage": "entire saved report",
+  "score": 3,
+  "style_status": "known",
+  "score_reason": "Concrete numbers, file names and explicit limits dominate; required report sections cause some repetition and compressed technical phrasing.",
+  "confidence": "medium",
+  "confidence_reason": "Self-assessment of a constrained technical report; no independent naturalness benchmark was performed.",
+  "examples": [
+    {
+      "location": "line 15",
+      "cue": "Direct scope decision",
+      "impact": "Makes the merge boundary clear.",
+      "repair": "no change needed",
+      "line": 15,
+      "quote": "Keep PR #236 unmerged. A separate source PR #237 allows a main deployment and clean post-merge freeze without merging governance evidence. Reject silently reusing c2 platform results for the changed README/vignette bytes. Reject suppressing warnings or weakening tests to obtain a cleaner report."
+    },
+    {
+      "location": "line 61",
+      "cue": "Explicit limits",
+      "impact": "Prevents the checkpoint from implying release completion.",
+      "repair": "no change needed",
+      "line": 61,
+      "quote": "This checkpoint does NOT cover actual source merge or deployment, the new post-merge archive, final Windows warning messages, new scientific default decisions, broad inferential validity, final release-panel READY votes, CRAN upload, confirmation or acceptance. Those remain explicit gates."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "No new inferential claim or scientific default; recovery and warning validity are explicitly bounded.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "Replay totals, route counts, source extraction and pending approval boundaries agree with the retained receipts; CI is explicitly recorded separately after publication.",
+  "references_gate": "pass",
+  "references_gate_reason": "Internal receipt names and PR237/source identifiers checked against source files and live PR metadata.",
+  "date": "2026-10-17",
+  "calibration_status": "No calibration examples consulted in this assessment.",
+  "interpretation": "perceived_style_not_authorship"
+}

@@ -1,0 +1,10 @@
+NOT_CRAN=UNSET
+_R_CHECK_ALWAYS_LOG_VIGNETTE_OUTPUT_=true
+_R_CHECK_FORCE_SUGGESTS_=true
+_R_CHECK_LIMIT_CORES_=true
+_R_CHECK_TIMINGS_=0
+OMP_NUM_THREADS=1
+OPENBLAS_NUM_THREADS=1
+R_HOME=/Library/Frameworks/R.framework/Resources
+R_LIBS_SITE=/Library/Frameworks/R.framework/Resources/site-library
+R_LIBS_USER=/Users/z3437171/Library/R/arm64/4.6/library

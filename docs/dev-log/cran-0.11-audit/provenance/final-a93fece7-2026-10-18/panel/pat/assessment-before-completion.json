@@ -1,0 +1,26 @@
+{
+  "style_score": 2,
+  "confidence": "medium",
+  "confidence_reason": "The review is short and evidence-led; perceived-style scoring is an editorial judgment, not an authorship test.",
+  "genre": "Independent release-review note",
+  "coverage": "Entire panel/pat/README.md draft",
+  "evidence_and_repair": [
+    {
+      "location": "Paragraph 2",
+      "phrase": "The exact archive\u2019s impute help defaults to gnn = FALSE",
+      "reader_effect": "Names the user-visible behavior and links the help claim to the frozen archive and installed receipt.",
+      "repair": "No change needed; the archive Rd text and installed help transcript were checked."
+    }
+  ],
+  "gates": {
+    "science": "pass for claim scope; the draft avoids claims of broad recovery or coverage.",
+    "facts": "pass; each stated identity and result was checked against the named receipts or archive content.",
+    "references": "pass; no external bibliographic citation is made; the DOI/Crossref identity and access result are described from retained records."
+  },
+  "provenance": {
+    "reviewer": "self-review",
+    "draft_sha256": "ff044af1ac3311eb5e44e3132fd848d71d86e74240cf48e31951af1e1638609d",
+    "date": "2026-10-18",
+    "seen_example_status": "No style controls were used; this assessment covers the exact saved draft."
+  }
+}

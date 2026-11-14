@@ -1,0 +1,98 @@
+[
+  {
+    "cell": "windows-latest-release",
+    "identity": {
+      "archive": "D:\\a\\pigauto\\pigauto\\frozen-artifact\\pigauto_0.11.0.tar.gz",
+      "sha256": "c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2",
+      "size_bytes": 5136713,
+      "inventory_sha256": "d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d",
+      "archive_entries": 250,
+      "package": "pigauto",
+      "version": "0.11.0",
+      "phase": "pre",
+      "platform": "Windows-2025Server-10.0.26100-SP0",
+      "workflow_sha": "f78a42c4329e3249ed91ed6bb54ab4c39a4da8b8",
+      "run_id": "39070922656",
+      "run_attempt": "1"
+    },
+    "status": "Status: OK",
+    "elapsed_seconds": 599.377222061157,
+    "testthat": {
+      "fail": 0,
+      "warn": 161,
+      "skip": 86,
+      "pass": 3195
+    },
+    "session": [
+      "R version 4.6.1 (2026-06-24 ucrt)",
+      "Platform: x86_64-w64-mingw32/x64",
+      "Running under: Windows Server 2022 x64 (build 26100)"
+    ],
+    "actual_package_index_present": true,
+    "actual_index_log_witness": "[82] (./Rd2.ind [83] [84"
+  },
+  {
+    "cell": "windows-latest-devel",
+    "identity": {
+      "archive": "D:\\a\\pigauto\\pigauto\\frozen-artifact\\pigauto_0.11.0.tar.gz",
+      "sha256": "c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2",
+      "size_bytes": 5136713,
+      "inventory_sha256": "d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d",
+      "archive_entries": 250,
+      "package": "pigauto",
+      "version": "0.11.0",
+      "phase": "pre",
+      "platform": "Windows-2025Server-10.0.26100-SP0",
+      "workflow_sha": "f78a42c4329e3249ed91ed6bb54ab4c39a4da8b8",
+      "run_id": "39070922656",
+      "run_attempt": "1"
+    },
+    "status": "Status: OK",
+    "elapsed_seconds": 656.047114849091,
+    "testthat": {
+      "fail": 0,
+      "warn": 161,
+      "skip": 86,
+      "pass": 3195
+    },
+    "session": [
+      "R Under development (unstable) (2026-10-16 r90686 ucrt)",
+      "Platform: x86_64-w64-mingw32/x64",
+      "Running under: Windows Server 2022 x64 (build 26100)"
+    ],
+    "actual_package_index_present": true,
+    "actual_index_log_witness": "[82] (./Rd2.ind [83] [84"
+  },
+  {
+    "cell": "ubuntu-latest-release",
+    "identity": {
+      "archive": "/home/runner/work/pigauto/pigauto/frozen-artifact/pigauto_0.11.0.tar.gz",
+      "sha256": "c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2",
+      "size_bytes": 5136713,
+      "inventory_sha256": "d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d",
+      "archive_entries": 250,
+      "package": "pigauto",
+      "version": "0.11.0",
+      "phase": "pre",
+      "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+      "workflow_sha": "f78a42c4329e3249ed91ed6bb54ab4c39a4da8b8",
+      "run_id": "39070922656",
+      "run_attempt": "1"
+    },
+    "status": "Status: OK",
+    "elapsed_seconds": 324.047611951828,
+    "testthat": {
+      "fail": 0,
+      "warn": 161,
+      "skip": 86,
+      "pass": 3195
+    },
+    "session": [
+      "R version 4.6.1 (2026-06-24)",
+      "Platform: x86_64-pc-linux-gnu",
+      "Running under: Ubuntu 24.04.5 LTS"
+    ],
+    "actual_package_index_present": true,
+    "actual_index_log_witness": "(/tmp/RtmpjOukOi/Rd2pdf241b666af5d9/Rd2.ind [88] [89"
+  }
+]

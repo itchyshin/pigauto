@@ -1,0 +1,18 @@
+{
+  "archive_sha256": "14ee7e5df99b0474c3b9b970acc7ec2e0a82d22976827dceb85b5d00755c03bb",
+  "package": "pigauto",
+  "version": "0.11.0",
+  "needs_compilation": "no",
+  "package_owned_native_binaries": [],
+  "optional_model_dependency_fields_absent": [
+    "drmTMB",
+    "gllvmTMB"
+  ],
+  "scanned_dependency_fields": [
+    "Depends",
+    "Imports",
+    "LinkingTo",
+    "Suggests",
+    "Enhances"
+  ]
+}

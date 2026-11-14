@@ -154,5 +154,6 @@ exact_conditional_mvn <- function(L, Sigma, henderson, cor_scale = TRUE,
   mu[cbind(miss_row, miss_col)] <- mu_m
   var_out[cbind(miss_row, miss_col)] <- var_m
   if (!all(is.finite(mu[cbind(miss_row, miss_col)]))) return(NULL)
+  if (!all(is.finite(var_out[cbind(miss_row, miss_col)]))) return(NULL)
   list(mu = mu, var = var_out)
 }

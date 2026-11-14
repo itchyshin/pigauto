@@ -1,0 +1,66 @@
+[
+  {
+    "os": "windows-latest",
+    "r": "release",
+    "identity": {
+      "archive": "D:\\a\\pigauto\\pigauto\\frozen-artifact\\pigauto_0.11.0.tar.gz",
+      "sha256": "c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2",
+      "size_bytes": 5136713,
+      "inventory_sha256": "d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d",
+      "archive_entries": 250,
+      "package": "pigauto",
+      "version": "0.11.0",
+      "phase": "pre",
+      "platform": "Windows-2025Server-10.0.26100-SP0",
+      "workflow_sha": "f78a42c4329e3249ed91ed6bb54ab4c39a4da8b8",
+      "run_id": "39070922656",
+      "run_attempt": "1"
+    },
+    "check_log_sha256": "67ab1f14f8796fe6073bad46c48b1e7c9161672a6ae828e65c0cf9b54a25ba3b",
+    "check_status": "OK",
+    "manual_review_required": true
+  },
+  {
+    "os": "windows-latest",
+    "r": "devel",
+    "identity": {
+      "archive": "D:\\a\\pigauto\\pigauto\\frozen-artifact\\pigauto_0.11.0.tar.gz",
+      "sha256": "c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2",
+      "size_bytes": 5136713,
+      "inventory_sha256": "d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d",
+      "archive_entries": 250,
+      "package": "pigauto",
+      "version": "0.11.0",
+      "phase": "pre",
+      "platform": "Windows-2025Server-10.0.26100-SP0",
+      "workflow_sha": "f78a42c4329e3249ed91ed6bb54ab4c39a4da8b8",
+      "run_id": "39070922656",
+      "run_attempt": "1"
+    },
+    "check_log_sha256": "fa7b129dd377899beff28230826fac88d620643f53d7bbdd29696378226ed898",
+    "check_status": "OK",
+    "manual_review_required": true
+  },
+  {
+    "os": "ubuntu-latest",
+    "r": "release",
+    "identity": {
+      "archive": "/home/runner/work/pigauto/pigauto/frozen-artifact/pigauto_0.11.0.tar.gz",
+      "sha256": "c2e768adad53baf6b772538e4c5a788161ae6d21ee029311654e9c28d3a5dfe2",
+      "size_bytes": 5136713,
+      "inventory_sha256": "d7b9b0e59ea051b3a22d7f347d8d925e6265b076b238ac893410e79d5b61329d",
+      "archive_entries": 250,
+      "package": "pigauto",
+      "version": "0.11.0",
+      "phase": "pre",
+      "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+      "workflow_sha": "f78a42c4329e3249ed91ed6bb54ab4c39a4da8b8",
+      "run_id": "39070922656",
+      "run_attempt": "1"
+    },
+    "check_log_sha256": "e29f3924d8b6637fabb55d11ed06a340cda1b91ba8265e2565368407b99cb7ab",
+    "check_status": "OK",
+    "manual_review_required": true
+  }
+]
+DIRECT_ARCHIVE_MATRIX_VERIFIED_3_OF_3

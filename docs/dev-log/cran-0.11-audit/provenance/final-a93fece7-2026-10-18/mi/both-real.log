@@ -1,0 +1,11 @@
+REAL_FIT_STATUS backend=drmTMB imputation=1 convergence=0 pdHess=TRUE
+REAL_FIT_STATUS backend=drmTMB imputation=2 convergence=0 pdHess=TRUE
+REAL_FIT_STATUS backend=drmTMB imputation=3 convergence=0 pdHess=TRUE
+GAUSSIAN_ORACLE_OK backend=drmTMB fits=3
+RUBIN_ORACLE_OK backend=drmTMB terms=3 imputations=3
+REAL_FIT_STATUS backend=gllvmTMB imputation=1 convergence=0 pdHess=TRUE
+REAL_FIT_STATUS backend=gllvmTMB imputation=2 convergence=0 pdHess=TRUE
+REAL_FIT_STATUS backend=gllvmTMB imputation=3 convergence=0 pdHess=TRUE
+RUBIN_ORACLE_OK backend=gllvmTMB terms=8 imputations=3
+script/cran-0.11-integration/test-real-backends.R: 50 expectations passed against installed pigauto
+REAL_ADAPTERS_OK

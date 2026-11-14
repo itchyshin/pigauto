@@ -1,0 +1,23 @@
+[ FAIL 0 | WARN 0 | SKIP 3 | PASS 35 ]
+
+══ Skipped tests (3) ═══════════════════════════════════════════════════════════
+• {rgbif} is not installed (2): 'test-gbif-centroids.R:146:3',
+  'test-gbif-centroids.R:181:3'
+• slow integration - set NOT_CRAN=TRUE to run (1):
+  'test-gbif-centroids.R:226:3'
+
+[ FAIL 0 | WARN 0 | SKIP 3 | PASS 35 ]
+[ FAIL 0 | WARN 0 | SKIP 8 | PASS 60 ]
+
+══ Skipped tests (8) ═══════════════════════════════════════════════════════════
+• {rgbif} is not installed (2): 'test-gbif-centroids.R:146:3',
+  'test-gbif-centroids.R:181:3'
+• {terra} is not installed (3): 'test-worldclim-covariates.R:130:3',
+  'test-worldclim-covariates.R:189:3', 'test-worldclim-covariates.R:230:3'
+• slow integration - set NOT_CRAN=TRUE to run (1):
+  'test-gbif-centroids.R:226:3'
+• slow integration -- NOT_CRAN=TRUE to run (2):
+  'test-worldclim-covariates.R:267:3', 'test-worldclim-covariates.R:362:3'
+
+[ FAIL 0 | WARN 0 | SKIP 8 | PASS 60 ]
+FINAL_EXACT_OPTIONAL_ABSENCE_BRANCHES_PASS

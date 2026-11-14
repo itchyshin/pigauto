@@ -1,0 +1,44 @@
+{
+  "assessment_performed": true,
+  "draft_sha256": "6155dbd79d5122fe7a070925cc6da5a8361b804ddedc5a0788d4806fa4c0a349",
+  "draft_version": "v1",
+  "requested_mode": "independent",
+  "assessor_type": "self",
+  "reviewer": "Codex self-review",
+  "method": "Separate post-draft read of the complete saved report, checked against the frozen archive and named retained receipts; style judgment is editorial, not authorship detection.",
+  "genre": "Short technical release-review report and vote.",
+  "coverage": "Entire panel/rose/README.md, all 13 lines; checked claims against the actual archive and the evidence records listed in verdict.json.",
+  "score": 2,
+  "style_status": "assessed",
+  "score_reason": "The report is specific and proportionate to an audit, with little stock framing. Its compact evidence language and repeated status qualifications are somewhat formal, but help preserve release boundaries.",
+  "confidence": "moderate",
+  "confidence_reason": "The report is short and the style cues are clear, while perceived-style scoring remains subjective and has no validated calibration.",
+  "examples": [
+    {
+      "location": "Paragraph 1, line 3",
+      "cue": "“I vote READY for this review's scoped release gate.”",
+      "impact": "States the recommendation directly and bounds it to this vote.",
+      "repair": "no change needed",
+      "line": 3,
+      "quote": "I vote READY for this review's scoped release gate."
+    },
+    {
+      "location": "Paragraph 4, line 9",
+      "cue": "“The archive NOTICE limits its MIT licence to megatrees software; the underlying tree data are outside that licence.”",
+      "impact": "Makes the software/data licence distinction concrete for a release reviewer.",
+      "repair": "no change needed",
+      "line": 7,
+      "quote": "The archive NOTICE limits its MIT licence to megatrees software; the underlying tree data are outside that licence."
+    }
+  ],
+  "evidence_none_reason": null,
+  "science_gate": "pass",
+  "science_gate_reason": "The report makes no new performance, coverage, or inferential-validity claim; it explicitly limits the warning review and retained platform checks.",
+  "facts_gate": "pass",
+  "facts_gate_reason": "The archive identity was independently hashed and the quoted package files inspected. Other concrete statements were checked against the identified release ledger, freeze readback, native summary, warning amendment, ancillary, and site receipts.",
+  "references_gate": "pass",
+  "references_gate_reason": "The only DOI statement is limited to the disclosed resolver 403 and Crossref identity check, which are supported by the retained ancillary receipt. No unsupported bibliographic claim appears.",
+  "date": "2026-10-18",
+  "calibration_status": "Read the protocol provisional-calibration descriptions; no benchmark reference answers or control drafts were opened for this assessment.",
+  "interpretation": "perceived_style_not_authorship"
+}
