@@ -83,8 +83,10 @@ bayes_lambda_for_col <- function(y, R, nugget = 1e-6,
   log_w[!ok] <- -Inf
   log_w <- log_w - max(log_w[ok])
   w <- exp(log_w)
+  # At least one finite log weight becomes exactly zero above, so its
+  # exponential is 1. All other weights lie in [0, 1]; the sum is finite
+  # and positive for any R vector. Genuine all-nonfinite cases exit above.
   w_sum <- sum(w)
-  if (!is.finite(w_sum) || w_sum <= 0) return(point_mass_1())
   w <- w / w_sum
 
   # Posterior summaries.
