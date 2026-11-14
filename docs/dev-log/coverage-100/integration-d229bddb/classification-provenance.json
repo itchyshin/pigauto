@@ -1,0 +1,7 @@
+{
+  "source_sha": "d229bddb1f280d2537e2753976fbd369af4fff4c",
+  "residuals_sha256": "b7414e6d63b1837978f1f8cd9a523a00d3a76c9345c89cb691a4457cfb5fe0f6",
+  "classification_sha256": "a34766b0ab3a27df2cc87d0a24cb44999e95c2a19cd87814e682f56fede7c843",
+  "basis": "Same97 locations as82ce independently confirmed in freshD229 collection; runtimeR and coverage configuration unchanged. Triage is not an impossibility proof.",
+  "historical_100_gate": "unmet; user approved delivery with exact remainder"
+}

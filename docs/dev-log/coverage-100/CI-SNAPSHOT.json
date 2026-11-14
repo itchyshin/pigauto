@@ -1,0 +1,1355 @@
+[
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/uncertainty-plot-order",
+    "headRefOid": "08b7cdc6df9fbacea3dbf305328f28b57d67f02d",
+    "isDraft": true,
+    "number": 284,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T12:19:25Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42616041858/job/129156040153",
+        "name": "pkgdown",
+        "startedAt": "2026-11-09T12:19:26Z",
+        "status": "COMPLETED",
+        "workflowName": "pkgdown.yaml"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T12:32:42Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42616042012/job/129156038734",
+        "name": "ubuntu-latest (R release)",
+        "startedAt": "2026-11-09T12:19:28Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T12:32:06Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42616041859/job/129156037984",
+        "name": "test-coverage",
+        "startedAt": "2026-11-09T12:19:27Z",
+        "status": "COMPLETED",
+        "workflowName": "test-coverage"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T12:32:48Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42616042012/job/129156038302",
+        "name": "ubuntu-latest (R devel)",
+        "startedAt": "2026-11-09T12:19:28Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T12:45:28Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42616042012/job/129156038488",
+        "name": "macos-latest (R release)",
+        "startedAt": "2026-11-09T12:19:29Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      }
+    ],
+    "title": "Fix uncertainty plots to use sorted prediction ranks"
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/single-clade-sampling",
+    "headRefOid": "81e5da2c636190c086ed31f079a15dd5ead30537",
+    "isDraft": true,
+    "number": 285,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T12:21:46Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42616372094/job/129157132051",
+        "name": "pkgdown",
+        "startedAt": "2026-11-09T12:21:47Z",
+        "status": "COMPLETED",
+        "workflowName": "pkgdown.yaml"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T12:34:21Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42616371969/job/129157129254",
+        "name": "ubuntu-latest (R release)",
+        "startedAt": "2026-11-09T12:21:49Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T12:35:50Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42616371870/job/129157128426",
+        "name": "test-coverage",
+        "startedAt": "2026-11-09T12:21:48Z",
+        "status": "COMPLETED",
+        "workflowName": "test-coverage"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T12:36:50Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42616371969/job/129157129589",
+        "name": "ubuntu-latest (R devel)",
+        "startedAt": "2026-11-09T12:21:48Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T12:48:14Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42616371969/job/129157129631",
+        "name": "macos-latest (R release)",
+        "startedAt": "2026-11-09T12:21:49Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      }
+    ],
+    "title": "Fix phylogenetic masking with one eligible clade"
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/discrete-uncertainty-guard",
+    "headRefOid": "ae2f1c70fd0dec3eb4c032a503e18c692dfd5490",
+    "isDraft": true,
+    "number": 286,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T13:05:18Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42622381746/job/129177531139",
+        "name": "pkgdown",
+        "startedAt": "2026-11-09T13:05:18Z",
+        "status": "COMPLETED",
+        "workflowName": "pkgdown.yaml"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T13:24:36Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42622381699/job/129177528950",
+        "name": "ubuntu-latest (R release)",
+        "startedAt": "2026-11-09T13:11:21Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T13:18:52Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42622382094/job/129177529581",
+        "name": "test-coverage",
+        "startedAt": "2026-11-09T13:08:12Z",
+        "status": "COMPLETED",
+        "workflowName": "test-coverage"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T13:25:26Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42622381699/job/129177529244",
+        "name": "ubuntu-latest (R devel)",
+        "startedAt": "2026-11-09T13:12:18Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T13:20:24Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42622381699/job/129177529287",
+        "name": "macos-latest (R release)",
+        "startedAt": "2026-11-09T13:06:20Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      }
+    ],
+    "title": "Refuse Gaussian interval displays for discrete uncertainty scores"
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/test-coverage-plotting",
+    "headRefOid": "bd6a643a9be222a23af54b311df374c98e2f5cdd",
+    "isDraft": true,
+    "number": 287,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T13:25:36Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42625368830/job/129187621999",
+        "name": "pkgdown",
+        "startedAt": "2026-11-09T13:25:36Z",
+        "status": "COMPLETED",
+        "workflowName": "pkgdown.yaml"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T13:39:24Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42625368740/job/129187619184",
+        "name": "ubuntu-latest (R release)",
+        "startedAt": "2026-11-09T13:26:21Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T13:35:36Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42625368705/job/129187618643",
+        "name": "test-coverage",
+        "startedAt": "2026-11-09T13:25:38Z",
+        "status": "COMPLETED",
+        "workflowName": "test-coverage"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T13:42:06Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42625368740/job/129187619541",
+        "name": "ubuntu-latest (R devel)",
+        "startedAt": "2026-11-09T13:30:39Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T13:49:10Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42625368740/job/129187619501",
+        "name": "macos-latest (R release)",
+        "startedAt": "2026-11-09T13:27:22Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      }
+    ],
+    "title": "Audit coverage gaps and test presentation and evaluation contracts"
+  },
+  {
+    "baseRefName": "codex/test-coverage-plotting",
+    "headRefName": "codex/coverage-100-wave2",
+    "headRefOid": "638445a002ce5118f78561c81cf35c2f313a514c",
+    "isDraft": true,
+    "number": 288,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-10T00:06:14Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42725692442/job/129530622089",
+        "name": "pkgdown",
+        "startedAt": "2026-11-10T00:06:14Z",
+        "status": "COMPLETED",
+        "workflowName": "pkgdown.yaml"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-10T00:38:26Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42725692406/job/129530624573",
+        "name": "ubuntu-latest (R release)",
+        "startedAt": "2026-11-10T00:25:08Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-10T00:44:52Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42725692474/job/129530620786",
+        "name": "test-coverage",
+        "startedAt": "2026-11-10T00:28:29Z",
+        "status": "COMPLETED",
+        "workflowName": "test-coverage"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-10T00:58:35Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42725692406/job/129530625121",
+        "name": "ubuntu-latest (R devel)",
+        "startedAt": "2026-11-10T00:44:54Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-10T00:45:21Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42725692406/job/129530625001",
+        "name": "macos-latest (R release)",
+        "startedAt": "2026-11-10T00:21:03Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      }
+    ],
+    "title": "test: extend prediction fitting and imputation coverage"
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-blomberg-k",
+    "headRefOid": "8bc94aaae17d9a0eed4af934ed5b61e9a55be5f9",
+    "isDraft": true,
+    "number": 289,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T14:13:34Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42632578872/job/129212358377",
+        "name": "pkgdown",
+        "startedAt": "2026-11-09T14:13:34Z",
+        "status": "COMPLETED",
+        "workflowName": "pkgdown.yaml"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T14:25:48Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42632578873/job/129212355102",
+        "name": "ubuntu-latest (R release)",
+        "startedAt": "2026-11-09T14:13:36Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T14:23:52Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42632579079/job/129212355709",
+        "name": "test-coverage",
+        "startedAt": "2026-11-09T14:13:36Z",
+        "status": "COMPLETED",
+        "workflowName": "test-coverage"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T14:26:42Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42632578873/job/129212355110",
+        "name": "ubuntu-latest (R devel)",
+        "startedAt": "2026-11-09T14:13:36Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T14:34:15Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42632578873/job/129212354786",
+        "name": "macos-latest (R release)",
+        "startedAt": "2026-11-09T14:13:37Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      }
+    ],
+    "title": "Fix Blomberg K signal gate"
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-mi-single-missing",
+    "headRefOid": "e43655e1d2cbd493db69a9bb2dcefb4cca2cde99",
+    "isDraft": true,
+    "number": 290,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T14:17:37Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42633249561/job/129214751913",
+        "name": "pkgdown",
+        "startedAt": "2026-11-09T14:17:48Z",
+        "status": "COMPLETED",
+        "workflowName": "pkgdown.yaml"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T14:31:02Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42633249243/job/129214655491",
+        "name": "ubuntu-latest (R release)",
+        "startedAt": "2026-11-09T14:17:45Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T14:33:21Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42633249246/job/129214654289",
+        "name": "test-coverage",
+        "startedAt": "2026-11-09T14:17:45Z",
+        "status": "COMPLETED",
+        "workflowName": "test-coverage"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T14:30:59Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42633249243/job/129214654717",
+        "name": "ubuntu-latest (R devel)",
+        "startedAt": "2026-11-09T14:17:44Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T14:38:24Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42633249243/job/129214655277",
+        "name": "macos-latest (R release)",
+        "startedAt": "2026-11-09T14:17:45Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      }
+    ],
+    "title": "fix: preserve covariance dimensions for one missing cell"
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/comparison-method-labels",
+    "headRefOid": "34dd16617b1f1aa91aa8480fabee208a981490af",
+    "isDraft": true,
+    "number": 291,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T14:22:31Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42634042377/job/129217399045",
+        "name": "pkgdown",
+        "startedAt": "2026-11-09T14:22:31Z",
+        "status": "COMPLETED",
+        "workflowName": "pkgdown.yaml"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T14:33:32Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42634042331/job/129217390992",
+        "name": "ubuntu-latest (R release)",
+        "startedAt": "2026-11-09T14:22:33Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T14:34:51Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42634042244/job/129217389779",
+        "name": "test-coverage",
+        "startedAt": "2026-11-09T14:22:32Z",
+        "status": "COMPLETED",
+        "workflowName": "test-coverage"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T14:34:01Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42634042331/job/129217391015",
+        "name": "ubuntu-latest (R devel)",
+        "startedAt": "2026-11-09T14:22:32Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T14:47:34Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42634042331/job/129217390511",
+        "name": "macos-latest (R release)",
+        "startedAt": "2026-11-09T14:22:33Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      }
+    ],
+    "title": "fix: label comparisons with the supplied method"
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-best-checkpoint",
+    "headRefOid": "9ed71bb8c014e707f38c0170f44ac950a2931066",
+    "isDraft": true,
+    "number": 292,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T15:13:12Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42642424792/job/129246719012",
+        "name": "pkgdown",
+        "startedAt": "2026-11-09T15:13:13Z",
+        "status": "COMPLETED",
+        "workflowName": "pkgdown.yaml"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T15:26:42Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42642425000/job/129246717098",
+        "name": "ubuntu-latest (R release)",
+        "startedAt": "2026-11-09T15:13:15Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T15:25:22Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42642424730/job/129246741873",
+        "name": "test-coverage",
+        "startedAt": "2026-11-09T15:13:17Z",
+        "status": "COMPLETED",
+        "workflowName": "test-coverage"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T15:24:29Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42642425000/job/129246716710",
+        "name": "ubuntu-latest (R devel)",
+        "startedAt": "2026-11-09T15:13:14Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T15:35:50Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42642425000/job/129246716163",
+        "name": "macos-latest (R release)",
+        "startedAt": "2026-11-09T15:13:15Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      }
+    ],
+    "title": "Fix validation-best GNN checkpoint restoration"
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-nonfinite-gnn-fit",
+    "headRefOid": "5e8deabbec07c4999097a8fe01eda75a549b49b3",
+    "isDraft": true,
+    "number": 293,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T15:34:30Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42646030947/job/129259399218",
+        "name": "pkgdown",
+        "startedAt": "2026-11-09T15:34:30Z",
+        "status": "COMPLETED",
+        "workflowName": "pkgdown.yaml"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T15:47:26Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42646030943/job/129259482106",
+        "name": "ubuntu-latest (R release)",
+        "startedAt": "2026-11-09T15:34:40Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T15:46:45Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42646030994/job/129259397451",
+        "name": "test-coverage",
+        "startedAt": "2026-11-09T15:34:32Z",
+        "status": "COMPLETED",
+        "workflowName": "test-coverage"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T15:47:36Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42646030943/job/129259483442",
+        "name": "ubuntu-latest (R devel)",
+        "startedAt": "2026-11-09T15:34:41Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T16:00:53Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42646030943/job/129259482658",
+        "name": "macos-latest (R release)",
+        "startedAt": "2026-11-09T15:34:41Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      }
+    ],
+    "title": "Preserve closed gates and reject non-finite GNN blends"
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/remove-impossible-bayes-weight-fallback",
+    "headRefOid": "22f8a5fa20ecbfed906944a3c9435e9667006879",
+    "isDraft": true,
+    "number": 294,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T17:07:58Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42661597356/job/129314299547",
+        "name": "pkgdown",
+        "startedAt": "2026-11-09T17:07:58Z",
+        "status": "COMPLETED",
+        "workflowName": "pkgdown.yaml"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T17:18:54Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42661596953/job/129314299341",
+        "name": "ubuntu-latest (R release)",
+        "startedAt": "2026-11-09T17:08:00Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T17:22:59Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42661597329/job/129314302703",
+        "name": "test-coverage",
+        "startedAt": "2026-11-09T17:08:00Z",
+        "status": "COMPLETED",
+        "workflowName": "test-coverage"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T17:16:47Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42661596953/job/129314299209",
+        "name": "ubuntu-latest (R devel)",
+        "startedAt": "2026-11-09T17:08:00Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T17:31:23Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42661596953/job/129314299286",
+        "name": "macos-latest (R release)",
+        "startedAt": "2026-11-09T17:08:01Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      }
+    ],
+    "title": "Remove unreachable Bayesian weight-sum fallback"
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/remove-unreachable-fallback-branches",
+    "headRefOid": "5f2562c15d4c650aa57ce7893ef20378cfcccdab",
+    "isDraft": true,
+    "number": 295,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T17:17:07Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42663104249/job/129319536563",
+        "name": "pkgdown",
+        "startedAt": "2026-11-09T17:17:07Z",
+        "status": "COMPLETED",
+        "workflowName": "pkgdown.yaml"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T17:30:34Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42663104244/job/129319535776",
+        "name": "ubuntu-latest (R release)",
+        "startedAt": "2026-11-09T17:17:09Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T17:33:32Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42663104215/job/129319534074",
+        "name": "test-coverage",
+        "startedAt": "2026-11-09T17:17:09Z",
+        "status": "COMPLETED",
+        "workflowName": "test-coverage"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T17:51:36Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42663104244/job/129319535487",
+        "name": "ubuntu-latest (R devel)",
+        "startedAt": "2026-11-09T17:17:09Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T17:46:26Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42663104244/job/129319534901",
+        "name": "macos-latest (R release)",
+        "startedAt": "2026-11-09T17:17:10Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      }
+    ],
+    "title": "Remove fallbacks ruled out by earlier validation"
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/remove-redundant-analysis-mi-guard",
+    "headRefOid": "c50f80f41bc4cf4b5a966acd2c7a94406a5a9fc5",
+    "isDraft": true,
+    "number": 296,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T17:55:27Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42669299432/job/129341241022",
+        "name": "pkgdown",
+        "startedAt": "2026-11-09T17:55:27Z",
+        "status": "COMPLETED",
+        "workflowName": "pkgdown.yaml"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T18:07:46Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42669299447/job/129341239239",
+        "name": "ubuntu-latest (R release)",
+        "startedAt": "2026-11-09T17:55:29Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T18:08:11Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42669299649/job/129341240874",
+        "name": "test-coverage",
+        "startedAt": "2026-11-09T17:55:29Z",
+        "status": "COMPLETED",
+        "workflowName": "test-coverage"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T18:08:14Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42669299447/job/129341238965",
+        "name": "ubuntu-latest (R devel)",
+        "startedAt": "2026-11-09T17:55:29Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T18:19:10Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42669299447/job/129341239488",
+        "name": "macos-latest (R release)",
+        "startedAt": "2026-11-09T17:55:30Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      }
+    ],
+    "title": "Remove duplicate analysis-MI completeness check"
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/benchmark-failure-diagnostic",
+    "headRefOid": "592df7340edc018f10ad929fc231d4dcf27fa99b",
+    "isDraft": true,
+    "number": 297,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T18:54:49Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42678293818/job/129365556123",
+        "name": "pkgdown",
+        "startedAt": "2026-11-09T18:54:50Z",
+        "status": "COMPLETED",
+        "workflowName": "pkgdown.yaml"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T19:05:58Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42678293643/job/129365553220",
+        "name": "ubuntu-latest (R release)",
+        "startedAt": "2026-11-09T18:54:52Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T19:04:55Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42678293968/job/129365558356",
+        "name": "test-coverage",
+        "startedAt": "2026-11-09T18:54:52Z",
+        "status": "COMPLETED",
+        "workflowName": "test-coverage"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T19:07:35Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42678293643/job/129365552613",
+        "name": "ubuntu-latest (R devel)",
+        "startedAt": "2026-11-09T18:54:51Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T19:19:43Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42678293643/job/129365552756",
+        "name": "macos-latest (R release)",
+        "startedAt": "2026-11-09T18:54:52Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      }
+    ],
+    "title": "Preserve causes when benchmark pipeline attempts all fail"
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/remove-redundant-imputation-guards",
+    "headRefOid": "946c33cb5014d276d2a501622665d7472eb03359",
+    "isDraft": true,
+    "number": 298,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T19:11:15Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42680924103/job/129375001693",
+        "name": "pkgdown",
+        "startedAt": "2026-11-09T19:11:25Z",
+        "status": "COMPLETED",
+        "workflowName": "pkgdown.yaml"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T19:23:25Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42680923764/job/129374895767",
+        "name": "ubuntu-latest (R release)",
+        "startedAt": "2026-11-09T19:11:17Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T19:24:07Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42680923640/job/129374893945",
+        "name": "test-coverage",
+        "startedAt": "2026-11-09T19:11:17Z",
+        "status": "COMPLETED",
+        "workflowName": "test-coverage"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T19:21:58Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42680923764/job/129374894867",
+        "name": "ubuntu-latest (R devel)",
+        "startedAt": "2026-11-09T19:11:16Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T19:32:26Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42680923764/job/129374895472",
+        "name": "macos-latest (R release)",
+        "startedAt": "2026-11-09T19:11:16Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      }
+    ],
+    "title": "Simplify redundant imputation guards"
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/dcb-no-observations",
+    "headRefOid": "16555adc0abb7179e8f9d5407653411b686c4e34",
+    "isDraft": true,
+    "number": 300,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T19:35:01Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42684725412/job/129388346686",
+        "name": "pkgdown",
+        "startedAt": "2026-11-09T19:35:01Z",
+        "status": "COMPLETED",
+        "workflowName": "pkgdown.yaml"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T19:46:39Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42684725440/job/129388344922",
+        "name": "ubuntu-latest (R release)",
+        "startedAt": "2026-11-09T19:35:04Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T19:44:28Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42684725792/job/129388349030",
+        "name": "test-coverage",
+        "startedAt": "2026-11-09T19:35:04Z",
+        "status": "COMPLETED",
+        "workflowName": "test-coverage"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T19:47:03Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42684725440/job/129388343527",
+        "name": "ubuntu-latest (R devel)",
+        "startedAt": "2026-11-09T19:35:04Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T19:57:34Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42684725440/job/129388343631",
+        "name": "macos-latest (R release)",
+        "startedAt": "2026-11-09T19:35:04Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      }
+    ],
+    "title": "Check private conditional-draw observations before estimation"
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/remove-empty-gbif-key-fallback",
+    "headRefOid": "96cd4dbeca19ce47d80f1ee4da556fe866768afe",
+    "isDraft": true,
+    "number": 301,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T20:04:14Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42687391614/job/129397759691",
+        "name": "ubuntu-latest (R release)",
+        "startedAt": "2026-11-09T19:51:50Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T20:42:20Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42687391642/job/129397760947",
+        "name": "test-coverage",
+        "startedAt": "2026-11-09T20:32:05Z",
+        "status": "COMPLETED",
+        "workflowName": "test-coverage"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T20:13:09Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42687391614/job/129397760269",
+        "name": "ubuntu-latest (R devel)",
+        "startedAt": "2026-11-09T20:00:22Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T20:17:25Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42687391614/job/129397760827",
+        "name": "macos-latest (R release)",
+        "startedAt": "2026-11-09T19:56:27Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      }
+    ],
+    "title": "Remove unreachable empty GBIF cache-key fallback"
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-joint-refinement-rollback",
+    "headRefOid": "f75d2c994f90c67f3dee49dad597cc7a07c4058e",
+    "isDraft": true,
+    "number": 302,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T20:02:33Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42687876801/job/129403861981",
+        "name": "pkgdown",
+        "startedAt": "2026-11-09T20:02:40Z",
+        "status": "COMPLETED",
+        "workflowName": "pkgdown.yaml"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T20:52:58Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42687877090/job/129399476784",
+        "name": "ubuntu-latest (R release)",
+        "startedAt": "2026-11-09T20:40:07Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T20:25:39Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42687876772/job/129399472805",
+        "name": "test-coverage",
+        "startedAt": "2026-11-09T20:13:32Z",
+        "status": "COMPLETED",
+        "workflowName": "test-coverage"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T21:04:26Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42687877090/job/129399476227",
+        "name": "ubuntu-latest (R devel)",
+        "startedAt": "2026-11-09T20:39:54Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T20:25:57Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42687877090/job/129399476981",
+        "name": "macos-latest (R release)",
+        "startedAt": "2026-11-09T20:00:42Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      }
+    ],
+    "title": "Retain last accepted joint refinement after divergence"
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/reject-nonfinite-exact-variance",
+    "headRefOid": "aa2ccddb51a46d11022c5a4f61b63f60ae767e3a",
+    "isDraft": true,
+    "number": 303,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T20:51:17Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42696899721/job/129431049760",
+        "name": "pkgdown",
+        "startedAt": "2026-11-09T20:51:17Z",
+        "status": "COMPLETED",
+        "workflowName": "pkgdown.yaml"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T22:18:38Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42696899626/job/129431046420",
+        "name": "ubuntu-latest (R release)",
+        "startedAt": "2026-11-09T22:06:05Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T22:07:11Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42696899613/job/129431046767",
+        "name": "test-coverage",
+        "startedAt": "2026-11-09T21:54:46Z",
+        "status": "COMPLETED",
+        "workflowName": "test-coverage"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T21:43:56Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42696899626/job/129431046270",
+        "name": "ubuntu-latest (R devel)",
+        "startedAt": "2026-11-09T21:30:59Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T21:18:52Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42696899626/job/129431045965",
+        "name": "macos-latest (R release)",
+        "startedAt": "2026-11-09T20:53:01Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      }
+    ],
+    "title": "Refuse non-finite exact conditional variances"
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/reject-overflowed-covariate-scaling",
+    "headRefOid": "ffe108cdf72f5abde733e870ade4b0d800e3e728",
+    "isDraft": true,
+    "number": 304,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T22:36:11Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42713347067/job/129488440467",
+        "name": "pkgdown",
+        "startedAt": "2026-11-09T22:36:21Z",
+        "status": "COMPLETED",
+        "workflowName": "pkgdown.yaml"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T22:47:20Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42713347608/job/129488360547",
+        "name": "ubuntu-latest (R release)",
+        "startedAt": "2026-11-09T22:36:44Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T23:56:01Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42713347535/job/129488359955",
+        "name": "test-coverage",
+        "startedAt": "2026-11-09T23:41:30Z",
+        "status": "COMPLETED",
+        "workflowName": "test-coverage"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T23:00:02Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42713347608/job/129488360972",
+        "name": "ubuntu-latest (R devel)",
+        "startedAt": "2026-11-09T22:47:27Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T23:05:25Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42713347608/job/129488361153",
+        "name": "macos-latest (R release)",
+        "startedAt": "2026-11-09T22:44:55Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      }
+    ],
+    "title": "Reject overflowed numeric covariate encodings with an early diagnostic"
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/remove-empty-cv-fallbacks",
+    "headRefOid": "0ba4ec0df598a43c29515b9e84a990b645411b8f",
+    "isDraft": true,
+    "number": 305,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T22:42:54Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42714320764/job/129491761726",
+        "name": "pkgdown",
+        "startedAt": "2026-11-09T22:42:55Z",
+        "status": "COMPLETED",
+        "workflowName": "pkgdown.yaml"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T23:15:00Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42714321190/job/129491766207",
+        "name": "ubuntu-latest (R release)",
+        "startedAt": "2026-11-09T23:06:37Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T23:13:25Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42714320856/job/129491759564",
+        "name": "test-coverage",
+        "startedAt": "2026-11-09T22:59:57Z",
+        "status": "COMPLETED",
+        "workflowName": "test-coverage"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T23:19:00Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42714321190/job/129491766455",
+        "name": "ubuntu-latest (R devel)",
+        "startedAt": "2026-11-09T23:06:33Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T23:06:32Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42714321190/job/129491766348",
+        "name": "macos-latest (R release)",
+        "startedAt": "2026-11-09T22:52:59Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      }
+    ],
+    "title": "Remove unreachable empty calibration fold fallbacks"
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/validate-prediction-counts",
+    "headRefOid": "b913036942ad0aa73ee48c62c08343bf66c82ab7",
+    "isDraft": true,
+    "number": 306,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T23:13:24Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42718670115/job/129506705043",
+        "name": "pkgdown",
+        "startedAt": "2026-11-09T23:13:24Z",
+        "status": "COMPLETED",
+        "workflowName": "pkgdown.yaml"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T23:44:44Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42718670140/job/129506702397",
+        "name": "ubuntu-latest (R release)",
+        "startedAt": "2026-11-09T23:32:30Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T23:31:56Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42718670461/job/129506707529",
+        "name": "test-coverage",
+        "startedAt": "2026-11-09T23:15:46Z",
+        "status": "COMPLETED",
+        "workflowName": "test-coverage"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-10T00:06:03Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42718670140/job/129506703113",
+        "name": "ubuntu-latest (R devel)",
+        "startedAt": "2026-11-09T23:53:21Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      },
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-09T23:38:08Z",
+        "conclusion": "SUCCESS",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42718670140/job/129506702646",
+        "name": "macos-latest (R release)",
+        "startedAt": "2026-11-09T23:16:17Z",
+        "status": "COMPLETED",
+        "workflowName": "R-CMD-check"
+      }
+    ],
+    "title": "Validate prediction counts before device selection"
+  },
+  {
+    "baseRefName": "codex/coverage-100-wave2",
+    "headRefName": "codex/coverage-closeout-evidence",
+    "headRefOid": "d8bb73d41ca72e5d2ac759fdbe9817837ecf9afa",
+    "isDraft": true,
+    "number": 307,
+    "state": "OPEN",
+    "statusCheckRollup": [
+      {
+        "__typename": "CheckRun",
+        "completedAt": "2026-11-10T00:32:02Z",
+        "conclusion": "SKIPPED",
+        "detailsUrl": "https://github.com/itchyshin/pigauto/actions/runs/42729020819/job/129541975559",
+        "name": "pkgdown",
+        "startedAt": "2026-11-10T00:32:02Z",
+        "status": "COMPLETED",
+        "workflowName": "pkgdown.yaml"
+      }
+    ],
+    "title": "Document verified coverage closeout and exact remaining gaps"
+  }
+]
