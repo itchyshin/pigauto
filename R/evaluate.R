@@ -188,7 +188,7 @@ eval_test_cells <- function(pred_latent, pred_obj, truth_latent,
       if (tp %in% c("continuous", "proportion")) {
         rmse_val <- rmse_vec(t_j[ok], p_j[ok])
         mae_val  <- mae_vec(t_j[ok], p_j[ok])
-        r_val    <- if (n_ok > 2L) stats::cor(t_j[ok], p_j[ok]) else NA_real_
+        r_val    <- if (n_ok > 2L) cor_for_scoring(t_j[ok], p_j[ok]) else NA_real_
 
         rows <- c(rows, list(
           data.frame(method = method, trait = nm, type = tp,
@@ -205,7 +205,7 @@ eval_test_cells <- function(pred_latent, pred_obj, truth_latent,
       } else if (tp == "count") {
         rmse_val <- rmse_vec(t_j[ok], p_j[ok])
         mae_val  <- mae_vec(t_j[ok], p_j[ok])
-        r_val    <- if (n_ok > 2L) stats::cor(t_j[ok], p_j[ok]) else NA_real_
+        r_val    <- if (n_ok > 2L) cor_for_scoring(t_j[ok], p_j[ok]) else NA_real_
 
         rows <- c(rows, list(
           data.frame(method = method, trait = nm, type = tp,
@@ -223,7 +223,7 @@ eval_test_cells <- function(pred_latent, pred_obj, truth_latent,
         # ordinal: RMSE on integer scale, Spearman rho
         rmse_val <- rmse_vec(t_j[ok], p_j[ok])
         rho_val  <- if (n_ok > 2L) {
-          stats::cor(t_j[ok], p_j[ok], method = "spearman")
+          cor_for_scoring(t_j[ok], p_j[ok], method = "spearman")
         } else {
           NA_real_
         }
@@ -373,7 +373,7 @@ eval_test_cells <- function(pred_latent, pred_obj, truth_latent,
       rmse_val <- rmse_vec(truth_ev[ok_gate], pred_ev[ok_gate])
       mae_val  <- mae_vec(truth_ev[ok_gate], pred_ev[ok_gate])
       r_val    <- if (n_ok > 2L) {
-        stats::cor(truth_ev[ok_gate], pred_ev[ok_gate])
+        cor_for_scoring(truth_ev[ok_gate], pred_ev[ok_gate])
       } else {
         NA_real_
       }
@@ -480,7 +480,7 @@ eval_test_cells_legacy <- function(pred_latent, truth_latent,
     n_ok     <- sum(ok)
     rmse_val <- rmse_vec(t_j[ok], p_j[ok])
     mae_val  <- mae_vec(t_j[ok], p_j[ok])
-    r_val    <- if (n_ok > 2L) stats::cor(t_j[ok], p_j[ok]) else NA_real_
+    r_val    <- if (n_ok > 2L) cor_for_scoring(t_j[ok], p_j[ok]) else NA_real_
 
     rows <- c(rows, list(
       data.frame(method = method, trait = trait_names[j], type = "continuous",
