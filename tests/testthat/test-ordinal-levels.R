@@ -129,8 +129,13 @@ test_that("safety advisories fire identically on both ordinal routes", {
     verbose = FALSE, seed = 3L))
   w_manual <- grab_warnings(impute(df_ord, tree, verbose = FALSE, seed = 3L))
 
-  expect_true(any(grepl("collapse to the majority class", w_decl)))
-  expect_true(any(grepl("collapse to the majority class", w_manual)))
+  advisory <- "Imbalanced K>=3 ordinal trait"
+  declared_advisory <- w_decl[grepl(advisory, w_decl, fixed = TRUE)]
+  manual_advisory <- w_manual[grepl(advisory, w_manual, fixed = TRUE)]
+  expect_length(declared_advisory, 1L)
+  expect_identical(declared_advisory, manual_advisory)
+  expect_match(declared_advisory, "fewer than 500 observed values", fixed = TRUE)
+  expect_match(declared_advisory, "Assess predictions by class", fixed = TRUE)
 })
 
 test_that("the missing-order error suggests valid code for non-syntactic names", {
