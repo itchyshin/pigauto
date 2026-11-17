@@ -538,15 +538,15 @@ impute <- function(traits, tree, species_col = NULL,
         class_freqs <- table(col) / sum(table(col), na.rm = TRUE)
         is_imbalanced <- max(class_freqs) > 0.7
         
-        # Is the validation set small? (e.g., fewer than 500 valid observations)
-        val_n <- sum(!is.na(col))
-        is_small_val <- val_n < 500 
+        # Is the number of observed values small? This is not the validation size.
+        n_observed <- sum(!is.na(col))
+        has_few_observations <- n_observed < 500
         
         # If ALL conditions are met, throw a formal CRAN-safe warning
-        if (is_imbalanced && is_small_val) {
+        if (is_imbalanced && has_few_observations) {
           warning(
             sprintf(
-              "Imbalanced K>=3 ordinal trait '%s' with a small validation set may collapse to the majority class.\nConsider setting: n_imputations = 20L, pool_method = 'mode'.\nSee ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').",
+              "Imbalanced K>=3 ordinal trait '%s' with fewer than 500 observed values may be predicted as the majority class.\nAssess predictions by class on representative held-out data.\nSee ?impute 'Imbalanced K-class traits' or vignette('common-pitfalls').",
               trait_name
             ),
             call. = FALSE

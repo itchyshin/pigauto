@@ -132,7 +132,7 @@ evaluate_imputation <- function(pred, truth, splits, pred_se = NULL,
         rmse_val <- rmse_vec(t_j[ok], p_j[ok])
 
         if (tp %in% c("continuous", "proportion")) {
-          r_val <- if (sum(ok) > 1L) stats::cor(t_j[ok], p_j[ok]) else NA_real_
+          r_val <- if (sum(ok) > 1L) cor_for_scoring(t_j[ok], p_j[ok]) else NA_real_
 
           cov95 <- NA_real_
           if (!is.null(pred_se)) {
@@ -153,7 +153,7 @@ evaluate_imputation <- function(pred, truth, splits, pred_se = NULL,
           )
 
         } else if (tp == "count") {
-          r_val   <- if (sum(ok) > 1L) stats::cor(t_j[ok], p_j[ok]) else NA_real_
+          r_val   <- if (sum(ok) > 1L) cor_for_scoring(t_j[ok], p_j[ok]) else NA_real_
           mae_val <- mae_vec(t_j[ok], p_j[ok])
 
           rows[[length(rows) + 1L]] <- data.frame(
@@ -169,7 +169,7 @@ evaluate_imputation <- function(pred, truth, splits, pred_se = NULL,
         } else {
           # ordinal
           rho_val <- if (sum(ok) > 1L) {
-            stats::cor(t_j[ok], p_j[ok], method = "spearman")
+            cor_for_scoring(t_j[ok], p_j[ok], method = "spearman")
           } else {
             NA_real_
           }
@@ -292,7 +292,7 @@ evaluate_imputation <- function(pred, truth, splits, pred_se = NULL,
         rmse_val <- rmse_vec(truth_ev[ok_gate], pred_ev[ok_gate])
         mae_val  <- mae_vec(truth_ev[ok_gate], pred_ev[ok_gate])
         r_val    <- if (n_ok > 2L) {
-          stats::cor(truth_ev[ok_gate], pred_ev[ok_gate])
+          cor_for_scoring(truth_ev[ok_gate], pred_ev[ok_gate])
         } else {
           NA_real_
         }
@@ -414,7 +414,7 @@ evaluate_continuous_legacy <- function(pred, truth, splits, pred_se) {
       if (sum(ok) == 0L) return(NULL)
 
       rmse_j <- rmse_vec(t_j[ok], p_j[ok])
-      r_j    <- if (sum(ok) > 1L) stats::cor(t_j[ok], p_j[ok]) else NA_real_
+      r_j    <- if (sum(ok) > 1L) cor_for_scoring(t_j[ok], p_j[ok]) else NA_real_
 
       cov95 <- NA_real_
       if (!is.null(pred_se) && sum(ok) > 0L) {
@@ -441,4 +441,13 @@ evaluate_continuous_legacy <- function(pred, truth, splits, pred_se) {
   if (length(splits$test_idx) > 0L) rows$test <- eval_split(splits$test_idx, "test")
 
   do.call(rbind, rows[!sapply(rows, is.null)])
+}
+
+# Correlation is undefined when either scored vector is constant.
+cor_for_scoring <- function(x, y, method = "pearson") {
+  if (all(is.finite(x)) && all(is.finite(y)) &&
+      (length(unique(x)) < 2L || length(unique(y)) < 2L)) {
+    return(NA_real_)
+  }
+  stats::cor(x, y, method = method)
 }
