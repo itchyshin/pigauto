@@ -213,7 +213,15 @@ trait, in \code{fit$model_config$predict_method_by_trait}. Under
 $route_val_n} / \code{$score_val_n} record, per trait, how many of
 its validation cells chose the route versus were reserved for gate
 calibration and conformal scoring (see \code{\link{fit_baseline}}'s
-\code{predict_method} docs).}
+\code{predict_method} docs). Because \code{"per_column"} predicts each
+trait independently, species with identical phylogenetic relationships
+to the observed species can receive identical predictions for that trait,
+even when another observed trait differs. The \code{"exact"} route uses
+cross-trait conditional information when available, but does not guarantee
+distinct predictions or better accuracy. Since \code{"auto"} can select
+\code{"per_column"} from held-out loss, inspect
+\code{fit$model_config$predict_method_by_trait} when this distinction
+matters.}
 
 \item{joint_refine_iter}{integer, default \code{0L}. Maximum passes of
 optional cross-trait refinement of joint-baseline cell imputations
