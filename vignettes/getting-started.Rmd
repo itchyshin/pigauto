@@ -28,8 +28,10 @@ install.packages("pigauto")
 packageVersion("pigauto")
 ```
 
-This page describes pigauto 0.11.1. Until that version is available on
-CRAN, install the GitHub version to use all examples below:
+This site documents pigauto 0.11.2, the development version. CRAN currently
+provides version 0.11.1. Install from CRAN for the latest released version;
+use GitHub only if you need a feature or fix that has not yet reached CRAN.
+For example, species- and clade-level cross-validation are new in 0.11.2.
 
 ```{r install-github, eval=FALSE}
 install.packages("pak") # only needed once
@@ -44,9 +46,11 @@ torch::install_torch()
 
 ## Start here
 
-CRAN 0.11.0 does not include every GitHub fix described here. In particular,
-use `evaluate(fit)` for held-out scoring on CRAN 0.11.0; see Step 7.
-Check `packageVersion("pigauto")` after installing pigauto 0.11.1 or later.
+In pigauto 0.11.0, `predict()` ignores `evaluation = TRUE`; use
+`evaluate(fit)` for held-out scoring. The `evaluation` argument is supported
+from 0.11.1 onward. Some examples on this page also use development features
+from 0.11.2. Check `packageVersion("pigauto")` to confirm which version you
+have installed.
 See [the installation steps](#install-pigauto) if you have not installed the
 package yet.
 
@@ -247,6 +251,10 @@ phylogenetic label propagation or a threshold model for discrete traits,
 with a per-trait Pagel's lambda. The architecture article explains how
 pigauto selects among these baselines. A held-out
 validation split calibrates the blend and the conformal intervals.
+Related methods for missing-data prediction in phylogenetic comparative
+analyses are described by Goolsby et al. (2017). pigauto uses its own internal
+Brownian conditional-imputation implementation; the default route does not
+call the `Rphylopars` package.
 Split conformal assumes the calibration cells resemble the scored
 cells. Masking a whole clade can violate that assumption: residuals from
 other clades may not represent the held-out clade, so nominal coverage
@@ -632,6 +640,11 @@ cannot be pooled for inference. See the
 
 ### Active imputation: where to measure next
 
+The general active-learning idea of selecting observations to reduce expected
+model variance is described by Cohn et al. (1996). The rankings below are
+pigauto-specific model-based proxies; they do not establish an optimal field
+design or guarantee a gain from collecting the suggested observations.
+
 `suggest_next_observation()` returns model-based BM/label-propagation proxy
 rankings under its stated assumptions. It is not an optimal sampling guarantee
 or a demonstrated field gain.
@@ -859,7 +872,7 @@ overlap is allowed: unmatched input species remain in `completed` but are not
 modeled or filled. Tree tips with no input row can still be used during model
 fitting.
 
-## References
+## References and further reading
 
 - Tobias, J.A. et al. (2022). AVONET: morphological, ecological and
   geographical data for all birds. *Ecology Letters*, 25, 581–597.
